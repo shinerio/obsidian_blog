@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间轮 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>时间轮</h1>
+        <time datetime="2026-01-03T13:04:29.100Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>时间轮(Timing Wheel)是George Varghese和Tony Lauck在1996年的论文[Hashed and Hierarchical Timing Wheels: data structures to efficiently implement a timer facility](TimingWheels.ppt (wustl.edu)]<a href="https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt)%E5%AE%9E%E7%8E%B0%E7%9A%84%EF%BC%8C%E6%98%AF%E4%B8%80%E7%A7%8D%E5%AE%9E%E7%8E%B0%E5%BB%B6%E8%BF%9F%E5%8A%9F%E8%83%BD%EF%BC%88%E5%AE%9A%E6%97%B6%E5%99%A8%EF%BC%89%E7%9A%84%E7%B2%BE%E5%A6%99%E7%9A%84%E9%AB%98%E7%BA%A7%E7%AE%97%E6%B3%95%EF%BC%8C%E5%85%B6%E7%AE%97%E6%B3%95%E5%BA%94%E7%94%A8%E8%8C%83%E5%9B%B4%E9%9D%9E%E5%B8%B8%E5%B9%BF%E6%B3%9B%E5%AE%83%E5%9C%A8Linux%E5%86%85%E6%A0%B8%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%B9%BF%E6%B3%9B%EF%BC%8C%E6%98%AFLinux%E5%86%85%E6%A0%B8%E5%AE%9A%E6%97%B6%E5%99%A8%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E6%B3%95%E5%92%8C%E5%9F%BA%E7%A1%80%E4%B9%8B%E4%B8%80%EF%BC%8C%E5%9C%A8Java%E5%BC%80%E5%8F%91%E8%BF%87%E7%A8%8B%E4%B8%AD%E5%B8%B8%E7%94%A8%E7%9A%84Dubbo%E3%80%81Netty%E3%80%81Akka%E3%80%81Quartz%E3%80%81ZooKeeper">https://www.cse.wustl.edu/~cdgill/courses/cs6874/TimingWheels.ppt)实现的，是一种实现延迟功能（定时器）的精妙的高级算法，其算法应用范围非常广泛它在Linux内核中使用广泛，是Linux内核定时器的实现方法和基础之一，在Java开发过程中常用的Dubbo、Netty、Akka、Quartz、ZooKeeper</a> 、Kafka等各种框架中也都有应用。</p>
+<h1>1. 解决问题场景</h1>
+<p>如果一个系统中存在着大量的调度任务，而大量的调度任务如果每一个都使用自己的调度器来管理任务的生命周期的话，浪费cpu的资源并且很低效。</p>
+<p>时间轮是一种高效来利用线程资源来进行批量化调度的一种调度模型。把大批量的调度任务全部都绑定到同一个的调度器上面，使用这一个调度器来进行所有任务的管理（manager），触发（trigger）以及运行（runnable）。能够高效的管理各种延时任务，周期任务，通知任务等等</p>
+<h1>2. 单级时间轮</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202502052300320.png" alt="image.png"></p>
+<h2>2.1. 基础概念</h2>
+<ul>
+<li>tick：时间轮的总大小，上图为12</li>
+<li>interval: 时间轮的间隔，上图为1</li>
+</ul>
+<h2>2.2. 数据结构设计</h2>
+<ol>
+<li>时间轮是一个环形队列，底层通过数组实现，数组中的每个元素可以存放个<strong>定时任务列表</strong>(<strong>HashedWheelBucket</strong>)</li>
+<li>数组中的每个元素（<strong>HashedWheelBucket</strong>）是一个双向链表</li>
+<li>链表中的每一个节点存储了真正的任务</li>
+</ol>
+<p>关键对象如下：</p>
+<ul>
+<li>pointer : 指针，随着时间的推移，指针不停地向前移动，到12后再回到1。</li>
+<li>bucket : 时间轮由bucket组成，如上图，有12个bucket。每个bucket都挂载了未来要到期的节点（即: 定时任务/延时任务）。</li>
+<li>interval：两个相邻的bucket的时间间隔<br><strong>时间轮使用一个表盘指针（pointer），用来表示时间轮当前指针跳动的次数，可以用interval * (pointer + 1)来表示下一次到期的任务，需要处理此时间格（bucket）所对应的所有任务</strong></li>
+</ul>
+<h2>2.3. 时间复杂度</h2>
+<p>时间轮的tick与数据量无关，通过数组下标可以直接访问，指定任务插入指定slot的时间复杂度是o(1)，每个slot上的双向链表上的所有任务理论上都是一起处理的，会交给异步线程执行，因此删除指定slot的时间复杂度是0(1)。</p>
+<h2>2.4. 存在的问题</h2>
+<p>显而易见，时间轮算法解决了遍历效率低的问题。（现在，即使有 10k 个任务，轮询线程也不必每轮遍历10k个任务，而仅仅需要遍历24个时间刻度）。时间轮算法中，轮询线程遍历到某一个时间刻度后，总是执行对应刻度上任务队列中的所有任务（通常是将任务扔给异步线程池来处理），而不再需要遍历检查所有任务的时间戳是否达到要求。</p>
+<h3>2.4.1. 内存问题</h3>
+<p>时间轮算法的精度取决于时间段“指针”单元的最小粒度大小，比如时间轮的格子是一秒跳一次，那么调度精度小于一秒的任务就无法被时间轮所调度。另外，如果保持精度不变，但是延迟任务需要在300秒后执行，轮盘总刻度也得达到300以上。为了实现这两点目的，我们只能通过扩充bucket的范围来实现。例如，将bucket设置成 2^32个，但是这样会带来巨大的内存消耗。在时间刻度密集，任务数少的情况下，大部分时间刻度所占用的内存空间是没有任何意义的。</p>
+<h3>2.4.2. 效率问题</h3>
+<p>当时间刻度增多，而任务数较少时，轮询线程的遍历效率会下降，例如，如果只有50个时间刻度上有任务，但却需要遍历1440个时间刻度。这违背了我们提出时间轮算法的初衷：解决遍历轮询线程遍历效率低的问题。</p>
+<h1>3. 带round的单级时间轮</h1>
+<p>时间轮的时间刻度随着时间精度而增加并不是一个好的问题解决思路，所以计划将时间轮的精度设置为秒，时间刻度个数固定为60。每一个任务拥有一个round字段，基于单时间轮原理之下，我们在每个bucket块下的链表的节点需要多存储一个新字段round。</p>
+<p>当指针转到某个bucket时，不能像简单的单时间轮那样直接执行bucket下所有的定时器，而是要去遍历该bucket下的链表，判断判断时间轮转动的次数是否等于节点中的round值，只有当expire和round都相同的情况下，才能执行该任务。如当前时间点为1，设置一个14秒后到期的定时任务，则slot位置为<code>(14 + 1) % 12 = 3，round = ceiling[14 / 12] = 2</code><br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202502052323257.png" alt="image.png"><br>轮询线程的执行逻辑是每隔一秒处理一个时间刻度上任务队列中的所有任务，任务的 round字段减 1，接着判断如果round字段的值变为 0，那么将任务移出任务队列，交给异步线程池来执行对应任务。如果是重复执行任务，那么再将任务添加到任务队列中。</p>
+<h2>3.1. 存在的问题</h2>
+<p>改进版单时间轮是时间和空间折中的方案，由于需要遍历单个buket上的链表，因此不像单时间轮那样有O(1)的时间复杂度。但是也不会像单时间轮那样，为了满足需求产生大量的bucket，在空间上有一定优化。因此虽然简化了时间轮的刻度个数，但是并没有简化运行效率不高的问题。</p>
+<p>改进版的时间轮如果某个bucket上挂载的定时器特别多，那么需要花费大量的时间去遍历这些节点，如果bucket下的链表每个节点的round都不相同，那么一次遍历下来可能只有极少数的定时器需要立刻执行的，因此很难在时间和空间上都达到理想效果。</p>
+<p>时间轮每次处理一个时间刻度，就需要处理其上任务队列的所有任务。其运行效率甚至与基于普通任务队列实现的定时任务框架没有区别。</p>
+<h1>4. 层级时间轮</h1>
+<p>为了解决单时轮和轮数时间轮引起的性能问题和资源问题的另一种方式是在层次结构中使用多个定时轮，由多个层级来进行多次hash进行任务数据的传递，从而减少对应的时间和空间的复杂程度。就像钟表一样，秒针转一圈，分针转一格，通过小轮驱动大轮，小轮上的任务到时间后会被放到比它大一级的轮上，任务只会在最大的那个轮上被执行。</p>
+<h2>4.1. 优点</h2>
+<ul>
+<li>轮询线程效率变高：首先不再需要计算round值，其次任务队列中的任务一旦被遍历，就是需要被处理的（没有空轮询问题）</li>
+<li>线程并发性好：虽然引入了并发线程，但是线程数仅仅和时钟轮的级数有关，并不随着任务数的增多而改变。   </li>
+<li>如果任务按照分钟级别来定时执行，那么当分钟时间轮达到对应刻度时，就会将任务交给异步线程来处理，然后将任务再次注册到秒级别的时钟轮上。</li>
+</ul>
+<h1>5. 时间轮在network中的应用</h1>
+<p>network中packet的生命周期管理常使用时间轮，主要有以下几方面原因：</p>
+<ul>
+<li><strong>高效性</strong><ul>
+<li><strong>低时间复杂度</strong>：时间轮算法能将插入和删除操作的时间复杂度降为 O (1)。在处理大量网络包时，能快速地添加或删除与包相关的定时任务，如设置包的超时重传、存活时间、会话的老化时间等，相比基于无序队列（插入 O (1)，遍历 O (n)）或有序队列（插入 O (log n)）的计时器实现方式，性能优势明显。</li>
+<li><strong>批量处理任务</strong>：可以将大量与包生命周期管理相关的任务绑定到时间轮上，通过时间轮的指针转动，批量地触发和执行到期任务。比如，在同一时间格内的多个包（或会话）的超时任务可以一次性处理，减少了逐个检查和处理任务的开销。</li>
+</ul>
+</li>
+<li><strong>资源管理优势</strong><ul>
+<li><strong>减少线程分配</strong>：能高效利用线程资源，只需一个或少数几个线程来管理时间轮，负责推动指针和执行到期任务，避免了为每个包的生命周期管理任务都分配一个单独的线程或调度器，从而降低了 CPU 的负载和资源浪费。</li>
+<li><strong>内存占用可控</strong>：通过合理设置时间轮的刻度和轮次等参数，可以在满足包生命周期管理需求的同时，有效地控制内存占用。例如，采用多层时间轮结构，能在保证时间精度的前提下，用较少的空间存储大量不同超时时间的任务。</li>
+</ul>
+</li>
+<li><strong>灵活性与可扩展性</strong><ul>
+<li><strong>适应不同场景</strong>：可以根据网络应用的具体需求，灵活调整时间轮的参数，如时间刻度的大小、轮的层数、任务队列的长度等，以适应不同的网络环境和包处理要求。比如，在实时性要求较高的网络应用中，可设置较小的时间刻度；在对时间精度要求不高但需要处理大量包的场景下，可适当增大时间刻度以减少资源消耗。</li>
+<li><strong>易于扩展功能</strong>：便于与其他网络功能和算法集成，进行功能扩展。例如，可以与网络拥塞控制算法结合，根据网络拥塞情况动态调整包的超时时间；也可以与流量控制算法配合，对不同优先级的包设置不同的生命周期管理策略。</li>
+</ul>
+</li>
+<li><strong>时间管理特性</strong><ul>
+<li><strong>精确控制包的生命周期</strong>：能为每个包精确地设置生存时间、超时时间等，确保包在网络中按照预期的时间规则进行传输、处理和销毁。比如，对于实时性要求高的视频流数据包，可设置较短的超时时间，及时重传丢失的包，保证视频播放的流畅性；对于一些非关键的控制信息包，可设置相对较长的生存时间，以适应网络的不确定性。</li>
+<li><strong>处理周期性任务</strong>：方便处理与包相关的周期性任务，如定期发送心跳包、定期更新包的状态信息等。通过在时间轮上设置周期性的任务节点，能够自动、按时触发这些任务，无需额外的复杂定时机制。</li>
+</ul>
+</li>
+</ul>
+<h1>6. reference</h1>
+<p><a href="https://m.imooc.com/article/336109">https://m.imooc.com/article/336109</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

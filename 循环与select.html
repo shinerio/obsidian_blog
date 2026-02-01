@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>循环与Select - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>循环与Select</h1>
+        <time datetime="2026-01-03T13:04:29.140Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. select</h1>
+<p><code>select</code> 语句会从上到下依次检查每个 <code>case</code> 的通信操作语句，每个case必须是一个通信操作，要么接收，要么发送。</p>
+<ul>
+<li>如果发现某个 <code>case</code> 的通信操作可以立即执行，就会执行该 <code>case</code> 语句块并跳出 <code>select</code> 代码块。</li>
+<li>如果多个 <code>case</code> 均可执行，则会随机选择一个执行。</li>
+<li>如果没有任何一个 <code>case</code> 可以执行，则会执行 <code>default</code> 语句块(如果存在的话)。&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;如果select语句带default并且放在无限循环 中，就会变成忙轮询（busy waiting），导致高CPU占用。</span></li>
+<li>如果没有default，select会被阻塞，goroutine会进入休眠状态，直到某个case满足条件。</li>
+</ul>
+<pre><code class="language-go">func main() {  
+    // 无缓冲channel  
+    chan1 := make(chan int)  
+    chan2 := make(chan string)  
+  
+    // 有缓冲channel  
+    chan3 := make(chan string, 5) // 缓冲区大小为5  
+  
+    var data = &quot;test&quot;  
+    go func() {  
+       for {  
+          select {  
+          // &lt;-chan1 是一个接收操作符号。如果chan1通道中有数据可以读取，那么就会执行这个case并丢弃读到的数据（仅当做一种触发信号），如果当前没有数据可读，则不会阻塞，而是继续检查下一个case。  
+          case &lt;-chan1:  
+             fmt.Println(&quot;receive from chan1.&quot;)  
+          // 从chan3中读取数据赋值给tmp变量  
+          case tmp := &lt;-chan3:  
+             fmt.Printf(&quot;receive from chan3, value %s\n&quot;, tmp)  
+          // chan2 &lt;- data 是一个发送操作符号，其中data是要发送的数据。如果chan2通道可以立即发送数据,那么就会执行这个case下面的代码块。如果当前通道已满无法发送，则不会阻塞，而是继续检查下一个case。  
+          // 这里chan2未定义缓冲大小，如果没有其他goroutine从chan2中接收数据的会，这个发送动作会一直阻塞  
+          // 如果要在无接收者的情况下实现往chan2中发送数据，则最好给chan2定义缓冲大小  
+          case chan2 &lt;- data:  
+             fmt.Println(&quot;send data to chan2&quot;)  
+          }  
+       }  
+    }()  
+    // 持续向chan1发送数据，以触发select中的case  
+    go func() {  
+       for i := 0; i &lt; 3; i++ {  
+          chan1 &lt;- i  
+       }  
+    }()  
+  
+    // 持续从chan2中接收数据，以触发select中的case  
+    go func() {  
+       for i := 0; i &lt; 3; i++ {  
+          var _ = &lt;-chan2  
+       }  
+    }()  
+  
+    // 持续向chan3发送数据，以触发select中的case  
+    go func() {  
+       for i := 0; i &lt; 5; i++ {  
+          chan3 &lt;- fmt.Sprintf(&quot;data%d&quot;, i)  
+       }  
+    }()  
+  
+    time.Sleep(time.Second * 10)  
+  
+    // 这里需要关闭chan，以防止goroutine泄漏  
+    close(chan1)  
+    close(chan2)  
+    close(chan3)  
+}
+
+func main() {  
+    ch := make(chan int)  
+  
+    go func() {  
+       for i := 0; i &lt; 3; i++ {  
+          ch &lt;- i  
+       }  
+       close(ch)  
+    }()  
+  
+    // 从一个已经关闭的chan中获取数据不会阻塞，会得到0，如下代码会打印 Received:1 Received: 2 Received: 3，之后一直死循环打印Received: 0  
+    //for {    // val := &lt;-ch    // time.Sleep(time.Second)    // fmt.Println(&quot;Received:&quot;, val)    //}    // 从channel中获取数据时最好判断channel是否关闭了，除非你确定chan不会关闭  
+    for {  
+       // ok为bool类型，代表chan是否关闭  
+       val, ok := &lt;-ch  
+       if !ok {  
+          fmt.Println(&quot;Channel closed&quot;)  
+          break  
+       }  
+       fmt.Println(&quot;Received:&quot;, val)  
+    }  
+}
+</code></pre>
+<p>超时判断</p>
+<pre><code class="language-go">func main() {  
+    //比如在下面的场景中，使用全局resChan来接受response，如果时间超过3S,resChan中还没有数据返回，则第二条case将执行  
+    var resChan = make(chan int)  
+    // do request  
+    select {  
+    case data := &lt;-resChan:  
+       fmt.Println(data)  
+    case &lt;-time.After(time.Second * 3):  
+       fmt.Println(&quot;request time out&quot;)  
+    }  
+}
+</code></pre>
+<h1>2. for select case陷阱</h1>
+<p>在Go语言中，select语句用于在多个channel操作中进行选择，它本身不会导致CPU busy，但某些使用方式可能会造成高CPU占用。</p>
+<h2>2.1. 正确用法</h2>
+<p>如果select语句阻塞等待通道操作，Go运行时会让出CPU，避免忙等待</p>
+<pre><code class="language-go">func worker(ch chan int) {
+    for {
+        select {
+        case val := &lt;-ch:
+            fmt.Println(&quot;Received:&quot;, val)
+        }
+    }
+}
+</code></pre>
+<p>这里select会阻塞，直到ch有数据可读。阻塞时，Go运行时会让出CPU，不会造成busy waiting。</p>
+<pre><code class="language-css">  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                           
+21381 devbox    20   0 1225400   2024   1276 S   0.0   0.0   0:00.00 main  
+</code></pre>
+<h2>2.2. 错误用法</h2>
+<p>如果 select 语句在循环中不断轮询且没有阻塞，可能会导致高 CPU 占用。例如：</p>
+<pre><code class="language-go">func busyWorker(ch chan int) {
+    for {
+        select {
+        case val := &lt;-ch:
+            fmt.Println(&quot;Received:&quot;, val)
+        default:
+            // 没有数据时，不做任何阻塞操作，导致无限循环
+        }
+    }
+}
+</code></pre>
+<p>default分支会在没有数据可读时立即执行，导致for循环不停执行，CPU占用率飙高。</p>
+<pre><code class="language-css">  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                           
+21941 devbox    20   0 1225400   2028   1276 R  99.0   0.0   0:13.83 main 
+</code></pre>
+<p>简单优化</p>
+<pre><code class="language-go">for {
+    select {
+    case val := &lt;-ch:
+        fmt.Println(&quot;Received:&quot;, val)
+    default:
+        time.Sleep(10 * time.Millisecond) // 让出 CPU，避免忙等待
+    }
+}
+</code></pre>
+<p>增加sleep，让出cpu调度</p>
+<pre><code class="language-css">  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                           
+22872 devbox    20   0 1225656   2020   1276 S   0.7   0.0   0:00.03 main   
+</code></pre>
+<p>在Go语言的select语句中，如果 select 语句内包含default分支，并且所有其他 case 都没有准备好（没有数据可读或可写），那么default立即执行，不会阻塞。</p>
+<h1>3. for循环调度新协程</h1>
+<p>当在for循环中启动协程并使用循环变量时，所有协程可能最终会使用循环结束时变量的最终值，而不是启动协程时的值。这是因为：</p>
+<ol>
+<li><strong>变量作用域</strong>：循环变量在整个循环中是同一个变量（同一个内存地址）</li>
+<li><strong>闭包捕获</strong>：Go 协程创建了一个闭包，捕获的是变量的引用而非值</li>
+<li><strong>执行时机</strong>：协程可能在循环结束后才真正开始执行</li>
+</ol>
+<p><strong>Go 1.22 之前</strong>：循环变量在每次迭代中是重用的（相同的内存地址），会导致协程捕获到相同引用。<br><strong>Go 1.22 及以后</strong>：默认情况下，每次迭代会为循环变量创建一个新的变量实例。这意味着在协程中捕获这些变量时，每个协程会捕获到不同的变量实例。</p>
+<p>go 1.22之前错误示例：</p>
+<pre><code class="language-go">func main() {
+    values := []int{1, 2, 3, 4, 5}
+    
+    for i, val := range values {
+        go func() {
+            // 错误：直接使用循环变量
+            fmt.Printf(&quot;索引: %d, 值: %d\n&quot;, i, val)
+        }()
+    }
+    
+    time.Sleep(time.Second) // 等待协程执行
+}
+</code></pre>
+<p>go 1.22版本以前输出示例：</p>
+<pre><code class="language-text">索引: 4, 值: 5
+索引: 4, 值: 5
+索引: 4, 值: 5
+索引: 4, 值: 5
+索引: 4, 值: 5
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

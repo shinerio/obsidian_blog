@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作系统概述 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>操作系统概述</h1>
+        <time datetime="2026-01-03T13:04:29.276Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 操作系统基本特征</h1>
+<h2>1.1. 并发</h2>
+<p>并发是指两个或多个事件在同一时间间隔内发生，在多道程序环境下，一段时间内宏观上有多个程序在同时执行，而在同一时刻，单处理器环境下实际上只有一个程序在执行，故微观上这些程序还是在分时的交替进行。操作系统的并发是通过分时得以实现的。操作系统的并发性是指计算机系统中同时存在多个运行着的程序，因此它具有同时处理和调度多个程序执行的能力。在操作系统中，引入进程的目的是使程序能并发执行。</p>
+<blockquote>
+<p>并发与并行的区别：并发的关键是你有处理多个任务的能力，不一定要同时（单核cpu分时调度）。并行的关键是你有<strong>同时</strong>处理多个任务的能力。</p>
+</blockquote>
+<h2>1.2. 共享</h2>
+<p>资源共享即共享，是指系统中的资源可供内存中多个并发执行的进程共同使用。共享可以分为以下两种资源共享方式。</p>
+<h3>1.2.1. 互斥共享</h3>
+<p>系统中的某些资源，如打印机、磁带机，虽然他们可以提供给多个进程使用，但为使所打印的内容不致造成混淆，应规定在同一段时间内只允许一个进程方位该资源。为此，当进程a访问某资源时，必须先提出请求，如果此时该资源空闲，系统便可将之分配给进程a使用，伺候若再有其他进程也要访问该资源（只要a未用完）则必须等待。仅当进程a访问完并释放该资源后，才允许另一进城对该资源进行访问。计算机系统中的物理设备，以及某些软件中所用的栈、变量和表格，都属于临界资源，他们都要求被互斥的共享。</p>
+<h3>1.2.2. 同时访问</h3>
+<p>系统中还有一种资源，允许在一段时间内由多个进程“同时”对它进行访问。这里所谓的“同时”往往是宏观上的，而在微观上，这些进程可能是交替的对该资源进行访问即“分时共享”。典型的可供多个进程同时访问的资源是磁盘设备，一些用重入码编写的文件也可以被“同时”共享，即若干个用户同时访问该文件。</p>
+<blockquote>
+<p>并发和共享是操作系统两个最基本的特征，这两者之间又是互为存在条件的：</p>
+<ol>
+<li>资源共享是以程序的并发为条件的，若系统不允许程序并发执行，则自然不存在资源共享的问题；</li>
+<li>若系统不能对资源共享实施有效地管理，也必将影响到程序的并发执行，甚至根本无法并发执行。</li>
+</ol>
+</blockquote>
+<h1>2. 虚拟化</h1>
+<p>虚拟是指把一个物理上的实体变为若干个逻辑上的对应物。物理实体是实的，即实际存在的；而后者是虚的，是用户感觉上的事物。相应的，用于实现虚拟的技术，成为虚拟技术。在操作系统中利用了多种虚拟技术，分别用来实现虚拟处理器、虚拟内存和虚拟外部设备。</p>
+<p>在虚拟处理器技术中，是通过多道程序设计技术，让多道程序并发执行的方法，来分时使用一台处理器的。此时，虽然只有一台处理器，但他能同时为多个用户服务，是每个终端用户都认为是有一个中央处理器在为他服务。利用多道程序设计技术，把一台物理上的CPU虚拟为多台逻辑上的CPU，称为虚拟处理器。</p>
+<p>类似的，可以通过虚拟存储器技术，将一台机器的物理存储器变为虚拟存储器，一边从逻辑上来扩充存储器的容量。当然， 这是用户所感觉到的内存容量是虚的，称为存储器程序虚拟存储器。</p>
+<p>还可以通过虚拟设备技术，将一台物理IO设备虚拟为多台逻辑上的IO设备，并允许每个用户占用一台逻辑上的IO设备，这样便可使原来仅允许在一段时间内有一个用户访问的设备，变为在一段时间内允许多个用户同时访问的共享设备。</p>
+<p>因此操作系统的虚拟技术可归纳为：时分复用技术和空分复用技术。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

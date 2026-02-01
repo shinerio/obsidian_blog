@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟线程 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>虚拟线程</h1>
+        <time datetime="2026-01-03T13:04:29.159Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 概念</h1>
+<h2>1.1. 平台线程</h2>
+<p>我们常用的Java线程与系统内核线程是一一对应的，系统内核的线程调度程序负责调度 Java线程。为了增加应用程序的性能，我们会增加越来越多的Java线程，而由于多种因素，平台线程的数量受到了很大的约束。</p>
+<ul>
+<li>资源有限导致系统线程总量有限，进而导致与系统线程一一对应的平台线程有限。</li>
+<li>平台线程的调度依赖于系统的线程调度程序，当平台线程创建过多，会消耗大量资源用于处理线程上下文切换。</li>
+<li>每个平台线程都会开辟一块私有的栈空间，大量平台线程会占据大量内存，每个平台线程需要占用约1MB左右的内存。<br>这些限制导致开发者不能极大量地创建平台线程，为了满足性能需要，需要引入池化技术、添加任务队列构建消费者-生产者模式等方案去让平台线程适配多变的现实场景。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202506132252117.png" alt="image.png"></li>
+</ul>
+<h2>1.2. 虚拟线程</h2>
+<p>虚拟线程（Virtual Thread）是JDK而不是OS实现的轻量级线程(Lightweight Process，LWP），由JVM调度。许多虚拟线程共享同一个操作系统线程，虚拟线程的数量可以远大于操作系统线程的数量。</p>
+<ul>
+<li>可以大量创建，例如十万级别、百万级别，而不会占据大量内存</li>
+<li>由<code>JVM</code>进行调度和状态切换，并且与系统线程&quot;松绑&quot;</li>
+<li>用法与原来平台线程差不多，或者说尽量兼容平台线程现存的<code>API</code><br>JVM 调度程序通过平台线程（载体线程）来管理虚拟线程，一个平台线程可以在不同的时间执行不同的虚拟线程（多个虚拟线程挂载在一个平台线程上），当虚拟线程被阻塞或等待时，平台线程可以切换到执行另一个虚拟线程。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian%E5%B9%B3%E5%8F%B0%E7%BA%BF%E7%A8%8B.png" alt="image.png"><br>相比较于平台线程来说，虚拟线程是廉价且轻量级的，使用完后立即被销毁，因此它们不需要被重用或池化，每个任务可以有自己专属的虚拟线程来运行。虚拟线程暂停和恢复来实现线程之间的切换，避免了上下文切换的额外耗费，兼顾了多线程的优点，简化了高并发程序的复杂，可以有效减少编写、维护和观察高吞吐量并发应用程序的工作量。</li>
+</ul>
+<h1>2. 虚拟线程调度</h1>
+<p>基于操作系统线程实现的平台线程，JDK依赖于操作系统中的线程调度程序来进行调度。而对于虚拟线程，JDK有自己的调度器。JDK的调度器没有直接将虚拟线程分配给系统线程，而是将虚拟线程分配给平台线程（类似于go语言中G-M-P模型，虚拟线程和平台线程是M:N调度）。JDK 的虚拟线程调度器是一个在FIFO模式下运行的类似<code>ForkJoinPool</code>的线程池。调度器的并行数量取决于调度器虚拟线程的平台线程数量。默认情况下是CPU可用核心数量，但可以使用系统属性<code>jdk.virtualThreadScheduler.parallelism</code>进行调整。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202506141253036.png" alt="image.png"></p>
+<p>JDK 的虚拟线程调度器是一个在 FIFO 模式下运行的类似<code>ForkJoinPool</code>的线程池。调度器的并行数量取决于调度器虚拟线程的平台线程数量。默认情况下是 CPU 可用核心数量，但可以使用系统属性<code>jdk.virtualThreadScheduler.parallelism</code>进行调整。注意，这里的<code>ForkJoinPool</code>与<code>ForkJoinPool.commonPool()</code>不同，<code>ForkJoinPool.commonPool()</code>用于实现并行流，并在 LIFO 模式下运行。</p>
+<p><code>ForkJoinPool</code>和<code>ExecutorService</code>的工作方式不同，<code>ExecutorService</code>有一个等待队列来存储它的任务，其中的线程将接收并处理这些任务。而<code>ForkJoinPool</code>的每一个线程都有一个等待队列，当一个由线程运行的任务生成另一个任务时，该任务被添加到该线程的等待队列中，当我们运行<code>Parallel Stream</code>，一个大任务划分成两个小任务时就会发生这种情况。</p>
+<p>为了防止<strong>线程饥饿</strong>问题，当一个线程的等待队列中没有更多的任务时，<code>ForkJoinPool</code>还实现了另一种模式，称为<strong>任务窃取</strong>， 也就是说：饥饿线程可以从另一个线程的等待队列中窃取一些任务。这和 Go G-M-P 模型中 work stealing 机制有异曲同工之妙。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202506141250621.png" alt="image.png"></p>
+<h1>3. 虚拟线程执行</h1>
+<p>当虚拟线程执行I/O或JDK中的其他阻止操作（如<code>BlockingQueue.take()</code>时，虚拟线程会从平台线程上卸载。当阻塞操作准备完成时（例如，网络 IO 已收到字节数据），调度程序将虚拟线程挂载到平台线程上以恢复执行。</p>
+<p>JDK中的绝大多数阻塞操作会将虚拟线程从平台线程上卸载，使平台线程能够执行其他工作任务。但是，JDK中的少数阻塞操作不会卸载虚拟线程，因此会阻塞平台线程。因为操作系统级别（例如许多文件系统操作）或 JDK级别（例如<code>Object.wait()</code>）的限制。这些阻塞操作阻塞平台线程时，将通过暂时增加平台线程的数量来补偿其他平台线程阻塞的损失。因此，调度器的<code>ForkJoinPool</code>中的平台线程数量可能会暂时超过CPU可用核心数量。调度器可用的平台线程的最大数量可以使用系统属性<code>jdk.virtualThreadScheduler.maxPoolSize</code>进行调整。这个阻塞补偿机制与Go G-M-P模型中hand off机制有异曲同工之妙。</p>
+<p>在以下两种情况下，虚拟线程会被固定到运行它的平台线程，在阻塞操作期间无法卸载虚拟线程：</p>
+<ol>
+<li>当在<code>synchronized</code>块或方法中执行代码时。</li>
+<li>当执行<code>native</code>方法或foreign function时。<br>虚拟线程被固定不会影响程序运行的正确性，但它可能会影响系统的并发度和吞吐量。如果虚拟线程<strong>在被固定时</strong>执行I/O或<code>BlockingQueue.take()</code> 等阻塞操作，则负责运行它的平台线程在操作期间会被阻塞。如果虚拟线程<strong>没有被固定</strong>，那会执行I/O等阻塞操作时会从平台线程上卸载。</li>
+</ol>
+<h1>4. 优缺点</h1>
+<h2>4.1. 优点</h2>
+<ul>
+<li><strong>非常轻量级</strong>：可以在单个线程中创建成百上千个虚拟线程而不会导致过多的线程创建和上下文切换。</li>
+<li><strong>简化异步编程</strong>： 虚拟线程可以简化异步编程，使代码更易于理解和维护。它可以将异步代码编写得更像同步代码，避免了回调地狱（Callback Hell）。</li>
+<li><strong>减少资源开销</strong>： 由于虚拟线程是由 JVM 实现的，它能够更高效地利用底层资源，例如 CPU 和内存。虚拟线程的上下文切换比平台线程更轻量，因此能够更好地支持高并发场景。</li>
+</ul>
+<h2>4.2. 缺点</h2>
+<ul>
+<li><strong>不适用于计算密集型任务</strong>： 虚拟线程适用于I/O密集型任务，但不适用于计算密集型任务，因为密集型计算始终需要CPU资源作为支持。</li>
+<li><strong>与某些第三方库不兼容</strong>： 虽然虚拟线程设计时考虑了与现有代码的兼容性，但某些依赖平台线程特性的第三方库可能不完全兼容虚拟线程。</li>
+</ul>
+<h1>5. 创建虚拟线程</h1>
+<pre><code class="language-java">Thread thread1 = Thread.ofVirtual().start(() -&gt; {  
+    try {  
+        TimeUnit.SECONDS.sleep(1);  
+    } catch (InterruptedException ignored) {  
+    }  
+    System.out.println(&quot;Virtual Thread 1 is running&quot;);  
+});  
+  
+Thread thread2 = Thread.startVirtualThread(() -&gt; {  
+    try {  
+        TimeUnit.SECONDS.sleep(2);  
+    } catch (InterruptedException ignored) {  
+    }  
+    System.out.println(&quot;Virtual Thread 2 is running&quot;);  
+});  
+  
+try (var virtualThreadPerTaskExecutor = Executors.newVirtualThreadPerTaskExecutor()) {  
+    virtualThreadPerTaskExecutor.submit(() -&gt; {  
+        try {  
+            TimeUnit.SECONDS.sleep(3);  
+        } catch (InterruptedException ignored) {  
+        }  
+        System.out.println(&quot;Virtual Thread 3 is running&quot;);  
+    });  
+}  
+  
+ThreadFactory factory = Thread.ofVirtual().factory();  
+Thread thread4 = factory.newThread(() -&gt; {  
+    try {  
+        TimeUnit.SECONDS.sleep(4);  
+    } catch (InterruptedException ignored) {  
+    }  
+    System.out.println(&quot;Virtual Thread 4 is running&quot;);  
+});  
+thread4.start();  
+  
+thread1.join();  
+thread2.join();  
+thread4.join();
+</code></pre>
+<h1>6. 虚拟线程卸载实验</h1>
+<h2>6.1. sleep卸载</h2>
+<pre><code class="language-java">var threads = IntStream.range(0, 5).mapToObj(index -&gt; Thread.ofVirtual().unstarted(() -&gt; {  
+    System.out.println(Thread.currentThread());  
+    try {  
+        Thread.sleep(10);  
+    } catch (InterruptedException e) {  
+        throw new RuntimeException(e);  
+    }  
+    System.out.println(Thread.currentThread());  
+})).toList();  
+  
+threads.forEach(Thread::start);  
+for (Thread thread : threads) {  
+    thread.join();  
+}
+</code></pre>
+<p>可以看到虚拟线程在sleep前后都切换了实际工作的平台线程</p>
+<pre><code class="language-text">VirtualThread[&lt;span class=&quot;tag&quot;&gt;#32&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-1
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#34&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-3
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#33&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-2
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#35&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-4
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#36&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-5
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#34&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-4
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#35&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-8
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#32&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-1
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#36&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-7
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#33&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-7
+</code></pre>
+<p>虚拟线程 sleep 时真正调用的方法是 <code>Continuation.yield</code>，会将当前虚拟线程的堆栈由平台线程的堆栈转移到Java堆内存，然后将其他就绪虚拟线程的堆栈由Java堆中拷贝到当前平台线程的堆栈中继续执行。</p>
+<blockquote>
+<p>[!note]<br>执行 IO 或<code>BlockingQueue.take()</code> 等阻塞操作时会跟 sleep 一样导致虚拟线程切换。虚拟线程的切换也是一个相对耗时的操作，但是与平台线程的上下文切换相比，还是轻量很多的</p>
+</blockquote>
+<p>在synchronized代码块中运行的虚拟线程不会发生卸载</p>
+<pre><code class="language-java">var threads = IntStream.range(0, 5).mapToObj(index -&gt; Thread.ofVirtual().unstarted(() -&gt; {  
+    synchronized (JDK21FeatureTest.class) {  
+        System.out.println(Thread.currentThread());  
+        try {  
+            Thread.sleep(10);  
+        } catch (InterruptedException e) {  
+            throw new RuntimeException(e);  
+        }  
+        System.out.println(Thread.currentThread());  
+    }  
+})).toList();  
+  
+threads.forEach(Thread::start);  
+for (Thread thread : threads) {  
+    thread.join();  
+}
+</code></pre>
+<p>执行结果</p>
+<pre><code class="language-text">VirtualThread[&lt;span class=&quot;tag&quot;&gt;#35&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-3
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#35&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-3
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#37&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-5
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#37&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-5
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#36&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-4
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#36&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-4
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#34&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-2
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#34&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-2
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#33&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-1
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#33&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-1
+</code></pre>
+<p><code>synchronized</code>代码块借助内置锁（监视器锁）来保证线程安全。当一个线程进入<code>synchronized</code>代码块时，它会获取对应的锁，要是锁被其他线程占用，该线程就会被<strong>阻塞</strong>。这种阻塞是由操作系统内核来处理的，会使线程进入等待状态，直到锁被释放。可以&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;使用ReentrantLock替代</font>。</p>
+<h2>6.2. IO卸载</h2>
+<pre><code class="language-java">var threads = IntStream.range(0, 5).mapToObj(index -&gt; Thread.ofVirtual().unstarted(() -&gt; {  
+    System.out.println(Thread.currentThread());  
+    try {  
+        HttpRequest request = HttpRequest.newBuilder()  
+                .uri(URI.create(&quot;https://localhost:5000/account&quot;))  
+                .GET()  
+                .build();  
+        MTLSHttpClientTest.getHttpClient().send(request, HttpResponse.BodyHandlers.ofString());  
+    } catch (Exception ignored) {  
+    }  
+    System.out.println(Thread.currentThread());  
+})).toList();  
+  
+threads.forEach(Thread::start);  
+for (Thread thread : threads) {  
+    thread.join();  
+}
+</code></pre>
+<p>执行结果</p>
+<pre><code class="language-text">VirtualThread[&lt;span class=&quot;tag&quot;&gt;#35&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-2
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#34&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-1
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#36&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-3
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#37&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-4
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#38&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-4
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#37&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-2
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#34&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-3
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#38&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-2
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#36&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-10
+VirtualThread[&lt;span class=&quot;tag&quot;&gt;#35&lt;/span&gt;]/runnable@ForkJoinPool-1-worker-11
+</code></pre>
+<h1>7. 性能测试</h1>
+<h2>7.1. IO密集型</h2>
+<p>应用程序符合下面两点特征，使用虚拟线程可以显著提高程序吞吐量：</p>
+<ul>
+<li>程序并发任务数量很高。</li>
+<li>IO密集型、工作负载不受 CPU 约束。<br>虚拟线程有助于提高服务端应用程序的吞吐量，因为此类应用程序大部分都是CRUD业务，且有大量并发，而且这些任务通常会有大量的IO等待。</li>
+</ul>
+<pre><code class="language-java">@Test  
+public void testPerformance() {  
+    AtomicInteger threadNum = new AtomicInteger(0);  
+    // 开启线程 统计平台线程数  
+    ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);  
+    scheduledExecutorService.scheduleAtFixedRate(() -&gt; {  
+        ThreadMXBean threadBean = ManagementFactory.getThreadMXBean();  
+        ThreadInfo[] threadInfo = threadBean.dumpAllThreads(false, false);  
+        if (threadInfo.length &gt; threadNum.get()) {  
+            threadNum.set(threadInfo.length);  
+        }  
+    }, 10, 10, TimeUnit.MILLISECONDS);  
+  
+    long start = System.currentTimeMillis();  
+    // 限制虚拟线程使用的平台线程数量
+    // System.setProperty(&quot;jdk.virtualThreadScheduler.parallelism&quot;, &quot;4&quot;);
+    // 虚拟线程  
+    // ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();  
+    // 使用平台线程  
+    ExecutorService executor =  Executors.newFixedThreadPool(1000);  
+    for (int i = 0; i &lt; 10000; i++) {  
+        executor.submit(() -&gt; {  
+            try {  
+                // 线程睡眠 0.5 s，模拟业务处理  
+                TimeUnit.MILLISECONDS.sleep(500);  
+            } catch (InterruptedException ignored) {  
+            }  
+        });  
+    }  
+    executor.close();  
+    System.out.printf(&quot;totalMillis：%dms\tmax platform thread/os thread num: %d\n&quot;, System.currentTimeMillis() - start, threadNum.get());  
+}
+</code></pre>
+<p>虚拟线程测试结果</p>
+<ul>
+<li>不同平台线程数量对结果影响不大</li>
+</ul>
+<pre><code class="language-txt"># 限制虚拟线程使用的平台线程数量
+# System.setProperty(&quot;jdk.virtualThreadScheduler.parallelism&quot;, &quot;4&quot;);  
+# ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+totalMillis：850ms	max platform thread/os thread num: 19
+
+totalMillis：980ms	max platform thread/os thread num: 27
+</code></pre>
+<p>平台线程测试结果</p>
+<pre><code class="language-txt">totalMillis：25362ms   max platform thread/os thread num: 214
+
+totalMillis：5247ms    max platform thread/os thread num: 1014
+
+totalMillis：2895ms    max platform thread/os thread num: 2014
+
+totalMillis：8038ms      max platform thread/os thread num: 9895
+</code></pre>
+<h2>7.2. 计算密集型</h2>
+<p>将上述代码替换成cpu密集型的指数运算，可以发现计算密集型任务使用和CPU核心数2倍左右的平台线程数会有更好的效果。如果我们限制虚拟线程使用的平台线程数量，会看到任务处理时间大大增加，说明计算密集型任务还是依赖底层平台线程。</p>
+<blockquote>
+<p>如果平台线程数增加，可能会加剧线程上下文切换，反而适得其反。</p>
+</blockquote>
+<pre><code class="language-java">for (int i = 0; i &lt; 10000; i++) {  
+    executor.submit(() -&gt; {  
+        Random random = new Random();  
+        for (int j = 0; j &lt; 100000; j++) {  
+            // 模拟一些工作  
+            Math.pow(random.nextInt(100), random.nextInt(10));  
+        }  
+    });  
+}
+</code></pre>
+<p>虚拟线程测试结果</p>
+<ul>
+<li>不同平台线程数量对测试结果影响很大</li>
+</ul>
+<pre><code class="language-text"># 限制虚拟线程使用的平台线程数量
+# System.setProperty(&quot;jdk.virtualThreadScheduler.parallelism&quot;, &quot;4&quot;);  
+# ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+totalMillis：23099ms	max platform thread/os thread num: 19
+
+totalMillis：3657ms	max platform thread/os thread num: 26
+</code></pre>
+<p>平台线程测试结果</p>
+<pre><code class="language-text"># ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+totalMillis：3703ms	max platform thread/os thread num: 26
+
+# ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+totalMillis：3147ms	max platform thread/os thread num: 38
+
+totalMillis：3138ms	max platform thread/os thread num: 1014
+
+totalMillis：9340ms	max platform thread/os thread num: 9404
+</code></pre>
+<h1>8. ref</h1>
+<p><a href="https://zhuanlan.zhihu.com/p/669327999">https://zhuanlan.zhihu.com/p/669327999</a><br><a href="https://www.zhihu.com/question/536743167">https://www.zhihu.com/question/536743167</a><br><a href="https://javaguide.cn/java/new-features/java19.html">https://javaguide.cn/java/new-features/java19.html</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPSec - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>IPSec</h1>
+        <time datetime="2026-01-03T13:04:29.235Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>IPSec (Internet Protocol Security) 协议主要工作在OSI模型的第3层网络层，为上层传输层协议(如TCP、UDP等)提供安全支持。IPSec不是一个单独网络协议，而是一系列为IP网络提供安全性的协议和服务的集合，提供了认证、加密、数据完整性等安全服务。</p>
+<h1>1. 主要协议</h1>
+<p>具体来说，IPSec 主要包括以下三种协议:</p>
+<ul>
+<li>IKE协议（Internet Key Exchange）是主要的密钥管理协议，用于建立IPsec安全通道。AH和ESP是用于保护IP数据报的安全协议。IKE是IPsec的“大脑”，为AH和ESP“拿钥匙”开门。三者关系密不可分，共同实现了IPsec的安全机制。</li>
+<li>AH协议(Authentication Header): 提供连接的双方认证和数据完整性保护。</li>
+<li>ESP协议(Encapsulating Security Payload): 提供数据机密性保护通过加密和可选的认证服务。</li>
+</ul>
+<h1>2. 功能</h1>
+<ul>
+<li>数据来源验证：接受方验证发送方身份是否合法</li>
+<li>数据加密：发送方对发送的数据加密，以密文的形式在internet上传送，接收方对接收的加密数据进行解密或直接转发</li>
+<li>数据完整性：接收方对数据完整性进行校验，以确定数据是否被篡改</li>
+<li>抗重放：接收方拒绝旧的或重复的数据包，防止恶意用户通过重复发送截获的数据包进行攻击</li>
+</ul>
+<h2>2.1. 数据来源验证</h2>
+<p>IPsec利用数字签名机制来实现数据来源的验证，主要步骤是:</p>
+<ol>
+<li>签名者使用其私钥对数据报文生成数字签名。</li>
+<li>将原始数据报文和签名一起发送给接收方。</li>
+<li>接收方使用签名者的公钥验证签名是否有效。</li>
+<li>如果验证成功，说明该报文来自持有相匹配私钥的签名者，数据来源得到验证。</li>
+<li>如果验证失败，说明报文不是来自声称的签名者，或者报文在传输中被篡改过。<br>数字签名的安全性基于公钥加密算法的密码学特性，只有对应的私钥持有者才能生成正确的签名。另外,数字签名还提供非抵赖性,签名者无法抵赖自己生成的合法签名。通过这种机制,IPsec可以验证数据报文的真实来源，防止源地址伪造或中间人攻击。这是IPsec实现数据真实性和完整性的关键手段之一。</li>
+</ol>
+<h2>2.2. 加密</h2>
+<p>IPsec在加密数据本身时，使用的是对称加密算法，比如AES、3DES等，速度快。<br>具体来说:</p>
+<ol>
+<li>IPsec各方通过密钥交换协议(如IKE)协商生成会话密钥。</li>
+<li>会话密钥采用对称加密算法，双方都持有相同的会话密钥。</li>
+<li>使用会话密钥对数据报文进行对称加密，获得加密后的数据。</li>
+<li>在传输过程中，该会话密钥不会再传输，保证密钥的安全。</li>
+<li>接收方用同样的会话密钥进行对称解密，获取原始报文数据。<br>而IPsec中使用的数字签名，才是采用非对称加密算法，比如RSA等。</li>
+</ol>
+<h2>2.3. 完整性校验</h2>
+<p>在中间人无法获取加密密钥的场景下，IPsec协议中的完整性校验实际上就是一个签名与验签的过程<br>具体来说:</p>
+<ol>
+<li>发送方会使用预共享密钥或者私钥加密生成报文的签名。</li>
+<li>接收方利用相同的密钥或发送方的公钥来验证签名的正确性。</li>
+<li>如果签名验证失败，说明报文遭到篡改，接收方应丢弃此报文。</li>
+<li>正确的签名验证表示报文完整、真实,可以信任报文的内容。<br>所以在这种情况下,完整性校验就是对报文内容进行数字签名,通过签名的正确性来验证报文的完整性和真实性。</li>
+</ol>
+<h2>2.4. 为什么要同时进行加密和完整性校验（签名）</h2>
+<p>即使在中间人无法获取加密密钥的情况下篡改报文，进行完整性校验也是非常必要的，主要出于以下几点考虑:</p>
+<ol>
+<li>可以检测到篡改行为的存在。如果不做完整性校验，接收方将无法知道报文已经被篡改过。</li>
+<li>可以及时放弃解密。完整性校验失败可以直接丢弃报文，不需要花费资源去尝试解密。</li>
+<li>防止错误传播。即使解密失败，若不做完整性校验，接收方还可能会对错误数据进行后续处理，导致错误扩散。</li>
+<li>有助于实时检测入侵行为。完整性校验失败可以及时告警，提示有中间人入侵行为。</li>
+<li>保护解密模块的安全。解密失败的数据可能会触发解密模块的安全漏洞，完整性校验可以避免这种情况发生。<br>所以即使报文无法被成功解密，进行完整性校验也是非常必要的，可以提高安全性、资源利用效率并及时检测入侵。</li>
+</ol>
+<h2>2.5. 抗重放</h2>
+<p>完整性校验会使用序号或时间戳等机制，这可以防止截获的数据包被复用重放。</p>
+<h1>3. IPsec框架</h1>
+<h1>4. IKE</h1>
+<p>在IPsec中，IKE负责协商和生成AH和ESP使用的密钥材料。AH和ESP依赖IKE生成的密钥来实现其数据认证，加密等安全功能。IKE会先与对端建立安全通道，协商安全参数，然后生成发送给AH和ESP的密钥。AH和ESP使用IKE提供的密钥来实现对IP数据报的认证和加密，从而保证通信安全。IKE还可以在密钥过期后负责重建安全通道和协商新密钥。IKE，AH和ESP一般配合使用，共同提供IPsec的安全服务。</p>
+<h2>4.1. 工作原理</h2>
+<ol>
+<li>建立通信通道：IKE首先在通信双方之间建立一个不安全的通信通道,用于后续的协商通信。这个通道通常使用UDP端口500。</li>
+<li>协商加密算法：双方通过前面建立的通道协商使用哪种加密算法来保护后续通信的安全,比如DES、AES等。</li>
+<li>协商认证机制：双方协商使用哪种方式来互相认证通信方身份,比如预共享密钥、数字证书等。</li>
+<li>生成并交换密钥：根据协商的加密算法,双方各自随机产生密钥,并通过不安全通道进行交换。</li>
+<li>建立安全通道：使用交换的密钥建立真正的安全通道(IPSec VPN隧道)，用于后续的数据传输。</li>
+<li>定期重新协商：IKE会定期改变并重新协商密钥,以保证长期通信的安全性。</li>
+<li>关闭通道：当通信结束时，IKE负责删除协商产生的密钥材料，关闭建立的安全通道。</li>
+</ol>
+<h3>4.1.1. 如何实现双方的身份认证</h3>
+<h4>4.1.1.1. 预共享秘钥</h4>
+<p>预共享密钥身份验证要求在协商密钥前预先把参与通讯的各方安全网关对应的密钥先保存在安全网关上，在IP地址不固定的情况下只能采取所有的安全网关都用相同的密钥，这显然只能适合小型且对安全性要求不高的网络。共享密钥优点是软件实现起来比较容易，配置简单，且设备投资比较小。</p>
+<p>实现方法如下:</p>
+<ol>
+<li>预先配置密钥：在通信双方(例如 VPN 网关)上预先配置相同的共享密钥，并确保密钥的安全存储。</li>
+<li>IKE协商使用PSK：在IKE协商过程中，双方选择使用预共享密钥作为认证方式。</li>
+<li>使用密钥散列值认证：双方各自使用预共享密钥和协商数据通过散列函数生成一个密钥标识(Key ID)。Key ID = Hash(PSK + 协商数据)</li>
+<li>交换密钥标识：通信双方将生成的密钥标识发送给对方。</li>
+<li>验证标识：收到标识后，使用本地的预共享密钥验证能否生成出一致的密钥标识。</li>
+<li>重复步骤验证：重复上述步骤,双方都能通过标识成功验证对方身份。</li>
+<li>建立安全通道：验证成功后,利用协商生成的密钥建立安全的通信通道。</li>
+</ol>
+<h4>4.1.1.2. 数字证书</h4>
+<ol>
+<li>双方配置数字证书：通信双方的设备上都需要预先配置数字证书，通常是由受信任的CA机构签发(ca签名，证明持有者可信)。证书中绑定了设备的身份信息和公钥。</li>
+<li>开始IKE协商：在IKE的第一个阶段，双方建立通信通道，商定协议版本、加密算法等。</li>
+<li>交换证书：在第二阶段，双方交换数字证书，通常在第2个IKE消息中完成。</li>
+<li>验证证书：接收方收到对方的证书后,会进行如下验证：<ol>
+<li>检查证书是否过期、是否吊销</li>
+<li>验证证书签名，通过CA的公钥解密签名，验证签名正确性</li>
+<li>检查证书主体内容，确认对端身份信息</li>
+</ol>
+</li>
+<li>提取公钥: 验证通过后,从证书中提取对方的公钥。</li>
+<li>签名验证: 用提取的公钥验证对方在协商中消息签名的正确性。</li>
+<li>建立安全通道: 如果上述证书验证和签名验证都成功,则表明对方身份合法,可以继续后续协商,建立安全的IKE通道。</li>
+</ol>
+<h1>5. AH</h1>
+<p>AH在IKE完成IKE认证和秘钥协商的基础上，提供以下功能：</p>
+<ul>
+<li>IKE的认证只能证明IKE端点本身的身份合法，不能保证IP数据包的完整性。</li>
+<li>AH可以利用序列号防止重放攻击</li>
+<li>AH为整个IP数据包提供认证服务，而不仅仅是IKE通信负载数据。</li>
+</ul>
+<h2>5.1. 协议格式</h2>
+<p>AH是一种基于IP的传输层协议，协议号为51，协议的具体格式如下：</p>
+<ul>
+<li>Next Header: 标识AH报文头后面的负载类型。传输模式下，是被保护的上层协议（TCP或UDP）或ESP协议的编号；隧道模式下，是IP协议或ESP协议的编号。注意：当AH与ESP协议同时使用时，AH报文头的下一头部为ESP报文头。</li>
+<li>Payload Length: AH头部自身的长度。</li>
+<li>Reserved: 保留未用，设置为0。</li>
+<li>Security Parameters Index (SPI): 安全参数索引，标识AH协议使用的安全联盟。</li>
+<li>Sequence Number: 是一个从1开始的单项递增的计数器，唯一地标识每一个数据包，用于防止重放攻击。</li>
+<li>Authentication Data: 认证数据，存放认证的散列值，即完整性校验值 ICV（Integrity Check Value），用于接收方进行完整性校验。可选择的认证算法有MD5、SHA1、SHA2、SM3。</li>
+</ul>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202310202153359.png" alt="image.png"></p>
+<h2>5.2. 协议抓包</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202310202208557.png" alt="image.png"></p>
+<h2>5.3. SPI</h2>
+<h3>5.3.1. SA</h3>
+<p>IPsec中的安全关联(Security Association, SA)是通过IKE(Internet Key Exchange)协议进行协商和生成的。 </p>
+<ol>
+<li>协商阶段: 双方协商生成SA的参数，比如加密算法，Hash算法，密钥生存时间等。</li>
+<li>对称密钥协商: 双方协商生成用于数据传输的对称加密密钥。</li>
+<li>非对称签名: 用数字证书对对称密钥进行签名，确保密钥的完整性。</li>
+<li>SA生成: 将协商结果填入数据结构，生成SA的参数定义，包括SPI，密钥，协议等信息。</li>
+<li>SA写入SAD: 将新生成的SA写入双方的安全关联数据库(SAD)。</li>
+<li>SPI绑定: 为新SA分配一个唯一的SPI值，与SA进行绑定。</li>
+<li>提交使用: 将新SA提交给IPsec，进行数据传输安全处理。</li>
+<li>SA定期更新: 更新密钥，重新协商等，维持长期安全。</li>
+</ol>
+<h3>5.3.2. SAD</h3>
+<p>SAD(Security Association Database) 指IPsec设备上用于维护安全关联(SA)信息的数据库。其主要功能包括:</p>
+<ol>
+<li>存储设备上配置或协商生成的所有活动和备用SA信息。</li>
+<li>每个SA通过一个唯一的SPI进行索引。</li>
+<li>IPsec在处理报文时,通过查找SAD获取匹配SPI的SA参数。</li>
+<li>SAD可由本地静态配置构成,也可以结合IKE动态协商生成。</li>
+<li>当SA失效时,从SAD中删除该SA信息。</li>
+<li>SAD需要高速索引与查找能力,可用硬件优化。</li>
+<li>SAD中的SA和密钥需要安全存储和管理。<br>SAD是维护IPsec SA信息的关键数据库，它为IPsec核心提供需要的安全参数以进行加密、认证和访问控制处理。SAD的效率直接影响IPsec性能。</li>
+</ol>
+<h3>5.3.3. SPI</h3>
+<p>SPI(Security Parameters Index)是一个重要的字段，它的主要作用是:</p>
+<ol>
+<li>标识一个唯一的安全关联(Security Association, SA)。每个IPsec安全关联都有一个唯一的SPI值与其对应。</li>
+<li>安全关联中决定了使用的加密算法、认证算法、密钥等参数。</li>
+<li>接收方根据SPI找到正确的安全关联,从而取出正确的密钥进行解密和认证。</li>
+<li>SPI和安全关联的映射关系存储在设备的安全关联数据库(SAD)中。</li>
+<li>SPI可以帮助接收端并行处理不同的安全通信通道。</li>
+<li>SPI通常是一个32比特的值，可以使得不同的通信流具有唯一标识。<br>所以SPI是一个索引值，它与特定的安全关联绑定，通过SPI可以找出正确的参数来进行ipsec安全处理。它对于接收端识别和处理不同的安全流是非常关键的。</li>
+</ol>
+<h2>5.4. Authentication Data</h2>
+<p>具体生成过程如下:</p>
+<ol>
+<li>将整个原始IP报文作为输入，串联各个字段。</li>
+<li>报文中会插入一个32位的SPI字段，标识所使用的安全关联。</li>
+<li>再插入一个序列号字段，用来进行抗重放保护。</li>
+<li>最后输入一个共享的HMAC密钥（在IKE阶段生成）</li>
+<li>将以上内容作为输入，经过HMAC哈希算法计算，生成定长的HASH值。</li>
+<li>这个HASH值即为Authentication Data，存储在AH头部中。<br>接收方利用同样的HMAC密钥、SPI、序列号等参数进行相同的HASH计算。如果计算结果与AH头部中的Authentication Data相匹配，则证明报文在传输过程中没有被修改，验证成功。这种基于HMAC的认证数据生成方式,可为AH提供完整性保护和数据源鉴别功能。<blockquote>
+<p>基与HMAC的方式实现了报文的完整性校验，而基与私钥的签名则提供了来源验证的能力。</p>
+</blockquote>
+</li>
+</ol>
+<h2>5.5. Sequence Number</h2>
+<p>AH头中还包含一个序列号，用来防重放攻击。 </p>
+<ol>
+<li>当建立IPsec安全关联(SA)时，发送方和接收方协商一个sequence number计数器的初始值，例如0。</li>
+<li>发送方对每个报文包按顺序赋予一个唯一的sequence number。</li>
+<li>此number被加入AH或ESP头部。</li>
+<li>接收方接收报文时，会检查sequence number。</li>
+<li>如果number大于预期值，则表明是一个新的报文，接受并更新number。</li>
+<li>如果number小于或等于预期值，说明是一个重复老报文，丢弃该重放报文。</li>
+<li>接收方维护一个滑动窗口，以容忍网络正常的少量乱序。</li>
+<li>发送方和接收方都需要持续维护并同步sequence number。</li>
+<li>当number达到最大值后,会重新循环从0开始。<br>通过这种机制,可以有效防止IPsec重放攻击。它依赖发送接收双方对sequence number的维护与校验。</li>
+</ol>
+<h1>6. ESP</h1>
+<p>AH算法并不能保证报文的私密性，通常需要和ESP一起使用，前者保证完整性，后者提供加密。</p>
+<h1>7. 隧道模式</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202310192243313.png" alt="image.png"></p>
+<h1>8. 总结</h1>
+<ul>
+<li>如果只需要认证和完整性保护,可以单独使用 AH。</li>
+<li>如果只需要加密,可以单独使用 ESP。</li>
+<li>如果需要认证、完整性保护和加密,需要同时使用AH和ESP。AH和ESP都定义在IPSec标准中，通常一起使用来提供全面的安全保护。</li>
+</ul>
+<h1>9. Ref</h1>
+<p><a href="https://abcdxyzk.github.io/blog/2021/06/15/net-ipsec-ah-esp/">ipsec(AH和ESP) - kk Blog —— 通用基础 (abcdxyzk.github.io)</a><br><a href="https://cshihong.github.io/2019/04/03/IPSec-VPN%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86/">IPSec VPN基本原理 | 曹世宏的博客 (cshihong.github.io)</a></p>
+<p>封装顺序：使用AH和ESP时，需要先封装AH再封装ESP，因为AH需要计算整个包(包含ESP加密数据)的认证信息来保证完整性。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

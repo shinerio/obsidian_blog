@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis关键参数 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Redis关键参数</h1>
+        <time datetime="2026-01-03T13:04:29.193Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. go-redis</h1>
+<p>在go- redis中，连接设置是通过 Options 结构体来管理的。</p>
+<h2>1.1. 单机模式</h2>
+<ul>
+<li>Network - 网络类型，可以是 tcp 或 unix，默认值为 tcp。</li>
+<li>Addr -  Redis 服务器的 host:port 地址。</li>
+<li>Dialer - 创建新网络连接的函数，优先于Network和Addr选项。</li>
+<li>OnConnect - 新连接建立时调用的钩子函数。</li>
+<li>Username - 连接 Redis 6.0 及更高版本时使用的用户名，用于身份验证。</li>
+<li>Password - 连接 Redis 时使用的可选密码。</li>
+<li>DB - 连接后选择的数据库编号。</li>
+<li>MaxRetries - 在放弃之前的最大重试次数，默认是 3。</li>
+<li>MinRetryBackoff - 每次重试之间的最小等待时间，默认是 8 毫秒。</li>
+<li>MaxRetryBackoff - 每次重试之间的最大等待时间，默认是 512 毫秒。</li>
+<li>DialTimeout - 建立新连接的超时时间，默认是 5 秒。</li>
+<li>ReadTimeout - 套接字读取的超时时间，默认是 3 秒。</li>
+<li>WriteTimeout - 套接字写入的超时时间，默认是 3 秒。</li>
+<li>PoolTimeout - 如果所有连接都忙碌，客户端等待连接的时间，默认是 ReadTimeout + 1 秒。 </li>
+<li>MinIdleConns - 最少的idle状态的连接数</li>
+<li>IdleTimeout：Amount of time after which client closes idle connections.  // Should be less than server&#39;s timeout.  // Default is 5 minutes. -1 disables idle timeout check.</li>
+<li>MaxConnAge - Connection age at which client retires (closes) the connection.  // Default is to not close aged connections.</li>
+<li>IdleCheckFrequency：Frequency of idle checks made by idle connections reaper.  // Default is 1 minute. -1 disables idle connections reaper,  // but idle connections are still discarded by the client  // if IdleTimeout is set.</li>
+<li>Limiter - 用于实现断路器或速率限制的接口。</li>
+</ul>
+<h2>1.2. 哨兵模式</h2>
+<pre><code class="language-go">type FailoverOptions struct {
+    // The master name.
+    MasterName string
+    // A seed list of host:port addresses of sentinel nodes.
+    SentinelAddrs []string
+    // Sentinel password from &quot;requirepass &lt;password&gt;&quot; (if enabled) in Sentinel configuration
+    SentinelPassword string
+
+    // Allows routing read-only commands to the closest master or slave node.
+    // This option only works with NewFailoverClusterClient.
+    RouteByLatency bool
+    // Allows routing read-only commands to the random master or slave node.
+    // This option only works with NewFailoverClusterClient.
+    RouteRandomly bool
+
+    // Route all commands to slave read-only nodes.
+    SlaveOnly bool
+
+    // Use slaves disconnected with master when cannot get connected slaves
+    // Now, this option only works in RandomSlaveAddr function.
+    UseDisconnectedSlaves bool
+
+    // Following options are copied from Options struct.
+
+    Dialer    func(ctx context.Context, network, addr string) (net.Conn, error)
+    OnConnect func(ctx context.Context, cn *Conn) error
+
+    Username string
+    Password string
+    DB       int
+
+    MaxRetries      int
+    MinRetryBackoff time.Duration
+    MaxRetryBackoff time.Duration
+
+    DialTimeout  time.Duration
+    ReadTimeout  time.Duration
+    WriteTimeout time.Duration
+
+    PoolSize           int
+    MinIdleConns       int
+    MaxConnAge         time.Duration
+    PoolTimeout        time.Duration
+    IdleTimeout        time.Duration
+    IdleCheckFrequency time.Duration
+
+    TLSConfig *tls.Config
+}
+</code></pre>
+<h2>1.3. 集群模式</h2>
+<pre><code class="language-go">type ClusterOptions struct {
+    // A seed list of host:port addresses of cluster nodes.
+    Addrs []string
+
+    // NewClient creates a cluster node client with provided name and options.
+    NewClient func(opt *Options) *Client
+
+    // The maximum number of retries before giving up. Command is retried
+    // on network errors and MOVED/ASK redirects.
+    // Default is 3 retries.
+    MaxRedirects int
+
+    // Enables read-only commands on slave nodes.
+    ReadOnly bool
+    // Allows routing read-only commands to the closest master or slave node.
+    // It automatically enables ReadOnly.
+    RouteByLatency bool
+    // Allows routing read-only commands to the random master or slave node.
+    // It automatically enables ReadOnly.
+    RouteRandomly bool
+
+    // Optional function that returns cluster slots information.
+    // It is useful to manually create cluster of standalone Redis servers
+    // and load-balance read/write operations between master and slaves.
+    // It can use service like ZooKeeper to maintain configuration information
+    // and Cluster.ReloadState to manually trigger state reloading.
+    ClusterSlots func(context.Context) ([]ClusterSlot, error)
+
+    // Following options are copied from Options struct.
+
+    Dialer func(ctx context.Context, network, addr string) (net.Conn, error)
+
+    OnConnect func(ctx context.Context, cn *Conn) error
+
+    Username string
+    Password string
+
+    MaxRetries      int
+    MinRetryBackoff time.Duration
+    MaxRetryBackoff time.Duration
+
+    DialTimeout  time.Duration
+    ReadTimeout  time.Duration
+    WriteTimeout time.Duration
+
+    // PoolSize applies per cluster node and not for the whole cluster.
+    PoolSize           int
+    MinIdleConns       int
+    MaxConnAge         time.Duration
+    PoolTimeout        time.Duration
+    IdleTimeout        time.Duration
+    IdleCheckFrequency time.Duration
+
+    TLSConfig *tls.Config
+}
+</code></pre>
+<h1>2. java-lettuce</h1>
+<h2>2.1. 集群模式</h2>
+<ul>
+<li>[spring.redis.lettuce.cluster.refresh.adaptive](<a href="https://github.com/redis/lettuce/wiki/Redis-Cluster">https://github.com/redis/lettuce/wiki/Redis-Cluster</a><span class="tag">#user-content-refreshing-the-cluster-topology-view</span>)：redis集群拓扑自动刷新，默认false</li>
+<li>spring.redis.lettuce.cluster.refresh.period：集群拓扑刷新周期</li>
+<li>spring.redis.lettuce.pool.time-between-eviction-runs：空闲对象逐出器线程的运行间隔时间。当为正值时，空闲对象逐出器线程启动，否则不执行空闲对象逐出。<blockquote>
+<p>[!note]<br>The Redis Cluster configuration may change at runtime. New nodes can be added, the master for a specific slot can change. Lettuce handles <code>MOVED</code> and <code>ASK</code> redirects transparently but in case too many commands run into redirects, you should refresh the cluster topology view. The topology is bound to a <code>RedisClusterClient</code> instance. All cluster connections that are created by one <code>RedisClusterClient</code> instance share the same cluster topology view.</p>
+</blockquote>
+</li>
+</ul>
+<p>故障无法切换的问题可以参考：<a href="https://blog.csdn.net/zzhongcy/article/details/107043589">https://blog.csdn.net/zzhongcy/article/details/107043589</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

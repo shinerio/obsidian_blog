@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Demo</h1>
+        <time datetime="2026-01-25T15:38:55.153Z">2026年1月25日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. summary</h1>
+<pre><code>用户消息
+    ↓
+AgentKit 运行时
+    ↓
+个人助手 Agent
+    ├── VeADK Agent (对话引擎)
+    ├── ShortTermMemory (短期记忆)
+    ├── LongTermMemory (长期记忆)
+    ├── KnowledgeBase (个人知识库)
+    ├── run_code (代码执行工具)
+    ├── mcp_router (MCP工具集)
+    └── 火山方舟模型 (LLM)
+</code></pre>
+<h1>2. <a href="https://console.volcengine.com/vikingdb/knowledge/region:vdb-knowledge+cn-beijing/collection/list">knowledge</a></h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125220751170.png" alt="image.png"></p>
+<pre><code class="language-powershell">$env:DATABASE_VIKING_COLLECTION = &quot;知识库名称&quot;
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125215848332.png" alt="image.png"></p>
+<h1>3. <a href="https://console.volcengine.com/vikingdb/memory/region:vdb-memory+cn-beijing/list">记忆库</a></h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125220829785.png" alt="image.png"></p>
+<pre><code class="language-powershell">$env:DATABASE_VIKINGMEM_COLLECTION = &quot;记忆库名称&quot;
+$env:DATABASE_VIKINGMEM_MEMORY_TYPE = &quot;event_v1,event_v11,profile_v1&quot;
+</code></pre>
+<p>对话前，无任何相关记忆<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125215136469.png" alt="image.png"><br>通过对话告知喜欢滑雪<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125215102695.png" alt="image.png"><br>再次查询记忆库<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125215243693.png" alt="image.png"></p>
+<h1>4. <a href="https://volcengine.github.io/veadk-python/tools/builtin/">沙箱工具run_code</a></h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125220641625.png" alt="image.png"></p>
+<pre><code>2026-01-25 22:01:26 | DEBUG | run_code.py:55 - tools endpoint: agentkit.cn-beijing.volces.com
+2026-01-25 22:01:26 | DEBUG | run_code.py:61 - tool_user_session_id: personal_assistant_user_956eb8eb-3a8f-4b99-a41f-b7b108c13126
+2026-01-25 22:01:26 | DEBUG | run_code.py:63 - Running code in language: python3, session_id=956eb8eb-3a8f-4b99-a41f-b7b108c13126, code=# 计算100以内所有偶数的和（包括100）
+even_sum = sum(range(0, 101, 2))
+print(f&quot;100以内所有偶数的和是: {even_sum}&quot;), tool_id=t-yeeb7eddkw54ppxtz3jy, host=agentkit.cn-beijing.volces.com, service=agentkit, region=cn-beijing, timeout=30
+2026-01-25 22:01:33 | DEBUG | run_code.py:112 - Invoke run code response: {&#39;ResponseMetadata&#39;: {&#39;RequestId&#39;: &#39;02176934967970500000000000000000000ffffac10029576aa85&#39;, &#39;Action&#39;: &#39;InvokeTool&#39;, &#39;Version&#39;: &#39;2025-10-30&#39;, &#39;Service&#39;: &#39;agentkit&#39;, &#39;Region&#39;: &#39;cn-beijing&#39;}, &#39;Result&#39;: {&#39;ToolId&#39;: &#39;t-yeeb7eddkw54ppxtz3jy&#39;, &#39;UserSessionId&#39;: &#39;personal_assistant_user_956eb8eb-3a8f-4b99-a41f-b7b108c13126&#39;, &#39;SessionId&#39;: &#39;s-yeebbsjvuoo2eybtj3cf&#39;, &#39;Endpoint&#39;: &#39;https://sd5r14p17t2mh8bfqo50g.apigateway-cn-beijing.volceapi.com/?faasInstanceName=vefaas-607mxv00-hwmyxaezum-d5r24c034rcr5co4s66g-sandbox&#39;, &#39;InternalEndpoint&#39;: &#39;&#39;, &#39;Result&#39;: &#39;{\n  &quot;success&quot;: true,\n  &quot;message&quot;: &quot;Code executed successfully&quot;,\n  &quot;data&quot;: {\n    &quot;kernel_name&quot;: &quot;python3&quot;,\n    &quot;session_id&quot;: &quot;c53dcb31-c137-43bd-acff-b027ce607a5d&quot;,\n    &quot;status&quot;: &quot;ok&quot;,\n    &quot;execution_count&quot;: 1,\n    &quot;outputs&quot;: [\n      {\n        &quot;output_type&quot;: &quot;stream&quot;,\n        &quot;name&quot;: &quot;stdout&quot;,\n        &quot;text&quot;: &quot;100以内所有偶数的和是: 2550\\n&quot;,\n        &quot;data&quot;: null,\n        &quot;metadata&quot;: {},\n        &quot;execution_count&quot;: null,\n        &quot;ename&quot;: null,\n        &quot;evalue&quot;: null,\n        &quot;traceback&quot;: null\n      }\n    ],\n    &quot;code&quot;: &quot;# 计算100以内所有偶数的和（包括100 ）\\neven_sum = sum(range(0, 101, 2))\\nprint(f\\&quot;100以内所有偶数的和是: {even_sum}\\&quot;)&quot;,\n    &quot;msg_id&quot;: &quot;16142a3c-bebb551941be4c7ba6522472_109_2&quot;\n  }\n}&#39;}}
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125220503945.png" alt="image.png"></p>
+<h1>5. <a href="https://www.volcengine.com/docs/86681/1844857?lang=zh">mcp&amp;mcp工具集</a></h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125221514355.png" alt="image.png"><br>部署MCP服务的时候可以选择API KEY自动生成MCP的入站身份鉴权</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;baidu-map&quot;: {
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [
+        &quot;-y&quot;,
+        &quot;@baidumap/mcp-server-baidu-map&quot;
+      ],
+      &quot;env&quot;: {
+        &quot;BAIDU_MAP_API_KEY&quot;: &quot;&lt;YOUR_API_KEY&gt;&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125225143668.png" alt="image.png"></p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125225313728.png" alt="image.png"><br>agentkit一直无法拉起mcp工具集，这里使用claude code本地测试<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125233227480.png" alt="image.png"></p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125233414977.png" alt="image.png"></p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20260125233623354.png" alt="image.png"></p>
+<pre><code>Based on the information I&#39;ve gathered using the MCP tools, I&#39;ve created a comprehensive 1-day walking itinerary for Beijing that connects three major landmarks. Please note that the total walking distance is quite substantial, so I recommend prioritizing the locations most important to you.    
+
+  Morning: Tiananmen Square &amp; Forbidden City (8:00 AM - 12:00 PM)
+
+  Start your journey at Tiananmen Square (天安门广场), the world&#39;s largest public square and one of the most iconic sites in Beijing.
+
+  - Address: Beijing Dongcheng District, East Chang&#39;an Street
+  - Weather today: Cold, around 0°C with sunny periods. Wear warm clothing.
+  - Spend approximately 1-1.5 hours exploring the square and admiring the architecture of the Great Hall of the People and National Museum of China. 
+
+  Then, walk to the Forbidden City (故宫), located just north of Tiananmen Square (about 46 minutes walk covering 3.3 km):
+  - Take the route via East Chang&#39;an Street, crossing underpasses and continuing up through the historical district
+  - Address: No. 4 Jingshan Front Street, Dongcheng District
+  - Opening hours: 8:30 AM - 5:00 PM (last entry at 4:00 PM)
+  - Allow 2-3 hours to explore this UNESCO World Heritage site with its imperial palaces and museums
+
+  Afternoon: Temple of Heaven (12:30 PM - 4:00 PM)
+
+  After lunch near the Forbidden City, walk to Temple of Heaven (天坛公园) (about 77 minutes walk covering 5.4 km):
+  - Route goes through Qianmen East Street and Qiyang Avenue
+  - Address: No. 1 Tiantan East Road, Dongcheng District
+  - A beautiful example of traditional Chinese architecture where emperors used to pray for good harvests
+  - Opening hours: 6:00 AM - 10:00 PM (park), 8:00 AM - 5:00 PM (attractions)
+  - Allow 1.5-2 hours to explore the park and main halls
+
+  Late Afternoon/Evening: Olympic Park - Bird&#39;s Nest &amp; Water Cube (4:30 PM - 7:00 PM)
+
+  For the final destination, walk to Olympic Park to see the Bird&#39;s Nest (National Stadium) and Water Cube (National Aquatics Center) (about 3 hours walk covering 13.9 km):
+
+  Due to the long walking distance, consider taking public transportation (subway line 5 to Tiantan East Gate, then transfer to line 8 to Olympic Green) for this segment.
+
+  - Address: No. 1 National Stadium South Road, Chaoyang District
+  - The Bird&#39;s Nest hosted the 2008 Olympics opening and closing ceremonies
+  - Water Cube is next door and offers a unique architectural experience
+  - Evening lighting makes for excellent photos
+
+  Practical Tips:
+
+  1. Dress warmly: Today&#39;s forecast shows temperatures around freezing, with colder wind chill factors.
+  2. Comfortable shoes: Bring comfortable walking shoes as you&#39;ll cover significant distances.
+  3. Transportation backup: Since the third leg of the journey is quite long, have taxi or subway directions ready as alternatives.
+  4. Food stops: Pack snacks and plan meals in advance, particularly at the Forbidden City area where there are several restaurants.
+  5. Entry tickets: Purchase tickets in advance for the Forbidden City and Temple of Heaven to avoid queues.
+  6. Time management: If you&#39;re not an avid walker, prioritize 2 out of the 3 sites for a more enjoyable experience.
+
+  This itinerary combines the ancient and modern aspects of Beijing, showcasing imperial history, traditional architecture, and contemporary Olympic legacy sites. Enjoy your Beijing city walk!
+</code></pre>
+<h1>6. 环境变量参考</h1>
+<pre><code class="language-shell">AGENTKIT_TOOL_ID=  
+DATABASE_VIKINGMEM_COLLECTION= &lt;span class=&quot;tag&quot;&gt;#记忆库名称&lt;/span&gt;。
+DATABASE_VIKINGMEM_MEMORY_TYPE=  &lt;span class=&quot;tag&quot;&gt;#配置的记忆策略&lt;/span&gt;，多个策略使用逗号分隔。
+DATABASE_VIKING_COLLECTION= &lt;span class=&quot;tag&quot;&gt;#知识库名称&lt;/span&gt;
+TOOL_MCP_ROUTER_URL=https://sd598mk9acju1mtc7****.apigateway-cn-beijing.volceapi.com/mcp &lt;span class=&quot;tag&quot;&gt;#MCP工具集的访问域名url&lt;/span&gt;。
+TOOL_MCP_ROUTER_API_KEY=xxx  &lt;span class=&quot;tag&quot;&gt;#MCP工具集入站身份认证的API&lt;/span&gt; Key。
+# knowledge、memory、mcp、code_run都是通过公网访问的
+# DATABASE_VIKING_BASE_URL=&quot;&lt;PrivateLink URL for VPC access only, possibly starts with http://&gt;&quot; &lt;span class=&quot;tag&quot;&gt;#内网访问域名&lt;/span&gt;，仅设置内网访问时需要传入。
+# 7. DATABASE_VIKINGMEM_BASE_URL=&quot;&lt;PrivateLink URL for VPC access only, possibly starts with http://&gt;&quot; &lt;span class=&quot;tag&quot;&gt;#内网访问域名&lt;/span&gt;，仅设置内网访问时需要传入。
+# DATABASE_VIKINGMEM_PROJECT=&quot;default&quot; &lt;span class=&quot;tag&quot;&gt;#非必填&lt;/span&gt;，默认为default项目。
+</code></pre>
+<h1>7. 相关链接</h1>
+<ul>
+<li><a href="https://www.volcengine.com/docs/86681/2155817?lang=zh">教程</a></li>
+<li><a href="https://console.volcengine.com/vikingdb/region:vikingdb+cn-beijing/home?">向量数据库、知识库、记忆库</a></li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

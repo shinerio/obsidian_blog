@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAT会话 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>NAT会话</h1>
+        <time datetime="2023-02-10T00:00:00.000Z">2023年2月10日</time>
+        <div class="tags">
+            
+            <span class="tag">nat</span>
+            
+            <span class="tag">network</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>我们知道传输层的任意一条流都是通过两个<code>socket</code>建立的，<code>socket</code>由<code>(ip,port,protocol)</code>组成，因此一条流可以用五元组<code>(srcIp,srcPort,dstIp,dstPort,protocol)</code>表示。这个五元组中的任意一个元素都不能改变，否则就是另外一条流了。对于服务端来说，<code>srcIp</code>和<code>srcPort</code>中任意一个变了，就意味着一个新的接入连接；而对于客户端来说，<code>dstIp</code>和<code>dstPort</code>中任意一个发生变化，访问的就是一个新的服务，比如通常<code>80</code>是一个<code>http server</code>服务，<code>5432</code>是一个<code>postgresql</code>数据库的服务端口。</p>
+<p><code>NAT</code>是用来做地址转换的，为了保证一条流五元组的一致性，我们需要保证<code>NAT</code>前和<code>NAT</code>后的IP、端口以及协议在一条流的整个生命周期都不变。为了保证这种不变性，我们需要维持一种<code>NAT</code>映射关系，我们把这个映射关系称之为<code>NAT</code>会话(session)。对于<code>SNAT</code>而言，<code>transtitIp</code>是被多个内网主机共享的，这个映射关系不能是永久的，否则就变成了内网<code>(internalIp,internalPort)</code>和<code>(transitIp,transitPort)</code>是<code>1:1</code>关系， <code>(transitIp,transitPort)</code>的组合关系很快便会出现耗尽的情况。因此对于<code>SNAT</code>而言，会话的另一个重要属性就是会话超时时间。而对于<code>DNAT</code>而言，由于内网是服务端，对外应该暴露固定的<code>transitIp</code>和<code>transitPort</code>，且需要被映射到内网特定的某个主机提供的某个特定服务，即一组固定的<code>internalIp</code>和<code>internalPort</code>。这个映射关系是不随着外网的<code>externalIp</code>和<code>externalPort</code>改变而改变的，因此这种会话一般是永久性的。<code>DNAT</code>的会话是固定映射的，很好理解，因此下文我们讨论的会话主要是针对<code>SNAT</code>而言。</p>
+<!--more-->
+
+<p>举个例子，假设有一条流：</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/SNAT%E6%B5%81.png" alt="image.png"></p>
+<p>NAT前：<code>TCP  192.168.0.100:5000 -&gt; 120.120.120.120:80</code><br>NAT后：<code>TCP  110.110.110.110:6000 -&gt; 120.120.120.120:80</code></p>
+<p>那么<code>TCP  192.168.0.100:5000 -&gt; 120.120.120.120:80</code>到<code>TCP  110.110.110.110:6000 -&gt; 120.120.120.120:80</code>的这样一个映射关系就可以称之为会话，而<code>UDP  192.168.0.100:5000 -&gt; 120.120.120.120:80</code>到<code>UDP  110.110.110.110:6000 -&gt; 120.120.120.120:80</code>则是另一个会话。</p>
+<h1>1. 术语定义</h1>
+<p>为了方便下文阐述，我们先统一一下术语：</p>
+<ul>
+<li>定义一条流中从内网发往外网的流量为<strong>上行流量</strong>，<code>TCP  192.168.0.100:5000 -&gt; 120.120.120.120:80</code>就标记了一条流上行流量，我们记为:<code>upKey=(internalIp,internalPort,externalIp,externalPort,protocol)</code></li>
+<li>定义一条流中从外网发往内网的流量为<strong>下行流量</strong>，<code>TCP  110.110.110.110:6000 -&gt; 120.120.120.120:80</code>就标记了一条流下行流量，我们记为:<code>downKey=(externalIp,externalPort,transitIp,transitPort,protocol)</code><blockquote>
+<p>注意这里我们并没有区分去程流量和回程流量，对于私网主动访问外网的场景，上行流量就是去程流量；对于外网主动访问内网的场景，上行流量就是回程流量。</p>
+</blockquote>
+</li>
+</ul>
+<p>此处我们可以导出会话<code>session = upKey + downKey + expireTime</code>。</p>
+<blockquote>
+<p>注意，这里我们讨论的都是对称型NAT，关于锥型NAT读者可以自行研究，相对来说会话信息会少一些，映射条件相对更宽松些。</p>
+</blockquote>
+<h1>2. 会话管理</h1>
+<p>一个会话的完整生命周期可以分为三个阶段：</p>
+<ul>
+<li>会话建立</li>
+<li>会话匹配(续约)</li>
+<li>会话老化</li>
+</ul>
+<h2>2.1. 会话匹配(续约)</h2>
+<p>对于一个上行报文，首先肯定是判断是否已经生成映射关系(session)，如果有的话我们只需要按照这个会话进行源地址和源端口的替换就行了，否则才需要新建一个会话。因此在讲会话的建立之前，我们先来聊聊会话的匹配。上行报文可以用一个<code>upSessKey</code>来表示，我们需要通过这个<code>upSessKey</code>来找到对应的<code>(transitIp,transitPort,protocol)</code>的组合。很自然地，我们就想到用一个<code>map</code>结构来存储，即一个<code>upSessKey</code>到<code>(transitIp,transitPort,protocol)</code>的映射关系，定义为<code>upSessMap</code>。同样对于下行报文，我们也可以使用一个<code>downSessKey</code>到<code>(internalIp,internalPort,protocol)</code>的映射关系来表示，定义为<code>downSessMap</code>。因此会话的匹配，可以简单概括上行报文通过<code>upSessKey</code>在<code>upSessMap</code>中匹配获得<code>session</code>，下行报文通过<code>downKey</code>在<code>downSessMap</code>中匹配获得<code>session</code>。</p>
+<p>上文我们说过，会话是具有超时时间的，为了保证长连接不中断，<code>NAT</code>设备在接收到每一个业务报文完成<code>NAT</code>转换的同时，还需要对会话的超时时间进行刷新，以便在业务持续有报文的情况下会话不会老化，这个超时时间的刷新就可以称之为会话续约。</p>
+<h2>2.2. 会话建立</h2>
+<p>由于<code>internalIp</code>和<code>internalPort</code>是由内网主机决定的，<code>externalIp</code>和<code>externalPort</code>是由业务访问的目的外网主机决定的，而<code>protocol</code>是由通信双方的具体业务类型决定的（<code>TCP</code>、<code>UDP</code>、<code>icmp</code>），因此<code>NAT</code>设备实际上可以控制的只有<code>transitIp</code>和<code>tranitPort</code>，因此会话管理本质上管理的是<code>transitIp</code>和<code>tranitPort</code>的分配以及销毁。对于一个新建会话，为了保证和任何其他的流不冲突，最稳妥的方式就是使用一个新的<code>(transitIp,transitPort)</code>的组合，且不同的<code>protocol</code>之间的会话是不会冲突的。因此，我们可以定义如下会话分配池:</p>
+<pre><code class="language-c">// NAT设备控制的一组用于NAT的外网IP
+uint32_t transitIpPool[];
+struct SessAllocateKey {
+    uint32_t transitIp;
+    uint8_t protocol;
+}
+struct BitMap ports;
+// key: SessAllocateKey value: BitMap
+struct HashMap *sessAllocateMap;
+</code></pre>
+<p>因此会话分配的逻辑就是通过一定的算法从<code>transitIpPool</code>中选出一个<code>transitIp</code>，然后从<code>sessAllocateMap</code>中获取当前<code>protocol</code>下此<code>transitIp</code>管理的端口分配情况的<code>bitmap</code>，选出一个未占用的<code>port</code>标记为占用，生成<code>upSessKey -&gt; (transtIp,transitPort,protocol)</code>的映射关系。同时为了使下行流量(<code>snat</code>回程流量)能够顺利地找到会话，将下行流量的<code>dstIp</code>和<code>dstPort</code>替换为原来的<code>internalIp</code>和<code>internalPort</code>，此时我们应该同时生成<code>downKey -&gt; (intenralIp,internalPort,protocol)</code>的映射关系。为了保证会话在<code>UDP</code>通信结束或者<code>TCP</code>未正常断链的情况下能够被及时回收，此时我们还需要给会话额外添加一个超时时间。最终设计会话结构如下：</p>
+<pre><code class="language-c">struct UpSesskey {
+    uint32_t internalIp;
+    uint16_t internalPort;
+    uint32_t externalIp;
+    uint32_t externalPort;
+    uint8_t protocol;
+}
+struct DownSesskey {
+    uint32_t transitIp;
+    uint16_t transitPort;
+    uint32_t externalIp;
+    uint32_t externalPort;
+    uint8_t protocol;  
+}
+struct Session {
+   struct UpSesskey upSessKey;
+   struct DownSessKey downSessKey;
+   uint32_t expireTime;
+}
+// key: UpSessKey, value: Session
+struct HashMap *upSessMap;
+// key: DownSessKey, value: Session
+struct HashMap *downSessMap;
+</code></pre>
+<h3>2.2.1. TransitIp选择算法</h3>
+<ul>
+<li>Round Robin：不受报文内容的影响，各个<code>transitIp</code>上端口的分配比较平均</li>
+<li>Hash：根据五元组进行HASH选择<code>transitIp</code>，对于特定的业务流场景，NAT后的IP比较稳定</li>
+</ul>
+<h3>2.2.2. 会话结构优化</h3>
+<p>由于<code>upSessKey</code>和<code>downSessKey</code>都包含了<code>(externalIp,externalPort)</code>，因此如果在<code>(externalIp,externalPort,protocol)</code>组合不同的情况下，<code>(internalIp,internalPort,protocol)</code>或<code>(transitIp,transitPrt,protocol)</code>的组合是可以一样的，这样也可以保证不同的<code>upSessKey</code>、不同的<code>downSessKey</code>之间都不冲突，也能定位到会话信息，完成<code>NAT</code>。同时<code>(externalIp,externalPort,protocol)</code>不同的情况下，对于<code>NAT</code>前或<code>NAT</code>后的流的五元组都不一样，保证无论是客户端还是服务端<code>OS</code>都能识别出来是不同的流。因此我们可以在<code>(externalIp,externalPort,protocol)</code>组合不同的情况下，复用<code>(transitIp,transitPort,protocol)</code>来提高<code>NAT</code>资源的使用率。因此我们的会话分配模型可以优化成如下结构：</p>
+<pre><code class="language-c">uint32_t transitIpPool[];
+// 将externalIp和externalPort加到会话分配的冲突域中
+struct SessAllocateKey {
+    uint32_t transitIp;
+    uint32_t externalIp;
+    uint16_t externalPort;
+    uint8_t protocol;
+}
+struct BitMap ports;
+// key: SessAllocateKey value: BitMap
+struct HashMap *sessAllocateMap;
+</code></pre>
+<h2>2.3. 会话老化</h2>
+<h3>2.3.1. 超时老化</h3>
+<h4>2.3.1.1. UDP</h4>
+<p>我们都知道<code>UDP</code>协议是面向无连接的，<code>UDP</code>会话并没有一个明确的“终结报文”来表示当前<code>UDP</code>会话可以被销毁了，因此<code>UDP</code>会话的唯一老化手段就是超时老化。<code>UDP</code>报文的超时老化时间并没有一个明确的标准，根据业务不同建议设置时间控制在<code>30s-900s</code>范围内。如果业务确实需要长时间保留<code>UDP</code>会话，建议客户端和服务端之间通过定时心跳进行保活。</p>
+<h4>2.3.1.2. TCP</h4>
+<p>对于<code>TCP</code>会话来说，相对就显得比较复杂了。<code>TCP</code>是面向连接的，有完整的<code>TCP状态机</code>，在<code>TCP</code>通信的任何阶段都有可能因为各种网络或主机异常问题导致<code>TCP</code>连接被意外释放，而这些意外释放往往不能被<code>NAT</code>设备感知，为了保证这种情况下会话能被释放，就需要各种超时老化机制来兜底。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/20230211160124.png" alt=""></p>
+<h5>2.3.1.2.1. sync超时</h5>
+<p><code>TCP</code>通过三次握手创建一个连接，有以下两种情况可能会导致超时：</p>
+<ul>
+<li>对于client来说，在发送<code>syn</code>后进入<code>syn_sent</code>状态，等待server的<code>syn+ack</code></li>
+<li>对于server来说，在发送<code>syn+ack</code>后进入<code>syn_revd</code>状态，等待client的<code>ack</code><br>在linux系统中，默认的syn超时是<code>75</code>秒，NAT设备的<code>syn</code>超时时间一般应该设置超过这个时间。</li>
+</ul>
+<pre><code class="language-SHELL">curl -o /dev/null -s -w &quot;time_connect: %{time_connect}\ntime_starttransfer: %{time_starttransfer}\ntime_total: %{time_total}\n&quot; 192.168.0.253:5000      
+time_connect: 0.000000
+time_starttransfer: 0.000000
+time_total: 75.007882
+</code></pre>
+<h5>2.3.1.2.2. ESTABLISHED超时</h5>
+<p><code>TCP</code>经历过三次握手后，client和server都进入了<code>established</code>阶段。<code>ESTABLISHED</code>阶段的异常分为有数据传输和没有数据传输两种情况。</p>
+<p>异常时有数据传输，为了保证<code>TCP</code>报文的可靠性，<code>TCP</code>提供了<a href="tcp重传.html" class="internal-link">Tcp重传</a>能力，默认情况会下会重传<code>15</code>次，最大重传时间120秒，重传15次后（总计约15分钟）后会断开连接，且此时是不会有<code>FIN</code>动作的，连接会直接关闭。因为一直存在重传报文，此情况下至少要保证NAT设备的超时重传时间大于单次最大重传时间——2分钟。</p>
+<p>异常时如果没有数据传输，还需要关注<code>TCP</code>有没有开启<a href="tcp-keepalivekeepalive.html" class="internal-link">Tcp KeepAlive|KeepAlive</a>。开启<code>KeepAlive</code>功能后，最长可能会需要7875秒（约两个多小时）后才能断开。如果没有开启<code>KeepAlive</code>功能，则连接永远不会断开。此时NAT设备也需要设置一个合理的超时时间，保证NAT设备会话功能不受异常影响。</p>
+<h5>2.3.1.2.3. FIN超时</h5>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/TCP%E5%9B%9B%E6%AC%A1%E6%8C%A5%E6%89%8B.png" alt="image.png"></p>
+<p><code>TCP</code>通过四次挥手释放一个连接，有以下四种情况都可能会导致超时：</p>
+<ol>
+<li>对于主动释放连接的一方来说<ul>
+<li>在发送完<code>FIN</code>报文进入<code>FIN_WAIT_1</code>状态后，等待被动方的<code>ACK</code>报文</li>
+<li>在收到被动方的<code>ACK</code>报文进入<code>FIN_WAIT_2</code>后，等待被动方<code>FIN</code>报文</li>
+</ul>
+</li>
+<li>对于被动释放连接的一方来说<ul>
+<li>在收到主动方的<code>FIN</code>报文并发送<code>ACK</code>进入<code>CLOSE_WAIT</code>状态后，此时被动方还有数据需要发送给主动方，等待主动方业务<code>ACK</code>报文。</li>
+<li>被动方发送<code>FIN</code>报文后，进入<code>LAST_ACK</code>状态，等待主动方<code>ACK</code>报文。</li>
+</ul>
+</li>
+</ol>
+<p>对于主动方来说，<code>FIN_WAIT_1</code>状态下会触发主动方的<code>TCP</code>重传（最大重传时间15分钟）后断开连接，而<code>FIN_WAIT_2</code>在linux下的默认超时时间为60秒。</p>
+<pre><code class="language-shell">$ more /proc/sys/net/ipv4/tcp_fin_timeout
+60
+</code></pre>
+<p>对被动方来说，正常情况下，处于<code>CLOSE_WAIT</code>和<code>LAST_ACK</code>状态下会触发TCP重传（最大重传时间15分钟）后断开连接。某些情况下，如果被动方因为代码问题（IO阻塞之类的）未及时close socket，未能发出<code>FIN</code>报文，此时tcp如果设置了keepalive，会经历最长7875秒后，由内核断开连接。</p>
+<h3>2.3.2. TCP正常挥手</h3>
+<p><code>TCP</code>通过四次挥手来完成连接的释放，因此我们可以维护<code>TCP状态机</code>，当收到第二个<code>FIN</code>报文后又收到<code>ACK</code>报文（即<code>LAST_ACK</code>），代表<code>TCP</code>挥手完成，此时只需要等待<code>2MSL</code>后即可释放会话（在被动方没有收到ACK报文的情况下，主动端可以有机会重发）。</p>
+<h3>2.3.3. TCP RST</h3>
+<p><code>RST</code>用于复位因某种原因引起出现的错误连接，也用来拒绝非法数据和请求。发送<code>RST</code>报文通常意味着发生了某些错误，接收端不必回<code>ACK</code>，因此<code>RST</code>报文也代表着会话的结束。<code>NAT</code>设备收到<code>RST</code>报文后也需要等待<code>2MSL</code>后释放会话（在<code>RST</code>未被对端收到的情况下，对端还有机会通过业务报文再次触发<code>RST</code>）。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mysql快照读下解决幻读 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Mysql快照读下解决幻读</h1>
+        <time datetime="2026-01-03T13:04:29.076Z">2026年1月3日</time>
+        <div class="tags">
+            
+            <span class="tag">excalidraw</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>==⚠  Switch to EXCALIDRAW VIEW in the MORE OPTIONS menu of this document. ⚠==</p>
+<h1>Text Elements</h1>
+<p>事务A ^b7TiLH2p</p>
+<p>事务B ^bMLs1cuE</p>
+<p>select * from orders; ^nEabCTcv</p>
+<p>insert into orders values(&#39;3&#39;, 30); ^L5cXt96O</p>
+<p>begin; ^qY0JCakz</p>
+<p>begin; ^4g4ylnvR</p>
+<p>mysql&gt; select * from orders;<br>+------+-------+<br>| id   | price |<br>+------+-------+<br>| 1    |    10 |<br>| 2    |    20 |<br>+------+-------+ ^NByx8zNb</p>
+<p>select * from orders; ^XYI6950h</p>
+<p>mysql&gt; select * from orders;<br>+------+-------+<br>| id   | price |<br>+------+-------+<br>| 1    |    10 |<br>| 2    |    20 |<br>+------+-------+ ^32eQgah5</p>
+<p>commit; ^VRiojIBx</p>
+<p>commit; ^jIo8kxVG</p>
+<p>select * from orders; ^K22PWYHL</p>
+<p>mysql&gt; select * from orders;<br>+------+-------+<br>| id   | price |<br>+------+-------+<br>| 1    |    10 |<br>| 2    |    20 |<br>| 3    |    30 |<br>+------+-------+ ^gWpduRds</p>
+<p>select * from orders; ^6UgsZYrO</p>
+<p>mysql&gt; select * from orders; ^9fGt5cPX</p>
+<p>+------+-------+ ^YKfzteNa</p>
+<p>| id   | price | ^azGetZ1k</p>
+<p>+------+-------+ ^PjFeYcM7</p>
+<p>| 1    |    10 | ^kvmKTk7O</p>
+<p>| 2    |    20 | ^iQqKOx4a</p>
+<p>+------+-------+ ^94uNiNCP</p>
+<p>2 rows in set (0.00 sec) ^bhwLGIko</p>
+<p>%%</p>
+<h1>Drawing</h1>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;excalidraw&quot;,
+    &quot;version&quot;: 2,
+    &quot;source&quot;: &quot;https://excalidraw.com&quot;,
+    &quot;elements&quot;: [
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 116,
+            &quot;versionNonce&quot;: 2036428116,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;Cq4Fb8jKBNu6oLIQ51jqq&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -265.41987136222053,
+            &quot;y&quot;: -551.51806483214,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1214314743,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;b7TiLH2p&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448882,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 64,
+            &quot;versionNonce&quot;: 1505083884,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;b7TiLH2p&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -166.91987136222053,
+            &quot;y&quot;: -518.51806483214,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 54,
+            &quot;height&quot;: 31,
+            &quot;seed&quot;: 620787193,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;事务A&quot;,
+            &quot;rawText&quot;: &quot;事务A&quot;,
+            &quot;baseline&quot;: 22,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;Cq4Fb8jKBNu6oLIQ51jqq&quot;,
+            &quot;originalText&quot;: &quot;事务A&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 205,
+            &quot;versionNonce&quot;: 384869076,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;YiMrXy7Kkz9DsUMHNcJmx&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 67.54641642915601,
+            &quot;y&quot;: -553.1638544250144,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 31769111,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;bMLs1cuE&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 155,
+            &quot;versionNonce&quot;: 134128748,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;bMLs1cuE&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 165.046416429156,
+            &quot;y&quot;: -520.1638544250144,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 56,
+            &quot;height&quot;: 31,
+            &quot;seed&quot;: 223432409,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;事务B&quot;,
+            &quot;rawText&quot;: &quot;事务B&quot;,
+            &quot;baseline&quot;: 22,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;YiMrXy7Kkz9DsUMHNcJmx&quot;,
+            &quot;originalText&quot;: &quot;事务B&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 188,
+            &quot;versionNonce&quot;: 2013079636,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;sWTz023mYp9JWW67y7APE&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -264.4676078322816,
+            &quot;y&quot;: -345.7453378338897,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 642934583,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;nEabCTcv&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 148,
+            &quot;versionNonce&quot;: 1879521004,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;nEabCTcv&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -243.4676078322816,
+            &quot;y&quot;: -312.7453378338897,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 209,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 1809058745,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;sWTz023mYp9JWW67y7APE&quot;,
+            &quot;originalText&quot;: &quot;select * from orders;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 477,
+            &quot;versionNonce&quot;: 1616707028,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;2g7wGg5LwigopS6a76LE0&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 65.74329682200926,
+            &quot;y&quot;: -238.30436982600443,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1947101271,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;L5cXt96O&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 571,
+            &quot;versionNonce&quot;: 509180268,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;L5cXt96O&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 99.24329682200926,
+            &quot;y&quot;: -217.80436982600443,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 184,
+            &quot;height&quot;: 54,
+            &quot;seed&quot;: 1756114073,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;insert into orders \nvalues(&#39;3&#39;, 30);&quot;,
+            &quot;rawText&quot;: &quot;insert into orders values(&#39;3&#39;, 30);&quot;,
+            &quot;baseline&quot;: 45,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;2g7wGg5LwigopS6a76LE0&quot;,
+            &quot;originalText&quot;: &quot;insert into orders values(&#39;3&#39;, 30);&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 238,
+            &quot;versionNonce&quot;: 690365268,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;wlrEc0dZZstw3uTup22_O&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -266.25186240684786,
+            &quot;y&quot;: -448.4965741422153,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1760380279,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;qY0JCakz&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 204,
+            &quot;versionNonce&quot;: 2118085612,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;qY0JCakz&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -166.25186240684786,
+            &quot;y&quot;: -415.4965741422153,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 51,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 1535979897,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;begin;&quot;,
+            &quot;rawText&quot;: &quot;begin;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;wlrEc0dZZstw3uTup22_O&quot;,
+            &quot;originalText&quot;: &quot;begin;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 321,
+            &quot;versionNonce&quot;: 414095572,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;2k8AvcBMJhrTBUqiPs-zm&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 66.49653312523094,
+            &quot;y&quot;: -447.3890993828726,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1412660887,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;4g4ylnvR&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 287,
+            &quot;versionNonce&quot;: 29560428,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;4g4ylnvR&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 166.49653312523094,
+            &quot;y&quot;: -414.3890993828726,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 51,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 1505401433,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448883,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;begin;&quot;,
+            &quot;rawText&quot;: &quot;begin;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;2k8AvcBMJhrTBUqiPs-zm&quot;,
+            &quot;originalText&quot;: &quot;begin;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 103,
+            &quot;versionNonce&quot;: 982277716,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;NByx8zNb&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -594.2631371979143,
+            &quot;y&quot;: -350.79558231496196,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 236,
+            &quot;height&quot;: 168,
+            &quot;seed&quot;: 680891319,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16.549952923564145,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n+------+-------+&quot;,
+            &quot;baseline&quot;: 160,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 456,
+            &quot;versionNonce&quot;: 1236164844,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;f_1KGPOQ1hPEcdnDcaxRY&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -266.686155694945,
+            &quot;y&quot;: -33.381539869673276,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 67626809,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;XYI6950h&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 414,
+            &quot;versionNonce&quot;: 932541396,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;XYI6950h&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -245.686155694945,
+            &quot;y&quot;: -0.3815398696732757,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 209,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 238552279,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;f_1KGPOQ1hPEcdnDcaxRY&quot;,
+            &quot;originalText&quot;: &quot;select * from orders;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 373,
+            &quot;versionNonce&quot;: 1300980588,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;32eQgah5&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -595.2442575284862,
+            &quot;y&quot;: -26.7508095487552,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 236,
+            &quot;height&quot;: 168,
+            &quot;seed&quot;: 349739033,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16.549952923564145,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n+------+-------+&quot;,
+            &quot;baseline&quot;: 160,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 516,
+            &quot;versionNonce&quot;: 769644884,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;PCeyumWbK3KYR196QPm0Q&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -268.55173482981616,
+            &quot;y&quot;: 80.95588023393768,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 883905015,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;VRiojIBx&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 493,
+            &quot;versionNonce&quot;: 61085164,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;VRiojIBx&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -177.05173482981616,
+            &quot;y&quot;: 113.95588023393768,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 68,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 773860601,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;commit;&quot;,
+            &quot;rawText&quot;: &quot;commit;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;PCeyumWbK3KYR196QPm0Q&quot;,
+            &quot;originalText&quot;: &quot;commit;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 553,
+            &quot;versionNonce&quot;: 146902740,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;Q8UAqgpd_xkQ_0OV5At9G&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 67.51251875725552,
+            &quot;y&quot;: -132.0719541709889,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1694497559,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;jIo8kxVG&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 529,
+            &quot;versionNonce&quot;: 151156844,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;jIo8kxVG&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 159.01251875725552,
+            &quot;y&quot;: -99.0719541709889,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 68,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 1734485465,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;commit;&quot;,
+            &quot;rawText&quot;: &quot;commit;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;Q8UAqgpd_xkQ_0OV5At9G&quot;,
+            &quot;originalText&quot;: &quot;commit;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 595,
+            &quot;versionNonce&quot;: 1490064468,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;EMdIiEx0fP_uXeiX3j-dh&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -267.546095446345,
+            &quot;y&quot;: 204.49783275713287,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1402896439,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;K22PWYHL&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 553,
+            &quot;versionNonce&quot;: 1232112364,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;K22PWYHL&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -246.54609544634502,
+            &quot;y&quot;: 237.49783275713287,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 209,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 464650937,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;EMdIiEx0fP_uXeiX3j-dh&quot;,
+            &quot;originalText&quot;: &quot;select * from orders;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 397,
+            &quot;versionNonce&quot;: 736291284,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;gWpduRds&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -580.5034179693386,
+            &quot;y&quot;: 196.21573430782686,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 236,
+            &quot;height&quot;: 192,
+            &quot;seed&quot;: 846160215,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16.549952923564145,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n| 3    |    30 |\n+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n| 3    |    30 |\n+------+-------+&quot;,
+            &quot;baseline&quot;: 184,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders;\n+------+-------+\n| id   | price |\n+------+-------+\n| 1    |    10 |\n| 2    |    20 |\n| 3    |    30 |\n+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 377,
+            &quot;versionNonce&quot;: 662195564,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;dnrEAC-v8ruqKBWq84weC&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -266.23303841061966,
+            &quot;y&quot;: -670.7455295336138,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 529169593,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;6UgsZYrO&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 393,
+            &quot;versionNonce&quot;: 1695453012,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;6UgsZYrO&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -245.23303841061966,
+            &quot;y&quot;: -637.7455295336138,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 209,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 1374914391,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;dnrEAC-v8ruqKBWq84weC&quot;,
+            &quot;originalText&quot;: &quot;select * from orders;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 283,
+            &quot;versionNonce&quot;: 610516972,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;9fGt5cPX&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -591.6769565036252,
+            &quot;y&quot;: -671.6139718963528,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 278,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 510426521,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448884,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders;&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 283,
+            &quot;versionNonce&quot;: 346653908,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;YKfzteNa&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -593.0018423092461,
+            &quot;y&quot;: -636.8946226420916,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 718701687,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448885,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 282,
+            &quot;versionNonce&quot;: 138207852,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;azGetZ1k&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -592.1598900720305,
+            &quot;y&quot;: -601.6139718963528,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 131,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 1998283385,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448885,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| id   | price |&quot;,
+            &quot;rawText&quot;: &quot;| id   | price |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| id   | price |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 283,
+            &quot;versionNonce&quot;: 1347013204,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;PjFeYcM7&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -591.9785284648876,
+            &quot;y&quot;: -566.43261028921,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 614260119,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448885,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 282,
+            &quot;versionNonce&quot;: 164476140,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;kvmKTk7O&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -592.1598900720305,
+            &quot;y&quot;: -531.6139718963528,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 136,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 643476313,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448885,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| 1    |    10 |&quot;,
+            &quot;rawText&quot;: &quot;| 1    |    10 |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| 1    |    10 |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 282,
+            &quot;versionNonce&quot;: 180707284,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;iQqKOx4a&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -592.1598900720305,
+            &quot;y&quot;: -496.61397189635284,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 153,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 41620151,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448885,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| 2    |    20 |&quot;,
+            &quot;rawText&quot;: &quot;| 2    |    20 |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| 2    |    20 |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 282,
+            &quot;versionNonce&quot;: 1990211436,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;94uNiNCP&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -592.1598900720305,
+            &quot;y&quot;: -461.61397189635284,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 1149098041,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448885,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 282,
+            &quot;versionNonce&quot;: 1815233876,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;bhwLGIko&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -592.1598900720305,
+            &quot;y&quot;: -426.61397189635284,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 248,
+            &quot;height&quot;: 27,
+            &quot;seed&quot;: 756392919,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674481448885,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;2 rows in set (0.00 sec)&quot;,
+            &quot;rawText&quot;: &quot;2 rows in set (0.00 sec)&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;2 rows in set (0.00 sec)&quot;
+        }
+    ],
+    &quot;appState&quot;: {
+        &quot;theme&quot;: &quot;dark&quot;,
+        &quot;viewBackgroundColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#ffffff&lt;/span&gt;&quot;,
+        &quot;currentItemStrokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+        &quot;currentItemBackgroundColor&quot;: &quot;transparent&quot;,
+        &quot;currentItemFillStyle&quot;: &quot;hachure&quot;,
+        &quot;currentItemStrokeWidth&quot;: 1,
+        &quot;currentItemStrokeStyle&quot;: &quot;solid&quot;,
+        &quot;currentItemRoughness&quot;: 1,
+        &quot;currentItemOpacity&quot;: 100,
+        &quot;currentItemFontFamily&quot;: 1,
+        &quot;currentItemFontSize&quot;: 20,
+        &quot;currentItemTextAlign&quot;: &quot;left&quot;,
+        &quot;currentItemStartArrowhead&quot;: null,
+        &quot;currentItemEndArrowhead&quot;: &quot;arrow&quot;,
+        &quot;scrollX&quot;: 623.3489205496651,
+        &quot;scrollY&quot;: 977.929587544263,
+        &quot;zoom&quot;: {
+            &quot;value&quot;: 0.4
+        },
+        &quot;currentItemRoundness&quot;: &quot;round&quot;,
+        &quot;gridSize&quot;: null,
+        &quot;colorPalette&quot;: {}
+    },
+    &quot;files&quot;: {}
+}
+</code></pre>
+<p>%%</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

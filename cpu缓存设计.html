@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU缓存设计 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>CPU缓存设计</h1>
+        <time datetime="2026-01-03T13:04:29.295Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 缓存</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202502012201874.png" alt="image.png"><br>Cache Memory也被称为Cache，是存储器子系统的组成部分，存放着程序经常使用的指令和数据，这就是Cache的传统定义。从广义的角度上看，Cache是快设备为了缓解访问慢设备延时的预留的Buffer，从而可以在掩盖访问延时的同时，尽可能地提高数据传输率。 快和慢是一个相对概念，与微架构(Microarchitecture)中的 L1/L2/L3 Cache相比， DDR内存是一个慢速设备；在磁盘 I/O 系统中，DDR确是快速设备，在磁盘I/O系统中，仍在使用DDR内存作为磁介质的Cache。在一个<a href="https://zhida.zhihu.com/search?content_id=176854366&content_type=Article&match_order=2&q=%E5%BE%AE%E6%9E%B6%E6%9E%84&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3Mzg1OTA0NTUsInEiOiLlvq7mnrbmnoQiLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoxNzY4NTQzNjYsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MiwiemRfdG9rZW4iOm51bGx9.pXrpPTnTBsbUSfy2_OYfLNj9VxGaNEihgFX_nbOzc3k&zhida_source=entity">微架构</a>中，除了有L1/L2/L3 Cache之外，用于<a href="https://zhida.zhihu.com/search?content_id=176854366&content_type=Article&match_order=1&q=%E8%99%9A%E5%AE%9E%E5%9C%B0%E5%9D%80&zd_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ6aGlkYV9zZXJ2ZXIiLCJleHAiOjE3Mzg1OTA0NTUsInEiOiLomZrlrp7lnLDlnYAiLCJ6aGlkYV9zb3VyY2UiOiJlbnRpdHkiLCJjb250ZW50X2lkIjoxNzY4NTQzNjYsImNvbnRlbnRfdHlwZSI6IkFydGljbGUiLCJtYXRjaF9vcmRlciI6MSwiemRfdG9rZW4iOm51bGx9.V5T6uK0yGiBpj_piBLr4xttZvMOPty35tGGXAgL_mOM&zhida_source=entity">虚实地址</a>转换的各级TLB， MOB( Memory Ordering Buffers)、在指令流水线中的ROB，Register File和BTB等等也是一种Cache。我们这里的Cache，是狭义 Cache，是CPU流水线和主存储器的 L1/L2/L3 Cache。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202502012151163.png" alt="image.png"><br>L1，L2，L3 指的都是CPU的缓存，比内存快，但是很昂贵，所以用作缓存，CPU查找数据的时候首先在L1，然后看L2，如果还没有，就到内存查找一些服务器还有L3 Cache，目的也是提高速度。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202502012201274.png" alt="image.png"></p>
+<p>L1 cache、L2 cache、L3 cache 速度快，主要和其与 CPU 的距离、存储容量、制造工艺及数据预取机制有关：</p>
+<ul>
+<li><strong>物理位置靠近 CPU</strong>：L1-L3 cache 在位置上都离 CPU 核心越来越近，尤其是L1 cache通常集成在CPU内核内。这使得CPU在访问缓存时，数据传输路径短，信号传输延迟低，能快速获取数据和指令，就像在身边的物品更容易快速拿到。</li>
+<li><strong>较小的存储容量</strong>：缓存容量相对主存小很多，L1 cache通常几十KB-几百 KB，L2 cache几百KB-几MB，L3 cache几MB-几十 MB。较小的容量使得缓存的存储结构更紧凑，CPU查找数据时遍历的存储单元少，就像在小房间找东西比大仓库更容易、更快。</li>
+<li><strong>先进的制造工艺</strong>：缓存一般采用与CPU相同或更先进的制造工艺，使用高速的存储单元，这些存储单元的电子信号切换速度快，能快速响应CPU的读写请求，实现高速的数据存取。</li>
+</ul>
+<h2>1.1. L1 Cache</h2>
+<p>L1 Cache(一级缓存)是CPU第一层高速缓存，分为数据缓存和指令缓存。<strong>内置的L1高速缓存的容量和结构对CPU的性能影响较大</strong>，不过高速缓冲存储器均由<strong>静态RAM</strong>组成，结构较复杂，在CPU管芯面积不能太大的情况下，L1级高速缓存的容量不可能做得太大。一般服务器CPU的L1缓存的容量通常在32—256KB。</p>
+<blockquote>
+<p>SRAM 速度快，不过在相同面积下其容量比其他类型内存小，且成本较高。而 L1 cache 集成在 CPU 内部，作为 CPU 和较低速内存（如 DRAM ）之间的缓存，对速度要求极高。SRAM 的高速特性契合 L1 cache 需求，能让其快速响应 CPU 的数据和指令读取请求，减少 CPU 等待时间，提升运行效率。</p>
+</blockquote>
+<h3>1.1.1. 静态ram和动态ram</h3>
+<p>静态 RAM（SRAM）和动态 RAM（DRAM）的区别如下：</p>
+<ul>
+<li><strong>存储原理</strong>：<ul>
+<li><strong>静态RAM</strong>：每个存储单元由四到六个晶体管组成双稳态触发器来记忆信息。只要供电正常，触发器就能稳定保持所存储的数据，无需刷新 。</li>
+<li><strong>动态RAM</strong>：每个存储单元由一个晶体管和一个电容构成。利用电容上存储的电荷来表示数据，由于电容存在漏电现象，电荷会逐渐流失，所以需周期性刷新补充电荷，以维持数据的正确性 。</li>
+</ul>
+</li>
+<li><strong>读写速度</strong>：<ul>
+<li><strong>静态RAM</strong>：存储单元结构简单且无需刷新，数据存取速度快，能快速响应 CPU 的数据请求，常被用作高速缓存（如 L1 - L3 cache） 。</li>
+<li><strong>动态RAM</strong>：因存在刷新操作及存储结构相对复杂等因素，读写速度比静态RAM慢 。</li>
+</ul>
+</li>
+<li><strong>集成度与容量</strong>：<ul>
+<li><strong>静态RAM</strong>：每个存储单元由多个晶体管组成，占用芯片面积大，集成度低，存储容量相对较小 。</li>
+<li><strong>动态RAM</strong>：每个存储单元仅由一个晶体管和一个电容组成，占用芯片面积小，集成度高，可实现大容量存储，常见的计算机内存条多采用动态RAM 。</li>
+</ul>
+</li>
+<li><strong>功耗</strong>：<ul>
+<li><strong>静态RAM</strong>：存储单元始终处于稳定状态，只要供电就有电流消耗，功耗相对较高 。</li>
+<li><strong>动态RAM</strong>：仅在读写和刷新操作时消耗较多功率，平时电容保持电荷状态时功耗低，整体功耗比静态RAM低 。</li>
+</ul>
+</li>
+<li><strong>成本</strong>：<ul>
+<li><strong>静态RAM</strong>：因集成度低、制造工艺复杂、单位存储容量成本高，价格较贵 。</li>
+<li><strong>动态RAM</strong>：由于集成度高、单位存储容量成本低，在大容量存储需求下性价比高，价格相对便宜</li>
+</ul>
+</li>
+</ul>
+<h2>1.2. L2 Cache</h2>
+<p>L2 Cache(二级缓存)是CPU的第二层高速缓存，分内部和外部两种芯片。内部的芯片二级缓存运行速度与主频相同，而外部的二级缓存则只有主频的一半。L2高速缓存容量也会影响CPU的性能，原则是越大越好，现在家庭用CPU容量最大的是512KB，而服务器和工作站上用CPU的L2高速缓存更高达256-1MB，有的高达2MB或者3MB。</p>
+<h2>1.3. L3 Cache</h2>
+<p>L3 Cache(三级缓存)，分为两种，早期的是外置，现在的都是内置的。而实际作用即是，L3缓存的应用可以进一步降低内存延迟，同时提升大数据量计算时处理器的性能。降低内存延迟和提升大数据量计算能力，对游戏都很有帮助。而在服务器领域增加L3缓存，在性能方面仍然有显著的提升。具有较大L3缓存的配置利用物理内存会更有效，比较慢的磁盘I/O子系统，可以处理更多的数据请求。具有较大L3缓存的处理器，提供更有效的文件系统缓存行为及较短消息和处理器队列长度。</p>
+<h2>1.4. 局部性原理</h2>
+<p>缓存基于局部性原理，局部性有两种，即时间局部性和空间局部性。<br><strong>时间局部性</strong>：当一个数据被访问后，它很有可能在不久的将来被再次访问，比如循环代码中的数据或指令。<br><strong>空间局部性</strong>：当程序访问地址为x的数据时，很有可能会紧接着访问x周围的数据，比如遍历数组或指令的顺序执行。<br>由于这两种局部性存在大多数的程序中，硬件系统可以很好地预测哪些数据可以放入缓存，从而可以运行得很好。</p>
+<h2>1.5. 缓存一致性</h2>
+<p>多CPU系统中，每个CPU核心通常有自己的私有缓存（如L1、L2缓存），而共享主内存。缓存的存在是为了加速数据访问，减少访问主存的延迟。但这也带来了问题：当一个CPU修改了自己缓存中的数据时，其他CPU的缓存中同一数据的副本就会变得不一致。如何确保所有CPU看到的内存视图一致，这就是缓存一致性需要解决的问题。</p>
+<p>缓存一致性要求满足以下几点：</p>
+<ol>
+<li><strong>写传播（Write Propagation）</strong>：任何CPU对某个内存位置的写操作必须最终被其他CPU看到。</li>
+<li><strong>事务串行化（Transaction Serialization）</strong>：所有CPU对同一内存位置的读写操作顺序在所有CPU看来是一致的。<br>最著名的缓存一致性协议应该是MESI协议，MESI代表缓存行的四种状态：</li>
+</ol>
+<ul>
+<li><strong>Modified（已修改）</strong>：缓存行已被修改，与主存不同，且只有当前缓存拥有该数据。</li>
+<li><strong>Exclusive（独占）</strong>：缓存行与主存一致，且未被其他缓存持有。</li>
+<li><strong>Shared（共享）</strong>：缓存行与主存一致，可能被多个缓存共享。</li>
+<li><strong>Invalid（无效）</strong>：缓存行数据无效，需要重新从主存或其他缓存获取。</li>
+</ul>
+<h3>1.5.1. 状态转换</h3>
+<p><strong>CPU A写数据</strong>：<br>    1. 若原状态为S或I→发送“无效化”信号给其他缓存，只有收到所有确认后，将状态改为M。<br>    2. 若原状态为E→直接改为M。<br>    3. 假设CPU A和CPU B同时发起对同一缓存行的写请求，则总线控制器（或目录协议）会序列化请求，只允许一个CPU先获得独占权。这种序列化是硬件层面的。<br><strong>CPU B读数据</strong>：<br>    1. 若其他缓存有M状态→触发回写主存，并转为S状态。<br>    2. 若其他缓存有S/E状态→共享数据，状态转为S。</p>
+<h3>1.5.2. 协议变种</h3>
+<ul>
+<li><strong>MOESI</strong>：ARM架构使用，增加Owned（O）状态，允许缓存持有修改数据并与其他缓存共享，延迟写回主存。</li>
+<li><strong>MESIF</strong>（Intel使用）：x86架构，增加Forward（F）状态，指定一个缓存作为数据提供者，减少总线流量。</li>
+</ul>
+<h3>1.5.3. 缓存一致性实现方式</h3>
+<h4>1.5.3.1. 监听式协议（Snooping Protocol）</h4>
+<ul>
+<li><strong>适用场景</strong>：基于总线的小规模多核系统（如单插槽CPU）。</li>
+<li><strong>原理</strong>：所有缓存监听总线上的事务（如读/写请求），根据规则更新自身状态。</li>
+<li><strong>示例</strong>：<ul>
+<li>CPU A写数据→广播“无效化”消息→其他缓存标记该数据为I。</li>
+</ul>
+</li>
+</ul>
+<h4>1.5.3.2. 目录式协议（Directory Protocol）</h4>
+<ul>
+<li><strong>适用场景</strong>：NUMA架构的大规模多处理器系统（如多路服务器）。</li>
+<li><strong>原理</strong>：中央目录记录缓存行状态（如哪些节点缓存了数据），减少广播开销。</li>
+<li><strong>步骤</strong>：<ol>
+<li>CPU请求数据→查询目录获取持有者列表。</li>
+<li>目录协调数据传递和状态更新（如发送无效化信号给特定节点）。</li>
+</ol>
+</li>
+</ul>
+<h4>1.5.3.3. 性能分析</h4>
+<h5>1.5.3.3.1. 写独占缓存时间</h5>
+<p>处于E状态的缓存写入时间应该非常快，等同于本地缓存的写入延迟，不需要总线交互，因此时间大约是1到几个CPU周期，具体取决于处理器的设计。</p>
+<ul>
+<li>L1缓存：<strong>1-3个CPU周期</strong>（约0.3-1 ns，假设3 GHz主频）。  </li>
+<li>L2缓存：<strong>5-10个周期</strong>（约1.7-3.3 ns）。</li>
+<li>L3缓存：<strong>20-40个周期</strong>（约6.7-13.3 ns）。<blockquote>
+<p>3GHZ主频，一个CPU周期大约为$1/(3*10^9)=0.3ns$</p>
+</blockquote>
+</li>
+</ul>
+<h5>1.5.3.3.2. 写共享缓存的时间组成</h5>
+<ol>
+<li><strong>总线仲裁延迟</strong>：多个核心竞争总线时的排队时间（通常<strong>10-50纳秒</strong>，取决于总线负载）。</li>
+<li><strong>信号传播延迟</strong>：广播<code>Invalidate</code>信号到所有缓存控制器的时间（现代CPU片上互联延迟约<strong>5-20纳秒</strong>）。</li>
+<li><strong>确认响应延迟</strong>：等待其他CPU确认无效化完成的时间（约<strong>20-100纳秒</strong>，取决于核心数量和拓扑）。<br><strong>总延迟范围：</strong></li>
+</ol>
+<ul>
+<li><strong>低竞争场景</strong>：约<strong>30-100纳秒</strong>。</li>
+<li><strong>高竞争场景</strong>（如多核争抢同一缓存行）：可能超过<strong>200纳秒</strong></li>
+</ul>
+<h5>1.5.3.3.3. 直接写主存时间组成</h5>
+<ol>
+<li><strong>DRAM访问延迟</strong>：现代DDR4/DDR5内存的典型延迟为<strong>70-100纳秒</strong>。</li>
+<li><strong>总线传输时间</strong>：数据从内存控制器到CPU的传输（约 <strong>20-50纳秒</strong>）。</li>
+<li><strong>协议开销</strong>：若涉及缓存一致性，仍需总线交互（如回写脏数据）。<br><strong>总延迟范围</strong>：</li>
+</ol>
+<ul>
+<li><strong>显式写主存</strong>（非缓存）：约 <strong>100-150纳秒</strong>。</li>
+<li><strong>缓存未命中后写回</strong>：可能叠加缓存加载时间，总延迟 <strong>200纳秒以上</strong>。</li>
+</ul>
+<h4>1.5.3.4. 对比</h4>
+<table>
+<thead>
+<tr>
+<th><strong>指标</strong></th>
+<th><strong>监听式协议（Snooping）</strong></th>
+<th><strong>目录式协议（Directory）</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>扩展性</strong></td>
+<td>差（总线带宽限制，适合≤32核）</td>
+<td>优（目录记录状态，适合大规模多核）</td>
+</tr>
+<tr>
+<td><strong>总线流量</strong></td>
+<td>高（广播所有消息）</td>
+<td>低（仅通知相关节点）</td>
+</tr>
+<tr>
+<td><strong>典型应用</strong></td>
+<td>桌面CPU（如Intel Core系列）</td>
+<td>服务器CPU（如AMD EPYC）</td>
+</tr>
+<tr>
+<td><strong>延迟</strong></td>
+<td>低（直接总线访问）</td>
+<td>较高（需查询目录）</td>
+</tr>
+</tbody></table>
+<h3>1.5.4. 内存屏障（Memory Barrier）</h3>
+<ul>
+<li><strong>作用</strong>：强制内存操作顺序，防止CPU/编译器重排序破坏一致性，同时确保缓存中的数据及时刷新到主内存，以及从主内存中读取最新的数据。</li>
+<li><strong>类型</strong>：<ul>
+<li><strong>写屏障</strong>：确保屏障前的写操作先于屏障后的写操作提交。</li>
+<li><strong>读屏障</strong>：确保屏障后的读操作能看到屏障前所有写操作的结果。</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-c">// 线程1
+data = 42;
+memory_barrier(); // 确保data写入在flag之前
+flag = 1;
+
+// 线程2
+while (flag == 0); // 自旋等待
+memory_barrier(); // 确保读取flag后能读取到最新的data
+printf(&quot;%d&quot;, data);
+</code></pre>
+<h4>1.5.4.1. 指令重排</h4>
+<p>现代的编译器和CPU为了提高程序的执行性能，会对指令进行重排序。指令重排序是指编译器或CPU在不改变程序<strong>单线程执行结果</strong>的前提下，对指令的执行顺序进行调整。</p>
+<blockquote>
+<p>在没有内存屏障的情况下，编译器或CPU可能会对线程1中的指令进行重排序，将 <code>flag = 1;</code> 提前到 <code>data = 42;</code> 之前执行。当发生这种重排序时，线程2可能会在 <code>data</code> 还未被正确赋值为<code>42</code>时，就通过检查 <code>flag</code> 的值（此时 <code>flag</code> 已经被置为 <code>1</code>）进入后续代码读取 <code>data</code>，从而读到错误的值。</p>
+<p>线程 1 中的内存屏障保证了 <code>data</code> 的写入操作一定在 <code>flag</code> 的写入操作之前完成，并且<strong>数据会被刷新到主内存</strong>。线程 2 中的内存屏障保证了在读取 <code>flag</code> 之后，能从主内存中读取到最新的 <code>data</code> 值。</p>
+</blockquote>
+<h3>1.5.5. 软件协同机制</h3>
+<h4>1.5.5.1. 原子操作</h4>
+<ul>
+<li><strong>CAS（Compare-And-Swap）</strong>：硬件支持的原子指令，确保“读-改-写”操作不可分割。</li>
+</ul>
+<pre><code class="language-c">// 原子地比较并更新值
+int atomic_cas(int* ptr, int expect, int new_val) {
+// 若*ptr == expect，则*ptr = new_val，返回旧值
+}
+</code></pre>
+<h4>1.5.5.2. 锁机制</h4>
+<ul>
+<li><strong>自旋锁（Spinlock）</strong>：忙等待锁，适用于短临界区。</li>
+<li><strong>互斥锁（Mutex）</strong>：阻塞等待锁，减少CPU空转。</li>
+</ul>
+<h4>1.5.5.3. 无锁编程</h4>
+<p>基于原子操作和内存屏障实现数据结构（如无锁队列），避免锁竞争。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,2397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mysql当前读下解决幻读 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Mysql当前读下解决幻读</h1>
+        <time datetime="2026-01-03T13:04:29.076Z">2026年1月3日</time>
+        <div class="tags">
+            
+            <span class="tag">excalidraw</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>==⚠  Switch to EXCALIDRAW VIEW in the MORE OPTIONS menu of this document. ⚠==</p>
+<h1>Text Elements</h1>
+<p>事务A ^yULSUGNg</p>
+<p>事务B ^RjMMNDeM</p>
+<p>select * from orders where 10 &lt; price and price &lt; 30 for update; ^OsIsBHFw</p>
+<p>insert into orders values(&#39;0&#39;, 0); ^63pCPtlL</p>
+<p>begin; ^kDOu9ePb</p>
+<p>begin; ^7fThy2SG</p>
+<p>mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;<br>Empty set (0.00 sec) ^hJz4O6N5</p>
+<p>commit; ^MGW9pfDf</p>
+<p>commit; ^jg59Mf7V</p>
+<p>select * from orders where 10 &lt; price and price &lt; 30 for update; ^CUbXXgu0</p>
+<p>Query OK, 1 row affected (0.01 sec) ^nRq6y28W</p>
+<p>insert into orders values(&#39;2&#39;, 20); ^sVIbCQl3</p>
+<p>block.... ^8wocq1Xv</p>
+<p>mysql&gt; insert into orders values(&#39;2&#39;, 20);<br>Query OK, 1 row affected (11.87 sec) ^v2qj8itZ</p>
+<p>select * from orders; ^X4GPYVyI</p>
+<p>mysql&gt; select * from orders; ^ZBe0o3D7</p>
+<p>+------+-------+ ^fH4SeFGn</p>
+<p>| id   | price | ^ZNWoA9Q4</p>
+<p>+------+-------+ ^hg6gXFjs</p>
+<p>| 1    |    10 | ^nBKxfUMA</p>
+<p>| 3    |    30 | ^22FJUYZ1</p>
+<p>+------+-------+ ^wZE9T6VK</p>
+<p>2 rows in set (0.00 sec) ^6KY3c3Oq</p>
+<p>select * from orders where 10 &lt; price and price &lt; 30 for update; ^4GNoVRub</p>
+<p>mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;<br>Empty set (0.00 sec) ^CAo486kJ</p>
+<p>insert into orders values(&#39;4&#39;, 40); ^PYFHvKEp</p>
+<p>Query OK, 1 row affected (0.01 sec) ^WtPGnNol</p>
+<p>mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update; ^l0eH9j1q</p>
+<p>+------+-------+ ^zZF77DOD</p>
+<p>| id   | price | ^EnIG3geb</p>
+<p>+------+-------+ ^VTZ27i6A</p>
+<p>| 2    |    20 | ^iFwg8Qmv</p>
+<p>+------+-------+ ^WDffaa2t</p>
+<p>1 row in set (0.00 sec) ^9RnqcOHx</p>
+<p>%%</p>
+<h1>Drawing</h1>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;excalidraw&quot;,
+    &quot;version&quot;: 2,
+    &quot;source&quot;: &quot;https://excalidraw.com&quot;,
+    &quot;elements&quot;: [
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 310,
+            &quot;versionNonce&quot;: 1115883929,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;GleKbBXFnMW_AvPBwxd_k&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -259.2399015017253,
+            &quot;y&quot;: -602.5009960623119,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1818528537,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;yULSUGNg&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 256,
+            &quot;versionNonce&quot;: 420667479,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;yULSUGNg&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -160.73990150172529,
+            &quot;y&quot;: -569.5009960623119,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 54,
+            &quot;height&quot;: 29,
+            &quot;seed&quot;: 1649413879,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396871681,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;事务A&quot;,
+            &quot;rawText&quot;: &quot;事务A&quot;,
+            &quot;baseline&quot;: 21,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;GleKbBXFnMW_AvPBwxd_k&quot;,
+            &quot;originalText&quot;: &quot;事务A&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 359,
+            &quot;versionNonce&quot;: 1887465081,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;mFMPNEGMTFRQsDp-pq8GO&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 73.32173242219824,
+            &quot;y&quot;: -601.6545687227507,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 901103609,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;RjMMNDeM&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 307,
+            &quot;versionNonce&quot;: 1581986969,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;RjMMNDeM&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 170.82173242219824,
+            &quot;y&quot;: -568.6545687227507,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 56,
+            &quot;height&quot;: 29,
+            &quot;seed&quot;: 2038503447,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396871684,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;事务B&quot;,
+            &quot;rawText&quot;: &quot;事务B&quot;,
+            &quot;baseline&quot;: 21,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;mFMPNEGMTFRQsDp-pq8GO&quot;,
+            &quot;originalText&quot;: &quot;事务B&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 204,
+            &quot;versionNonce&quot;: 1195259737,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;iigkfTVm-9Ee9GZ2iHXHZ&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -254.46393551262793,
+            &quot;y&quot;: -379.332420399584,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 751655129,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;OsIsBHFw&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 218,
+            &quot;versionNonce&quot;: 593511223,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;OsIsBHFw&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -242.46393551262793,
+            &quot;y&quot;: -371.332420399584,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 227,
+            &quot;height&quot;: 75,
+            &quot;seed&quot;: 1408498999,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397108211,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders \nwhere 10 &lt; price and \nprice &lt; 30 for update;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;,
+            &quot;baseline&quot;: 68,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;iigkfTVm-9Ee9GZ2iHXHZ&quot;,
+            &quot;originalText&quot;: &quot;select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 704,
+            &quot;versionNonce&quot;: 1740311897,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;gUbpz9hBGgCX6AU6yrePS&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 76.55843389588472,
+            &quot;y&quot;: -275.42583255059594,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 84,
+            &quot;seed&quot;: 322885049,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;63pCPtlL&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674397142187,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 695,
+            &quot;versionNonce&quot;: 1868650519,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;63pCPtlL&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 110.05843389588472,
+            &quot;y&quot;: -258.42583255059594,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 184,
+            &quot;height&quot;: 50,
+            &quot;seed&quot;: 1695366743,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397147823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;insert into orders \nvalues(&#39;0&#39;, 0);&quot;,
+            &quot;rawText&quot;: &quot;insert into orders values(&#39;0&#39;, 0);&quot;,
+            &quot;baseline&quot;: 43,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;gUbpz9hBGgCX6AU6yrePS&quot;,
+            &quot;originalText&quot;: &quot;insert into orders values(&#39;0&#39;, 0);&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 249,
+            &quot;versionNonce&quot;: 567866649,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;wnXaZR0C-Uzfa3EzhsnQN&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -255.89384397421895,
+            &quot;y&quot;: -489.3821923076806,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 741193369,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;kDOu9ePb&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 213,
+            &quot;versionNonce&quot;: 1009730807,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;kDOu9ePb&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -155.89384397421895,
+            &quot;y&quot;: -456.3821923076806,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 51,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1067539319,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;begin;&quot;,
+            &quot;rawText&quot;: &quot;begin;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;wnXaZR0C-Uzfa3EzhsnQN&quot;,
+            &quot;originalText&quot;: &quot;begin;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 334,
+            &quot;versionNonce&quot;: 1426909689,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;WQ8BK9okkr6yk_kNZ5VbR&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 76.85455155785985,
+            &quot;y&quot;: -490.2747175483379,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 172850041,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;7fThy2SG&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 298,
+            &quot;versionNonce&quot;: 2114555415,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;7fThy2SG&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 176.85455155785985,
+            &quot;y&quot;: -457.2747175483379,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 51,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 670356631,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;begin;&quot;,
+            &quot;rawText&quot;: &quot;begin;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;WQ8BK9okkr6yk_kNZ5VbR&quot;,
+            &quot;originalText&quot;: &quot;begin;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 287,
+            &quot;versionNonce&quot;: 120924281,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;hJz4O6N5&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -872.4554534496447,
+            &quot;y&quot;: -370.8176435088644,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 595,
+            &quot;height&quot;: 41,
+            &quot;seed&quot;: 501326937,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397121237,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16.549952923564145,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;\nEmpty set (0.00 sec)&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;\nEmpty set (0.00 sec)&quot;,
+            &quot;baseline&quot;: 35,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;\nEmpty set (0.00 sec)&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 555,
+            &quot;versionNonce&quot;: 1942218937,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;KuNr1MjXZrJOWPWSnv2tz&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -256.3281372623161,
+            &quot;y&quot;: 19.73284196486145,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 1706830263,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;4GNoVRub&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 94,
+            &quot;versionNonce&quot;: 156687191,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;4GNoVRub&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -244.3281372623161,
+            &quot;y&quot;: 27.73284196486145,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 227,
+            &quot;height&quot;: 75,
+            &quot;seed&quot;: 34273015,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders \nwhere 10 &lt; price and \nprice &lt; 30 for update;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;,
+            &quot;baseline&quot;: 68,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;KuNr1MjXZrJOWPWSnv2tz&quot;,
+            &quot;originalText&quot;: &quot;select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 613,
+            &quot;versionNonce&quot;: 9988505,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;phbJ5Xvqj0radu2Lg34u4&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -258.19371639718725,
+            &quot;y&quot;: 134.0702620684724,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 239411737,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;MGW9pfDf&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 588,
+            &quot;versionNonce&quot;: 1118787703,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;MGW9pfDf&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -166.69371639718725,
+            &quot;y&quot;: 167.0702620684724,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 68,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1034446839,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;commit;&quot;,
+            &quot;rawText&quot;: &quot;commit;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;phbJ5Xvqj0radu2Lg34u4&quot;,
+            &quot;originalText&quot;: &quot;commit;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 975,
+            &quot;versionNonce&quot;: 82431609,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;F1lHLW6PewovpYzBmzXy_&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 73.75566515780213,
+            &quot;y&quot;: 256.61319780011536,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 493582073,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;jg59Mf7V&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 949,
+            &quot;versionNonce&quot;: 1916481943,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;jg59Mf7V&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 165.25566515780213,
+            &quot;y&quot;: 289.61319780011536,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 68,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1516654871,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;commit;&quot;,
+            &quot;rawText&quot;: &quot;commit;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;F1lHLW6PewovpYzBmzXy_&quot;,
+            &quot;originalText&quot;: &quot;commit;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 813,
+            &quot;versionNonce&quot;: 1733564247,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;8Wht4Bh3D7avwZn4BZ5fO&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -248.19333758738708,
+            &quot;y&quot;: 370.8727632547625,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 582234073,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;CUbXXgu0&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674397221287,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 777,
+            &quot;versionNonce&quot;: 655977879,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;CUbXXgu0&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -236.19333758738708,
+            &quot;y&quot;: 378.8727632547625,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 227,
+            &quot;height&quot;: 75,
+            &quot;seed&quot;: 902436407,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397222133,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders \nwhere 10 &lt; price and \nprice &lt; 30 for update;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;,
+            &quot;baseline&quot;: 68,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;8Wht4Bh3D7avwZn4BZ5fO&quot;,
+            &quot;originalText&quot;: &quot;select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 41,
+            &quot;versionNonce&quot;: 1697471289,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;nRq6y28W&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 380.2675643310665,
+            &quot;y&quot;: -265.72317596545054,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 357,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1220127255,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;Query OK, 1 row affected (0.01 sec)&quot;,
+            &quot;rawText&quot;: &quot;Query OK, 1 row affected (0.01 sec)&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;Query OK, 1 row affected (0.01 sec)&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 868,
+            &quot;versionNonce&quot;: 1238884089,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;2wRhe5lhfh-XQ1qgxbLBv&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 79.18555388850609,
+            &quot;y&quot;: -80.50536151263339,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 84,
+            &quot;seed&quot;: 1544386743,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;sVIbCQl3&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674397188977,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 857,
+            &quot;versionNonce&quot;: 1491606137,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;sVIbCQl3&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 112.68555388850609,
+            &quot;y&quot;: -63.505361512633385,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 184,
+            &quot;height&quot;: 50,
+            &quot;seed&quot;: 1345114681,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397196095,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;insert into orders \nvalues(&#39;2&#39;, 20);&quot;,
+            &quot;rawText&quot;: &quot;insert into orders values(&#39;2&#39;, 20);&quot;,
+            &quot;baseline&quot;: 43,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;2wRhe5lhfh-XQ1qgxbLBv&quot;,
+            &quot;originalText&quot;: &quot;insert into orders values(&#39;2&#39;, 20);&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 251,
+            &quot;versionNonce&quot;: 2050905369,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;8wocq1Xv&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 378.443223510754,
+            &quot;y&quot;: -74.74048419329733,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 69,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 704672791,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;block....&quot;,
+            &quot;rawText&quot;: &quot;block....&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;block....&quot;
+        },
+        {
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;version&quot;: 322,
+            &quot;versionNonce&quot;: 270267705,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;QCIa3qeRyK4A74iU_rdvx&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 358.77931359864465,
+            &quot;y&quot;: -43.542554810973115,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 0.22943670099425617,
+            &quot;height&quot;: 296.8023612282493,
+            &quot;seed&quot;: 1365961401,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397203586,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0.22943670099425617,
+                    296.8023612282493
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 390,
+            &quot;versionNonce&quot;: 931733079,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;v2qj8itZ&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 388.98005327493456,
+            &quot;y&quot;: 226.8009489022951,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 402,
+            &quot;height&quot;: 50,
+            &quot;seed&quot;: 1652843321,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397213308,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; insert into orders values(&#39;2&#39;, 20);\nQuery OK, 1 row affected (11.87 sec)&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; insert into orders values(&#39;2&#39;, 20);\nQuery OK, 1 row affected (11.87 sec)&quot;,
+            &quot;baseline&quot;: 43,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; insert into orders values(&#39;2&#39;, 20);\nQuery OK, 1 row affected (11.87 sec)&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 294,
+            &quot;versionNonce&quot;: 652880505,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;wZReN7-9szlRYBuKEJmoC&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -262.7339986021227,
+            &quot;y&quot;: -710.6404129245454,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 91,
+            &quot;seed&quot;: 947809527,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;X4GPYVyI&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674396285614,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 309,
+            &quot;versionNonce&quot;: 586268375,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;X4GPYVyI&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -241.7339986021227,
+            &quot;y&quot;: -677.6404129245454,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 209,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1722040825,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396352355,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;select * from orders;&quot;,
+            &quot;rawText&quot;: &quot;select * from orders;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;wZReN7-9szlRYBuKEJmoC&quot;,
+            &quot;originalText&quot;: &quot;select * from orders;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 127,
+            &quot;versionNonce&quot;: 343766713,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;ZBe0o3D7&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -728.7086609752619,
+            &quot;y&quot;: -704.9725350096618,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 278,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 228336727,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders;&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 127,
+            &quot;versionNonce&quot;: 1430272953,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;fH4SeFGn&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -730.033546780883,
+            &quot;y&quot;: -670.2531857554004,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1156067481,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396289508,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 126,
+            &quot;versionNonce&quot;: 787494809,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;ZNWoA9Q4&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -729.1915945436672,
+            &quot;y&quot;: -634.9725350096618,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 131,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 23298423,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| id   | price |&quot;,
+            &quot;rawText&quot;: &quot;| id   | price |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| id   | price |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 126,
+            &quot;versionNonce&quot;: 553871991,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;hg6gXFjs&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -729.1915945436672,
+            &quot;y&quot;: -599.9725350096618,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1504228729,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 126,
+            &quot;versionNonce&quot;: 1930943609,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;nBKxfUMA&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -729.1915945436672,
+            &quot;y&quot;: -564.9725350096618,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 136,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 2055355031,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| 1    |    10 |&quot;,
+            &quot;rawText&quot;: &quot;| 1    |    10 |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| 1    |    10 |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 132,
+            &quot;versionNonce&quot;: 1251353335,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;22FJUYZ1&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -729.4072151047468,
+            &quot;y&quot;: -529.7505335004289,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 152,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 298163801,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396887243,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| 3    |    30 |&quot;,
+            &quot;rawText&quot;: &quot;| 3    |    30 |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| 3    |    30 |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 126,
+            &quot;versionNonce&quot;: 548922713,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;wZE9T6VK&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -729.1915945436672,
+            &quot;y&quot;: -494.9725350096618,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 229429175,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 126,
+            &quot;versionNonce&quot;: 1395030199,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;6KY3c3Oq&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -729.1915945436672,
+            &quot;y&quot;: -459.9725350096618,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 248,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 202533689,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674396221721,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;2 rows in set (0.00 sec)&quot;,
+            &quot;rawText&quot;: &quot;2 rows in set (0.00 sec)&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;2 rows in set (0.00 sec)&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 425,
+            &quot;versionNonce&quot;: 1280240279,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;CAo486kJ&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -868.7897242350843,
+            &quot;y&quot;: 27.355855756303356,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 595,
+            &quot;height&quot;: 41,
+            &quot;seed&quot;: 1479523545,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397176124,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16.549952923564145,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;\nEmpty set (0.00 sec)&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;\nEmpty set (0.00 sec)&quot;,
+            &quot;baseline&quot;: 35,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;\nEmpty set (0.00 sec)&quot;
+        },
+        {
+            &quot;type&quot;: &quot;rectangle&quot;,
+            &quot;version&quot;: 782,
+            &quot;versionNonce&quot;: 1553546681,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;anMzDrP1vQ_OSV8LEKGSW&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 78.26315905584772,
+            &quot;y&quot;: -179.03006398801483,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 251,
+            &quot;height&quot;: 84,
+            &quot;seed&quot;: 78454841,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 3
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;PYFHvKEp&quot;
+                }
+            ],
+            &quot;updated&quot;: 1674397183016,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 775,
+            &quot;versionNonce&quot;: 2104705463,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;PYFHvKEp&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 111.76315905584772,
+            &quot;y&quot;: -162.03006398801483,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 184,
+            &quot;height&quot;: 50,
+            &quot;seed&quot;: 1079958487,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397186638,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;insert into orders \nvalues(&#39;4&#39;, 40);&quot;,
+            &quot;rawText&quot;: &quot;insert into orders values(&#39;4&#39;, 40);&quot;,
+            &quot;baseline&quot;: 43,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;anMzDrP1vQ_OSV8LEKGSW&quot;,
+            &quot;originalText&quot;: &quot;insert into orders values(&#39;4&#39;, 40);&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 117,
+            &quot;versionNonce&quot;: 771432089,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;WtPGnNol&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 381.9722894910295,
+            &quot;y&quot;: -169.32740740286943,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 357,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 510570777,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397183016,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;Query OK, 1 row affected (0.01 sec)&quot;,
+            &quot;rawText&quot;: &quot;Query OK, 1 row affected (0.01 sec)&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;Query OK, 1 row affected (0.01 sec)&quot;
+        },
+        {
+            &quot;id&quot;: &quot;l0eH9j1q&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -976.7030987024133,
+            &quot;y&quot;: 390.84363762775195,
+            &quot;width&quot;: 721,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 1701696695,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 1613960279,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397261725,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders where 10 &lt; price and price &lt; 30 for update;&quot;
+        },
+        {
+            &quot;id&quot;: &quot;zZF77DOD&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -976.7030987024133,
+            &quot;y&quot;: 425.84363762775195,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 1351628345,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 1064845465,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397261725,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;id&quot;: &quot;EnIG3geb&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -976.7030987024133,
+            &quot;y&quot;: 460.84363762775195,
+            &quot;width&quot;: 131,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 1751131607,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 1134326135,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397261725,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;| id   | price |&quot;,
+            &quot;rawText&quot;: &quot;| id   | price |&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| id   | price |&quot;
+        },
+        {
+            &quot;id&quot;: &quot;VTZ27i6A&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -976.7030987024133,
+            &quot;y&quot;: 495.84363762775195,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 1769932569,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 666289529,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397261725,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;id&quot;: &quot;iFwg8Qmv&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -976.7030987024133,
+            &quot;y&quot;: 530.843637627752,
+            &quot;width&quot;: 153,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 925586167,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 1746741911,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397261725,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;| 2    |    20 |&quot;,
+            &quot;rawText&quot;: &quot;| 2    |    20 |&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| 2    |    20 |&quot;
+        },
+        {
+            &quot;id&quot;: &quot;WDffaa2t&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -976.7030987024133,
+            &quot;y&quot;: 565.843637627752,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 572570617,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 328314457,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397261725,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;id&quot;: &quot;9RnqcOHx&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -976.7030987024133,
+            &quot;y&quot;: 600.843637627752,
+            &quot;width&quot;: 229,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 441703447,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 1785315255,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397261725,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;1 row in set (0.00 sec)&quot;,
+            &quot;rawText&quot;: &quot;1 row in set (0.00 sec)&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;1 row in set (0.00 sec)&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 153,
+            &quot;versionNonce&quot;: 370354231,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;Z3De3iAL&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 375.76030536755,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 438,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 172141239,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;mysql&gt; select * from orders where price&lt;=10;&quot;,
+            &quot;rawText&quot;: &quot;mysql&gt; select * from orders where price&lt;=10;&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;mysql&gt; select * from orders where price&lt;=10;&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 153,
+            &quot;versionNonce&quot;: 1715198649,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;Gz61qQ7K&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 410.76030536755,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 815513657,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 153,
+            &quot;versionNonce&quot;: 269420887,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;ddnFD0bY&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 445.76030536755,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 131,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 136985559,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| id   | price |&quot;,
+            &quot;rawText&quot;: &quot;| id   | price |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| id   | price |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 153,
+            &quot;versionNonce&quot;: 54664089,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;06RTdNRQ&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 480.76030536755,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 327766297,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 154,
+            &quot;versionNonce&quot;: 1580320375,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;nbmZPt6I&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 515.9912402041978,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 149,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1094887671,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| 0    |     0 |&quot;,
+            &quot;rawText&quot;: &quot;| 0    |     0 |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| 0    |     0 |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 153,
+            &quot;versionNonce&quot;: 730677369,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;ONfx9LQP&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 550.76030536755,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 136,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1750189561,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;| 1    |    10 |&quot;,
+            &quot;rawText&quot;: &quot;| 1    |    10 |&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;| 1    |    10 |&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 153,
+            &quot;versionNonce&quot;: 255844247,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;Xyka5uMO&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 585.76030536755,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 145,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 1393586711,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;+------+-------+&quot;,
+            &quot;rawText&quot;: &quot;+------+-------+&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;+------+-------+&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 153,
+            &quot;versionNonce&quot;: 1826670937,
+            &quot;isDeleted&quot;: true,
+            &quot;id&quot;: &quot;Yr0lPosp&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -723.0248153348958,
+            &quot;y&quot;: 620.76030536755,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 248,
+            &quot;height&quot;: 25,
+            &quot;seed&quot;: 2046336729,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1674397258823,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;text&quot;: &quot;2 rows in set (0.00 sec)&quot;,
+            &quot;rawText&quot;: &quot;2 rows in set (0.00 sec)&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;2 rows in set (0.00 sec)&quot;
+        },
+        {
+            &quot;id&quot;: &quot;NJwiKZnT&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -50.82363758735664,
+            &quot;y&quot;: 392.37528713059294,
+            &quot;width&quot;: 11,
+            &quot;height&quot;: 25,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 1,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 1,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 535249433,
+            &quot;version&quot;: 4,
+            &quot;versionNonce&quot;: 1147270711,
+            &quot;isDeleted&quot;: true,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1674397221246,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;&quot;,
+            &quot;rawText&quot;: &quot;&quot;,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 1,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 18,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;&quot;
+        }
+    ],
+    &quot;appState&quot;: {
+        &quot;theme&quot;: &quot;dark&quot;,
+        &quot;viewBackgroundColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#ffffff&lt;/span&gt;&quot;,
+        &quot;currentItemStrokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+        &quot;currentItemBackgroundColor&quot;: &quot;transparent&quot;,
+        &quot;currentItemFillStyle&quot;: &quot;hachure&quot;,
+        &quot;currentItemStrokeWidth&quot;: 1,
+        &quot;currentItemStrokeStyle&quot;: &quot;solid&quot;,
+        &quot;currentItemRoughness&quot;: 1,
+        &quot;currentItemOpacity&quot;: 100,
+        &quot;currentItemFontFamily&quot;: 1,
+        &quot;currentItemFontSize&quot;: 20,
+        &quot;currentItemTextAlign&quot;: &quot;left&quot;,
+        &quot;currentItemStartArrowhead&quot;: null,
+        &quot;currentItemEndArrowhead&quot;: &quot;arrow&quot;,
+        &quot;scrollX&quot;: 1308.59973843963,
+        &quot;scrollY&quot;: 596.346303778498,
+        &quot;zoom&quot;: {
+            &quot;value&quot;: 0.55
+        },
+        &quot;currentItemRoundness&quot;: &quot;round&quot;,
+        &quot;gridSize&quot;: null,
+        &quot;colorPalette&quot;: {}
+    },
+    &quot;files&quot;: {}
+}
+</code></pre>
+<p>%%</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

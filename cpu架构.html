@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU架构 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>CPU架构</h1>
+        <time datetime="2026-01-03T13:04:29.295Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202502012204187.png" alt="image.png"></p>
+<h1>1. 主频</h1>
+<p>CPU 主频，即CPU的时钟频率，是衡量 CPU 运算速度的重要指标，以下从其定义、工作原理及与性能的关系等方面进行具体解释。</p>
+<ul>
+<li><strong>基本定义</strong>：CPU 主频表示 CPU 内数字脉冲信号振荡的速度，单位为赫兹（Hz）。通常所说的CPU 主频为2.4GHz、3.6GHz等，意味着CPU内部的时钟信号每秒能产生2.4×10⁹次、3.6×10⁹次振荡，即一个CPU时钟周期的时间不足1ns。</li>
+<li><strong>工作原理</strong>：CPU的运行依赖时钟信号来同步各个部件的操作。时钟信号就像指挥家的节拍，每个节拍（时钟周期）内，CPU 完成特定的基本操作，如读取指令、解码指令、执行运算等。&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;主频越高，每秒内的时钟周期数越多，CPU能完成的基本操作次数也越多，理论上运算速度就越快。</span></li>
+<li><strong>与性能的关系</strong>：一般情况下，在其他条件相同的前提下，主频越高，CPU 性能越强。例如，同架构、同核心数的两款CPU，主频3.0GHz的通常比2.5GHz的运算速度更快，在处理数据、运行程序等方面表现更出色。但CPU性能不仅取决于主频，还与&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;核心数、缓存大小、架构、指令集</font>等因素有关。如一些低主频、多核心的CPU，在多任务处理时，可能比高主频、单核心的 CPU 性能更好。</li>
+<li><strong>动态调整</strong>：现代CPU为了平衡性能和功耗，具备&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;动态调整主频</span>的技术，如Intel的睿频技术和AMD的智能加速技术。在系统负载高时，CPU可自动提升主频以提高性能；负载低时，降低主频减少功耗和发热，以实现节能和稳定运行。</li>
+</ul>
+<h1>2. 寄存器分类</h1>
+<p>CPU的每个核心都有自己的寄存器集，包含通用寄存器和特殊目的寄存器。通用寄存器用于存储通用数据和算术运算中间结果；特殊目的寄存器用于存储特定功能或控制状态信息，如程序计数器、栈指针、状态寄存器等 。<br>在执行指令时，每个核心只访问和操作自己的寄存器集，可并行执行不同指令和操作，不会互相干扰或直接访问对方寄存器内容。当多个核心需通信或数据交换时，可使用共享内存或特定同步机制（如锁、原子操作等）来实现，寄存器本身并不直接用于多核心之间的通信 。</p>
+<p>不同类型的CPU，其内部寄存器的种类、数量以及寄存器的数值范围都是不同的。不过，根据功能的不同，可以将寄存器划分为下面几类：</p>
+<table>
+<thead>
+<tr>
+<th>种类</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>累加寄存器</td>
+<td>存取运行的数据和运算后的数据</td>
+</tr>
+<tr>
+<td>标志寄存器</td>
+<td>用于反应处理器的状态和运算结果的某些特征以及控制指令的执行</td>
+</tr>
+<tr>
+<td>程序计数器</td>
+<td>程序计数器是用于存放下一条指令所在单元的地址的地方</td>
+</tr>
+<tr>
+<td>基址寄存器</td>
+<td>存储数据内存的起始位置</td>
+</tr>
+<tr>
+<td>变址寄存器</td>
+<td>存储基址的相对地址</td>
+</tr>
+<tr>
+<td>通用寄存器</td>
+<td>存储任意数据</td>
+</tr>
+<tr>
+<td>指令寄存器</td>
+<td>储存正在被运行的指令，CPU内部使用，程序无法对该寄存器进行读写</td>
+</tr>
+<tr>
+<td>栈寄存器</td>
+<td>存储栈区域的起始位置</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>[!tip]<br>其中<strong>程序计数器、累加寄存器、标志寄存器、指令寄存器和栈寄存器</strong>都只有一个，其他寄存器一般有多个。</p>
+</blockquote>
+<h1>3. 程序计数器（PC）</h1>
+<p>程序计数器（Program Counter）是用来存储下一条指令所在单元的地址。程序执行时，PC的初值为程序<strong>第一条指令</strong>的地址，在顺序执行程序时，控制器首先按程序计数器所指出的指令地址从内存中取出一条指令，然后分析和执行该指令，同时将PC的值加1指向下一条要执行的指令。可根据一个示例来看一下程序计数器的执行过程：<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202502012213320.png" alt="image.png"><br>这是一段进行相加的操作，程序启动，在经过编译解析后会由操作系统把硬盘中的程序复制到内存中，示例中的程序将123和456执行相加操作，并将结果输出到显示屏上。由于使用机器语言难以描述，所以这里经过翻译后的结果，实际上每个指令和数据都可能分布在不同的地址上，但为了方便说明，把组成每一条的内存和数据放在一个内存地址上。<br>地址0100是程序运行的起始位置。Windows等操作系统把程序从硬盘复制到内存后，会将程序计数器作为设定为起始位置0100，然后执行程序，每执行一条指令后，程序计数器的数据会增加1（或者直接指向下一条指令的地址），然后，CPU就会根据程序计数器的数值，从内存中读取命令并执行，也就是说，程序计数器控制程序的流程。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

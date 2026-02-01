@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Route Table与VRF - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Route Table与VRF</h1>
+        <time datetime="2026-01-03T13:04:29.257Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>在 Linux 系统中，支持使用多个 <strong>route table（路由表）</strong> 是为了增强网络配置的灵活性和功能性。多路由表的主要作用如下：</p>
+<h1>1. 实现策略路由（Policy Routing）</h1>
+<p>默认情况下，Linux 使用主路由表（<code>main</code>）中的路由规则来决定流量的转发路径。然而，某些场景下可能需要基于流量的<strong>源地址</strong>、<strong>目标地址</strong>、<strong>入接口</strong> 等条件来选择不同的路由表。这就是策略路由的核心功能。</p>
+<ul>
+<li><strong>示例场景：</strong><ul>
+<li>流量从不同的网络接口（如 <code>eth0</code> 和 <code>eth1</code>）进来时，需使用不同的网关。</li>
+<li>根据源 IP 地址选择不同的路由路径。<br>  <strong>配置示例：</strong></li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell"># 定义一个新的路由表 
+echo &quot;200 custom_table&quot; &gt;&gt; /etc/iproute2/rt_tables  
+# 向该路由表添加路由 
+ip route add 192.168.1.0/24 dev eth1 table custom_table  
+# 定义策略：源地址 192.168.1.100 的流量使用 custom_table 
+ip rule add from 192.168.1.100 table custom_table`
+</code></pre>
+<h1>2. 实现多网关配置</h1>
+<p>多路由表常用于多网关场景下的流量分配。例如，当一台服务器有多个网卡连接到不同的 ISP，且希望不同网卡使用各自的网关时，可以借助多路由表实现。</p>
+<ul>
+<li><strong>示例场景：</strong><ul>
+<li>一个网卡连接到 ISP1，另一个网卡连接到 ISP2。</li>
+<li>内部流量从 ISP1 出，外部流量从 ISP2 出。<br>  <strong>配置示例：</strong></li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell"># 为 ISP1 创建路由表 
+echo &quot;201 isp1_table&quot; &gt;&gt; /etc/iproute2/rt_tables 
+ip route add default via 192.168.1.1 dev eth0 table isp1_table  
+# 为 ISP2 创建路由表 
+echo &quot;202 isp2_table&quot; &gt;&gt; /etc/iproute2/rt_tables 
+ip route add default via 10.0.0.1 dev eth1 table isp2_table  
+# 定义规则：源地址 192.168.1.0/24 使用 ISP1 
+ip rule add from 192.168.1.0/24 table isp1_table  
+# 定义规则：源地址 10.0.0.0/24 使用 ISP2 
+ip rule add from 10.0.0.0/24 table isp2_table
+</code></pre>
+<h1>3. 解决路由冲突和复杂网络需求</h1>
+<p>在某些复杂网络环境中，不同的子网可能需要不同的路由规则。如果使用单一的主路由表，配置会非常复杂甚至不可行。使用多路由表可以将不同的路由需求分开管理，降低复杂性。</p>
+<ul>
+<li><strong>示例场景：</strong><ul>
+<li>公司网络中，VPN 流量、内网流量、公网流量需要分开走不同的路由。</li>
+</ul>
+</li>
+</ul>
+<h2>3.1. 支持高可用和冗余（Failover）</h2>
+<p>通过多个路由表，可以为不同的网络接口设置备用路由路径。当某个接口失效时，策略路由可以自动切换到备用路由表，以实现高可用性。</p>
+<ul>
+<li><strong>示例场景：</strong><ul>
+<li>两条物理线路，一条为主线路，另一条为备用线路。</li>
+<li>使用 <code>ip rule</code> 和监控脚本实现线路的自动切换。</li>
+</ul>
+</li>
+</ul>
+<h2>3.2. 实现流量隔离**</h2>
+<p>多路由表可以帮助隔离流量。例如，在多租户系统中，每个租户可能有自己的网络配置，流量需要单独路由而不影响其他租户。</p>
+<ul>
+<li><strong>示例场景：</strong><ul>
+<li>每个租户有独立的网段和网关，需通过不同的路由表管理其流量。</li>
+</ul>
+</li>
+</ul>
+<h2>3.3. 支持容器和虚拟机的多网络配置**</h2>
+<p>对于运行容器或虚拟机的主机，可能需要根据虚拟机或容器的网络配置选择不同的路由路径。多路由表可以用来管理不同的网络环境。</p>
+<ul>
+<li><strong>示例场景：</strong><ul>
+<li>Docker 容器通过 <code>docker0</code> 使用默认路由，KVM 虚拟机通过 <code>br0</code> 使用另一条路由。</li>
+</ul>
+</li>
+</ul>
+<h1>4. <strong>总结</strong></h1>
+<p>多路由表的主要作用是提供灵活的网络配置能力，适用于以下场景：</p>
+<ol>
+<li>策略路由（基于条件选择路由表）。</li>
+<li>多网关配置（多出口流量管理）。</li>
+<li>解决复杂的网络需求和路由冲突。</li>
+<li>高可用和冗余网络。</li>
+<li>流量隔离（多租户或应用隔离）。</li>
+<li>容器或虚拟化场景下的多网络支持。</li>
+</ol>
+<h1>5. VRF</h1>
+<p>在现代网络环境中，使用 VRF（Virtual Routing and Forwarding）确实是更高效和优雅的解决方案。相比通过多路由表和策略路由手动实现复杂的网络需求，VRF 提供了一个更结构化、模块化的方式来隔离和管理流量。以下是关于为什么可以考虑使用 VRF，以及其与传统多路由表方式的比较。</p>
+<h2>5.1. <strong>VRF 与传统多路由表的对比</strong></h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>多路由表</th>
+<th>VRF</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>隔离性</strong></td>
+<td>手动配置，通过策略路由（<code>ip rule</code>）实现</td>
+<td>天然隔离，每个 VRF 拥有独立的路由表</td>
+</tr>
+<tr>
+<td><strong>易用性</strong></td>
+<td>复杂，需要维护路由表、策略规则和 NAT</td>
+<td>简单，直接将接口加入 VRF</td>
+</tr>
+<tr>
+<td><strong>扩展性</strong></td>
+<td>随规模增长复杂度上升</td>
+<td>面向多租户和大规模网络设计，扩展性强</td>
+</tr>
+<tr>
+<td><strong>兼容性</strong></td>
+<td>标准 Linux 工具，易于集成</td>
+<td>需要 Linux 内核支持 VRF</td>
+</tr>
+<tr>
+<td><strong>功能性</strong></td>
+<td>功能单一，仅用于流量分离和路由策略</td>
+<td>支持更丰富的功能，例如 VRF 间通信</td>
+</tr>
+</tbody></table>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

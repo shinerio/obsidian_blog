@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BGP邻居建立 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>BGP邻居建立</h1>
+        <time datetime="2026-01-03T13:04:29.243Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202503192234972.png" alt="image.png"></p>
+<ul>
+<li>先启动BGP的一端先发起TCP连接，R1先启动BGP，R1使用随机端口号向R2的179端口发起TCP连接，完成TCP连接的建立。</li>
+<li>三次握手建立完成之后，R1、R2之间相互发送Open报文，携带参数用于对等体建立</li>
+<li>参数协商正常之后双方相互发送Keepalive报文，收到对端发送的Keepalive报文之后对等体建立成功，同时双方定期发送Keepalive报文用于保持连接。</li>
+</ul>
+<h1>1. TCP连接</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202503192241218.png" alt="image.png"></p>
+<ul>
+<li>缺省情况下，BGP使用报文出接口作为TCP连接的本地接口。</li>
+<li>在部署IBGP对等体关系时，建议使用Loopback地址作为更新源地址。Loopback接口非常稳定，而且可以借助AS内的IGP和冗余拓扑来保证可靠性。</li>
+<li>在部署EBGP对等体关系时，通常使用直连接口的IP地址作为源地址，如若使用Loopback接口建立EBGP对等体关系，则应注意EBGP多跳问题。<blockquote>
+<p>[!note]<br>Loopback地址和lo0(127.0.0.1，本地回环地址)是不一样的，路由器的Loopback地址是一个虚拟接口，通常配置为一个可路由的IP地址，例如10.0.12.1或192.168.0.1等等。除了Loopback接口外，路由器上还有很多连接到不同的网段的多个以太网接口，每个接口都有自己的IP地址。</p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p>[!note]<br>一般而言在AS内部，网络具备一定的冗余性。在R1与R3之间，如果采用直连接口建IBGP邻居关系，那么一旦接口或者直连链路发生故障，BGP会话也就断了，但是事实上，由于冗余链路的存在，R1与R3之间的IP连通性其实并没有DOWN（仍然可以通过R4到达彼此）。</p>
+</blockquote>
+<h1>2. Open报文</h1>
+<p>主要包括</p>
+<ul>
+<li>My Autonomous System：自身AS号</li>
+<li>Hold Time：用于协商后续Keepalive报文发送时间</li>
+<li>BGP Identifier：自身Router ID<blockquote>
+<p>[!tip]<br>BGP建立对等体的对等体都会发起TCP三次握手，所以会建立两个TCP连接，但是实际BGP只会保留其中一个TCP连接，从Open报文中获取对端BGP Identifier之后BGP对等体会比较本端的Router ID和对端的Router ID大小，如果本端Router ID小于对端Router ID，则会关闭本地建立的TCP连接，使用由对端主动发起创建的TCP连接进行后续的BGP报文交互。</p>
+</blockquote>
+</li>
+</ul>
+<h1>3. Update报文</h1>
+<p><a href="https://img2023.cnblogs.com/blog/1661734/202309/1661734-20230918095024034-1658400849.png"><img src="https://img2023.cnblogs.com/blog/1661734/202309/1661734-20230918095024034-1658400849.png" alt="image-20220928134909305"></a></p>
+<p>BGP对等体关系建立之后，BGP路由器发送BGP Update（更新）报文通告路由到对等体。路由通告包括可达路由和不可达路由。</p>
+<h1>4. Notification报文</h1>
+<p>Notification报文用于错误信息通告，然后断开BGP邻居</p>
+<h1>5. Route-Refresh报文</h1>
+<p>用于请求对等体重新发送路由信息</p>
+<h1>6. 实验</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202503192334970.png" alt="image.png"></p>
+<h2>6.1. 配置端口</h2>
+<p>R1</p>
+<pre><code class="language-shell">AR2&lt;span class=&quot;tag&quot;&gt;#configure&lt;/span&gt; terminal
+AR2(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f0/0
+AR2(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 192.168.1.2 255.255.255.0
+AR2(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+AR2(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f1/0
+AR2(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 10.0.0.1 255.0.0.0
+AR2(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+AR2(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; lo0
+AR2(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 2.2.2.2 255.255.255.255
+</code></pre>
+<p>R2</p>
+<pre><code class="language-shell">R2&lt;span class=&quot;tag&quot;&gt;#configure&lt;/span&gt; terminal
+Enter configuration commands, one per line.  End with CNTL/Z.
+R2(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f1/0
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 192.168.1.1 255.255.255.0
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt;
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f0/0
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 192.168.2.1 255.255.255.0
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; lo0
+R2(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 1.1.1.1 255.255.255.255
+</code></pre>
+<p>PC2</p>
+<pre><code class="language-shell">PC2&gt; ip 10.0.0.2 255.0.0.0 10.0.0.1
+</code></pre>
+<p>R3</p>
+<pre><code class="language-shell">R3&lt;span class=&quot;tag&quot;&gt;#configure&lt;/span&gt; terminal
+R3(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f0/0
+R3(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 192.168.3.1 255.255.255.0
+R3(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+R3(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f1/0
+R3(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 192.168.2.2 255.255.255.0
+R3(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+R3(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; lo0
+R3(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 3.3.3.3 255.255.255.255
+</code></pre>
+<p>R4</p>
+<pre><code class="language-shell">R4&lt;span class=&quot;tag&quot;&gt;#configure&lt;/span&gt; terminal
+R4(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f1/0
+R4(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 192.168.3.2 255.255.255.0
+R4(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+R4(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; f0/0
+R4(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 11.0.0.1 255.0.0.0
+R4(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shutdown
+R4(config-if)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; lo0
+R4(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 4.4.4.4 255.255.255.255
+</code></pre>
+<p>PC1</p>
+<pre><code class="language-shell">PC1&gt; ip 11.0.0.2 255.0.0.0 11.0.0.1
+</code></pre>
+<h2>6.2. R1和R2配置OSPF</h2>
+<p>R2</p>
+<pre><code class="language-shell">R2&lt;span class=&quot;tag&quot;&gt;#configure&lt;/span&gt; terminal
+R2(config)&lt;span class=&quot;tag&quot;&gt;#router&lt;/span&gt; ospf 100
+R2(config-router)&lt;span class=&quot;tag&quot;&gt;#network&lt;/span&gt; 192.168.1.0 0.0.0.255 area 0
+R2(config-router)&lt;span class=&quot;tag&quot;&gt;#network&lt;/span&gt; 1.1.1.1 0.0.0.0 area 0
+</code></pre>
+<p>R1</p>
+<pre><code class="language-shell">R1&lt;span class=&quot;tag&quot;&gt;#configure&lt;/span&gt; terminal
+R1(config)&lt;span class=&quot;tag&quot;&gt;#router&lt;/span&gt; ospf 100
+R1(config-router)&lt;span class=&quot;tag&quot;&gt;#network&lt;/span&gt; 10.0.0.0 0.255.255.255 area 0
+R1(config-router)&lt;span class=&quot;tag&quot;&gt;#network&lt;/span&gt; 2.2.2.2 0.0.0.0 area 0
+</code></pre>
+<h2>6.3. R3和R4配置RIP</h2>
+<h2>6.4. 配置BGP</h2>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

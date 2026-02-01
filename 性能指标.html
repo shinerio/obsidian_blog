@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机网络（二）—— 性能指标 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>计算机网络（二）—— 性能指标</h1>
+        <time datetime="2020-04-20T00:00:00.000Z">2020年4月20日</time>
+        <div class="tags">
+            
+            <span class="tag">计算机网络</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>计算机网络的常见的性能指标有速率、带宽、吞吐量、时延、时延带宽积、往返时间、利用率。</p>
+<!--more-->
+
+<h1>1. 速率（bit/s或byte/s）</h1>
+<p>速率是物理层概念，指的是信道上每秒钟传输的0/1比特数量。比如下载文件中显示的7.8MB/s指的是每秒中可以传输7.8M字节的信息。</p>
+<h1>2. 带宽（bit/s）</h1>
+<p>带宽是逻辑概念，表示网络信道传输数据的能力，即最高速率。不同的信道占据着不同的频谱，信道在最大频带下能够达到的最大速率称之为带宽。我们常常会在运营商办理入网服务，常见的百兆带宽指的是100Mbps，即（12800byte/s）。通信网络包括核心网、传输网、接入网等，运营商一般在位于接入网的入口处进行限速，一旦用户流量跨过接入网，就不再限速。</p>
+<h1>3. 信道容量（bit/s）</h1>
+<p>香农定理给出了信道信息传送速率的上限（比特每秒）和信道信噪比及带宽的关系。在有随机热噪声的信道上传输数据信号时，信道容量$C_{max}$与信道带宽W，信噪比$S/N$关系为：</p>
+<p>$<br>C_{max}=W*\log_{2}(1+S/N)<br>$<br>简单来看，就是信道带宽越大，信噪比越大（信号越强，噪音越弱），信道容量越大。香农定理指导我们，只要实际传输速率$R&lt;C_{max}$，理论上就可以保证误码率为0。想要提高信息传输的速率，要么增大带宽（电话线换光纤），要么使用合适编码方案提高信噪比，这就是香农定理的意义。</p>
+<blockquote>
+<p>此处带宽是与计网中的带宽概念不同，通信领域“带宽”指的信号所占据的频带宽度（以赫兹Hz为单位）。例如，在普通电话线上提高访问Internet的ADSL使用了大约1MHz的带宽，对于1-2千米的短距离来说，40分贝的信噪比已经算是比较好的状况了。正是由于电话线具有这样的特性，因此我们永远不可能期望在电话线上获得高于13Mbps的速率。而光纤的带宽大约有3000GHz，是传统电话线的200000倍。</p>
+</blockquote>
+<h1>4. 吞吐量(Throughput)</h1>
+<p>吞吐量表示在单位时间内通过某个网络或接口的数据量，包括全部上传和下载的流量。通常我们更倾向于用“吞吐量”一词来表示一个系统的测试性能。因为受各种低效率因素的影响，一段带宽为10Mbps的链路连接的一对节点可能只达到2Mbps的吞吐量。</p>
+<h1>5. 时延(delay/latency)</h1>
+<p>时延是指数据（一个数据包或bit）从网络的一端传送到另一端所需要的时间。总时延=发送时延+传播时延+排队时延+处理时延。</p>
+<ul>
+<li>发送时延（transmission delay）是主机或路由器发送数据帧所需时间，也就是从发送数据帧的第一个比特开始，到该帧最后一个比特发送完毕所需要的时间。</li>
+</ul>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424213210.png" alt=""></p>
+<ul>
+<li>传播时延（propagation delay）是电磁波在信道中传播一定的距离需要花费的时间。主机或路由器发送完数据到最后一比特到达主机或路由器的所需时间。</li>
+</ul>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424213227.png" alt=""></p>
+<ul>
+<li>排队时延是指分组在经过网络传输时，要经过许多的路由器。但分组在进入路由器后要先在输入队列中排队等待处理。</li>
+<li>处理时延是指路由器或主机在收到数据包时，要花费一定时间进行处理，例如分析数据包的首部、进行首部差错检验，查找路由表给数据包选定转发出口，这就产生了处理时延。</li>
+</ul>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424213336.png" alt=""></p>
+<h1>6. 时延带宽积</h1>
+<p>时延带宽积=传播时延×带宽。表示在特定时间里，网络上的最大数据量。</p>
+<blockquote>
+<p>假设两台电脑百兆网口接在一起用Chariot跑TCP流量，电脑的窗口大小为64KB（窗口不自动扩大）。它们之间线路速度为100Mb/s ，RTT稳定为1ms，那么带宽时延乘积为100Kb (12.5KB，tcp已发送未确认的数据), 小于窗口大小，那么跑出来的速度是接近线速（100Mb/s）的。如果RTT稳定为10ms，那么理论速度为64*8/10=51.2Mb/s。</p>
+</blockquote>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424213612.png" alt=""></p>
+<h1>7. 往返时间(Round-Trip Time，RTT)</h1>
+<p>往返时间表示从发送方发送数据开始，到发送方接收到来自接收方的确认，总共经历的时间。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250321200519498.png" alt=""></p>
+<h1>8. 利用率</h1>
+<p>利用率是指的网络有百分之几的时间是被利用的（有数据通过），没有数据通过的网络利用率为零。U是网络利用率，D表示网络当前时延，$D_0$表示网络空闲时的时延。$D=D_0/(1-U)$</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424214055.png" alt=""></p>
+<h1>9. 带宽和网络吞吐量</h1>
+<p>带宽表示可以通过网络传输的数据总量。总带宽是指可以通过网络传输的理论最大数据量。测量单位是兆字节每秒（MBps）。可以将带宽视为网络的理论最大吞吐量。 </p>
+<p>带宽是指可以传输的数据量，而吞吐量是指根据实际网络限制，在任何给定时刻传输的实际数据量。高带宽并不能保证速度或良好的网络性能，但更高的带宽会导致更高的吞吐量。</p>
+<h1>10. web服务性能指标</h1>
+<h1>11. RT（Response time，响应时间）</h1>
+<p>响应时间是指系统对请求作出响应的时间。对于我们常见的手游来说，比如王者荣耀100ms的响应时间应该是不错的，400ms则到了无法忍受的程度。</p>
+<h2>11.1. TPS（Transaction Per Second，每秒事务数）</h2>
+<p>在性能测试工具中，TPS也被称之为吞吐量。吞吐量直接体现系统性能的承载能力，是指单位时间内处理的客户请求的数量。其计量单位可以根据需求不同而不同，比如请求数/秒，页面数/秒，业务数/小时</p>
+<h2>11.2. QPS（Query Per Second，每秒查询数）</h2>
+<p>每秒查询率QPS是对一个特定的查询服务器在规定时间内所处理流量多少的衡量标准，在因特网上，作为域名系统服务器的机器的性能经常用每秒查询率来衡量。对应fetches/sec，即每秒的响应请求数，也即是最大吞吐能力。 （看来是类似于TPS，只是应用于特定场景的吞吐量）</p>
+<h2>11.3. 并发用户数</h2>
+<p>并发用户数对于一个系统来说具有统计意义，指系统可以同时承载的正常使用系统功能的用户的数量。实际上，并发用户数是一个非常不准确的指标，因为用户不同的使用模式会导致不同用户在单位时间发出不同数量的请求。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

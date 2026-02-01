@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4+1视图 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>4+1视图</h1>
+        <time datetime="2026-01-03T13:04:29.282Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<table>
+<thead>
+<tr>
+<th align="left">视图类型</th>
+<th align="left">描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">逻辑视图</td>
+<td align="left">逻辑视图面向系统逻辑分析和设计，是描述系统逻辑结构的视图，主要解决系统分析和设计的问题，它描述系统的<strong>业务上下文</strong>、系统的<strong>逻辑分解</strong>，以及分解出的<strong>逻辑元素间的关系</strong>。</td>
+</tr>
+<tr>
+<td align="left">开发视图（实现视图）</td>
+<td align="left">开发视图面向系统开发及软件管理，是描述<strong>系统代码结构</strong>，<strong>构建结构</strong>的视图，主要解决系统技术实现和开发的问题，它依托逻辑视图，描述代码、构建结构。</td>
+</tr>
+<tr>
+<td align="left">运行视图（处理视图、行为视图）</td>
+<td align="left">运行视图面向系统运行，是描述系统<strong>启动过程</strong>、<strong>运行期交互</strong>的视图，主要解决系统运行期交互，描述各<strong>可执行交付件在运行期的交互关系</strong>。</td>
+</tr>
+<tr>
+<td align="left">部署视图（物理视图）</td>
+<td align="left">部署视图面向系统部署，是描述系统的<strong>交付</strong>、<strong>安装</strong>、<strong>部署</strong>的视图，主要解决系统安装部署的问题，描述系统的交付、安装、部署关系。</td>
+</tr>
+<tr>
+<td align="left">用例视图（场景视图）</td>
+<td align="left">用例视图以用例作为驱动元素，驱动和验证其他四个视图的设计，<strong>用例视图不增加设计元素，仅增加用例作为输入</strong>，因此作为“+1”视图。</td>
+</tr>
+</tbody></table>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250324213031.png" alt="image.png"></p>
+<blockquote>
+<p>[!note]<br>白盒视图：逻辑视图、开发视图、运行视图都属于<br>黑盒视图：部署视图、用例视图</p>
+</blockquote>
+<h1>1. 用例视图</h1>
+<p>用例视图是一种需求分析技术，通常采用UML的用例图进行设计。通过用例视图的设计过程，可以正确的识别系统的用户和其它系统（Actor）、系统边界（Boundary）和用例（Use Case），并对系统的功能场景进行充分的分析，以确定系统提供的功能可以满足用户需求。</p>
+<p>从文章开头的图中我们也能看到其他视图都是围绕用例视图展开的。用例视图之所以是4+1视图的<strong>核心</strong>，是因为它确定了以下信息，而其它4个视图都是需要围绕着这些信息进行设计：</p>
+<ul>
+<li><strong>系统边界</strong>：有了边界，才能够确定系统的设计范围；同时，通过边界能够识别出系统需要与用户或其它系统进行交互；</li>
+<li><strong>系统用户</strong>：明确的用户定义是系统需求分析的先决条件；</li>
+<li><strong>功能和场景</strong>：通过识别出系统与用户或其它系统的交互，可以分析出系统需要提供哪些功能，以及这些功能存在哪些应用场景；<blockquote>
+<p>[!note]<br>结合DDD思想，我们可以通过事件风暴输出我们的领域事件（功能和场景），从而形成用例视图</p>
+</blockquote>
+</li>
+</ul>
+<h2>1.1. 用例模型画法</h2>
+<table>
+<thead>
+<tr>
+<th><strong>组成元素</strong></th>
+<th><strong>说明</strong></th>
+<th><strong>符号表示</strong></th>
+<th><strong>备注</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>参与者（actor）</td>
+<td>参与者（actor）在建模过程中处于核心地位，actor是在系统之外与系统交互的人或事物。用一个小人表示。</td>
+<td><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/68d3f09840b94ab3beb4f8d01cb472c7~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp#?w=166&h=188&e=png&b=fefefe" alt="image.png"></td>
+<td>1. 找出参与者：参与者一定是<strong>直接并主动地向系统发出动作并反馈</strong>，否则就不是参与者。  <br>2. 谁对系统有着明确的目标和要求并主动发出动作？  <br>3. 系统为谁服务？业务工人（business worker）：被动参与业务处于系统边界内部。</td>
+</tr>
+<tr>
+<td>用例 (User Case)</td>
+<td>用例定义了一组用例实例，每个实例都是系统所执行的一系列动作。用一个椭圆代表。</td>
+<td><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/8e6edeeadc4d4c108ff3a532c546f42d~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp#?w=302&h=128&e=png&b=fdfdfd" alt="image.png"></td>
+<td>用例特征：1. 用例是相对独立的 2. 用例的执行结果对参与者来说是可观测和有意义的 3. 这件事必须由一个参与者发起 4.用例必然由动宾短语形式出现的 5.一个用例就是一个需求单元、设计单元、开发单元、测试单元，甚至部署单元  <br>用例的粒度：1. 概念建模阶段：每个用例描述一个完整的事件流。2. 系统建模阶段：每个用例能够描述操作者与计算机的一次完整交互用例粒度的划分依据最标准的方法以该用例是否完成了参与者的某个完整目的为依据。  <br>用例的来源：1. 一个明确有效的目标 2. 一个真实的目标应当完备的表达主角的期望 3. 一个有效的目标应当在系统边界内，由主角发动并具有明确的后果</td>
+</tr>
+<tr>
+<td>关联关系 (Association)</td>
+<td>表示参与者与用例之间的关系。用一个直线箭头表示</td>
+<td><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/c1e0891a2da349f2bd88bea8dabc64b6~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp#?w=568&h=242&e=png&b=fdfdfd" alt="image.png"></td>
+<td></td>
+</tr>
+<tr>
+<td>包含关系 (Include)</td>
+<td>表示一个<strong>大的功能分解成多个小模块的动作</strong>。用一个带包含文字的虚线箭头表示</td>
+<td><img src="https://p1-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/f149e3256a63488198cb89000861ca01~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp#?w=682&h=220&e=png&b=fdfdfd" alt="image.png"></td>
+<td></td>
+</tr>
+<tr>
+<td>扩展关系 (Extend)</td>
+<td>表示用例功能的延伸，相当于是<strong>为用例提供附加功能</strong>。用一个带扩展文字的虚线箭头表示</td>
+<td><img src="https://p9-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/0fc05e7a1b4f4bfcbad11e99a48c494e~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp#?w=664&h=220&e=png&b=fdfdfd" alt="image.png"></td>
+<td></td>
+</tr>
+<tr>
+<td>边界</td>
+<td>用来表示正在建模系统的边界。边界内表示系统的组成部分，边界外表示系统外部。系统边界在画图中用方框来表示，同时附上系统的名称，参与者画在边界的外面，用例画在边界里面。</td>
+<td><img src="https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/a5d621a2ed7a4d70bae9418be5cf6bbd~tplv-k3u1fbpfcp-zoom-in-crop-mark:1512:0:0:0.awebp#?w=1096&h=660&e=png&b=fefefe" alt="image.png"></td>
+<td>边界是可大可小的，由建模者主观确定。边界的确定是一个动态的过程，没有明确的方法。需求过程是一个动态的过程，不可能一蹴而就，我们只能把这些不同的结果进行对比、思考、讨论，最终希望得到一个更恰当的结果，就像盲人摸象—样，多方结果的相互印证得出的结论总是会更接近真相。所以在建模过程中，如果对建模结果感到疑惑，就可以试着改变边界设定，得到不同的参与者和用例，再通过相互印证的方式得到更好的结果。系统边界的作用有时候不是很明显，在画图时可省略。</td>
+</tr>
+</tbody></table>
+<h2>1.2. 示例</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328215105.png" alt="image.png"></p>
+<h1>2. 逻辑视图</h1>
+<p>用于描述系统的功能需求，即系统给用户<strong>提供哪些服务</strong>；以及描述系统软件功能拆解后的<strong>组件关系</strong>、<strong>组件约束</strong>和<strong>边界</strong>，反映系统整体组成与系统如何构建的过程。</p>
+<p>软件设计最重要的原则就是高内聚、低耦合，一个满足此原则的系统不应该存在不合理的依赖关系，比如下层与上层间的反向依赖，或是循环依赖等。</p>
+<p>一般，逻辑架构元素决定了开发组织（根据康威定律，反之亦然）。因此，逻辑元素的边界和接口也是后续多个开发组织之间进行接口控制的关系依据。设计合理的逻辑架构，可以提升团队的沟通效率，进而提升整个系统的交付效率和质量。</p>
+<h2>2.1. 逻辑视图画法</h2>
+<p>步骤分解顺序为：System &gt; Susbsystem &gt; Component &gt; Module，对应着0层逻辑模型 -&gt; 1层逻辑模型 -&gt; 2层逻辑模型。</p>
+<h3>2.1.1. 0层模型</h3>
+<p>0层模型描述了System之间的关系，System与Subsystem包含关系。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328221622.png" alt="image.png"></p>
+<h3>2.1.2. 1层模型</h3>
+<p>1层模型描述Subsystem之间的关系，Subsystem和Component包含关系。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328222226.png" alt="image.png"></p>
+<h3>2.1.3. 2层模型</h3>
+<p>2层模型描述Component之间的关系，Component和module包含关系。</p>
+<h2>2.2. 示例</h2>
+<p>javaj体系中各个功能组件，以及他们的<strong>层级关系</strong>，<strong>作用</strong>和<strong>依赖范围</strong>。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328214901.png" alt="image.png"><br>springcloud微服务的逻辑视图示例，描述了springcloud中各个功能组件。该逻辑视图描述了springcloud的关键组件、作用及相互依赖关系<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328214924.png" alt="image.png"></p>
+<h1>3. 开发视图</h1>
+<p>主要包括两部分信息：</p>
+<ul>
+<li>对逻辑视图中功能模块，描述其代码位置，可以是代码仓位置，或代码目录，或是开源软件的版本信息等</li>
+<li>系统的构建，即如何将代码编译成二进制交付件（比如.so/.bin）。这个构建信息需要包括构建依赖、构建工具链、构建环境信息</li>
+</ul>
+<p>一个设计良好的开发视图，应该能够满足以下要求：</p>
+<ul>
+<li>通过逻辑视图的功能模块，能够找到它所有代码和所有的二进制交付件</li>
+<li>每一个代码源文件，都能够找到它所属的逻辑功能模块</li>
+<li>每一个二进制交付件，都能够找到它集成了哪些逻辑视图中的功能模块<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328222601.png" alt="image.png"></li>
+</ul>
+<h1>4. 运行视图</h1>
+<p>逻辑视图、开发视图和部署视图，描述的都是系统的静态信息，到现在为止我们还缺少对系统动态行为的描述，而运行视图就是用来描述<strong>系统中的动态信息的</strong>。运行视图最常见的设计工具就是UML的时序图。</p>
+<p>运行视图的设计，最常见的是逻辑架构元素之间的交互关系，比如消息交互、服务调用或API调用。如下图所示。</p>
+<p>在运行视图中，除了要关注组件间的交互关系，通常还需要考虑并发、抢占、关键资源（比如锁）访问等。</p>
+<h2>4.1. 组成元素</h2>
+<table>
+<thead>
+<tr>
+<th>元素</th>
+<th>描述</th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>进行角色（<code>Actor</code>）</td>
+<td>在交互中扮演特定角色的实体，可以是人、系统、外部组件等。</td>
+<td></td>
+</tr>
+<tr>
+<td>对象(<code>Object</code>)</td>
+<td>在交互中参与通信的实体，表示在系统中存在的具体对象，可以是类的实例、组件等。</td>
+<td></td>
+</tr>
+<tr>
+<td>生命线(<code>LifeLine</code>)</td>
+<td>表示对象在整个交互中的存在时间，是对象的生命周期，通常与对象的生存期一致。</td>
+<td></td>
+</tr>
+<tr>
+<td>控制焦点(<code>Activation</code>)</td>
+<td>表示对象活跃时的时间段，用于标识对象的操作或消息发送的时间段，用虚线框表示。</td>
+<td></td>
+</tr>
+<tr>
+<td>消息(<code>Message</code>)</td>
+<td>表示对象之间的通信或交互，可以是同步消息、异步消息、返回消息等。</td>
+<td></td>
+</tr>
+<tr>
+<td>自关联消息</td>
+<td>表示对象发送消息给自身的情况，用于描述对象的自我调用或自身处理。</td>
+<td></td>
+</tr>
+<tr>
+<td>组合片段</td>
+<td>用于表示在一段时间内特定的控制流程或行为，可以嵌套在时序图中，用来划分不同的交互片段。</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>时序图元素通过各种连接和注释，共同描述了对象之间的交互过程，以及它们的执行顺序和时序关系。这有助于开发人员更好地理解系统中的消息传递和协作情况。</p>
+<h2>4.2. 示例</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328222725.png" alt="image.png"></p>
+<h1>5. 物理视图</h1>
+<p>物理视图是软件架构中的一部分，用于描述系统的物理部署和运行环境。它关注于如何将软件系统部署在硬件设备上，并展示了不同组件、模块、服务在物理设备上的布局和交互关系。物理视图帮助开发人员和架构师理解系统的部署情况，以及硬件资源的利用情况。在UML中通常由部署图表示。</p>
+<h2>5.1. 元素组成</h2>
+<table>
+<thead>
+<tr>
+<th>元素类型</th>
+<th>描述</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>节点（Node）</td>
+<td>物理或虚拟的计算资源，代表部署目标的硬件或软件环境</td>
+<td>Web 服务器、数据库服务器，既可以是物理机器也可以是容器</td>
+</tr>
+<tr>
+<td>构件（Component）</td>
+<td>系统中可部署和替换的模块单元</td>
+<td>数据库组件、应用服务器组件</td>
+</tr>
+<tr>
+<td>节点关系（Node Relationship）</td>
+<td>表示节点之间的连接或依赖关系</td>
+<td>连接、依赖</td>
+</tr>
+<tr>
+<td>部署关系（Deployment Relationship）</td>
+<td>节点与构件之间的部署关系</td>
+<td>部署、关联</td>
+</tr>
+<tr>
+<td>网络（Network）</td>
+<td>物理或逻辑的网络基础设施</td>
+<td>局域网、互联网</td>
+</tr>
+<tr>
+<td>存储（Artifact）</td>
+<td>被部署的物件（如文件、数据库表）</td>
+<td>配置文件、数据文件</td>
+</tr>
+<tr>
+<td>线条（Connector）</td>
+<td>构件之间的通信路径</td>
+<td>连接器、通信路径</td>
+</tr>
+</tbody></table>
+<h2>5.2. 示例</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328222938.png" alt="image.png"></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

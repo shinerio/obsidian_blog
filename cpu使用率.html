@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPU使用率 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>CPU使用率</h1>
+        <time datetime="2026-01-03T13:04:29.270Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 查看进程CPU使用率</h1>
+<h2>1.1. 平均使用率</h2>
+<p>ps命令显示的<code>%cpu</code>值是进程的平均CPU使用率，计算公式为:<br>$%CPU=(进程使用的CPU时间​/进程运行的总时间)×100$<br>如下命令显示CPU占用最高的前几名进程<br><code>ps -eo pid,comm,%cpu --sort=-%cpu | head</code><br>输出如下</p>
+<pre><code class="language-scss">PID COMMAND         %CPU  
+1234 firefox         42.3  
+5678 chrome          37.5  
+9101 java            22.0
+</code></pre>
+<h2>1.2. 瞬时使用率</h2>
+<p>如果想监控某个进程（比如 <code>nginx</code>）的 CPU 使用率</p>
+<pre><code>top -p $(pgrep nginx)
+</code></pre>
+<h1>2. 查看系统CPU使用率</h1>
+<h2>2.1. 使用 <code>top</code> 命令（实时查看）</h2>
+<p>进入 <code>top</code> 界面后，按 <strong><code>1</code></strong> 可以查看每个CPU核心的使用情况。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250302162105169.png" alt="image.png"><br><code>Cpu(s)</code> 行的字段含义：</p>
+<ul>
+<li><strong><code>us</code>（user）</strong>：用户进程占用 CPU 百分比</li>
+<li><strong><code>sy</code>（system）</strong>：内核进程占用 CPU 百分比</li>
+<li><strong><code>ni</code>（nice）</strong>：调整过优先级的用户进程占用 CPU 百分比</li>
+<li><strong><code>id</code>（idle）</strong>：空闲 CPU 百分比</li>
+<li><strong><code>wa</code>（iowait）</strong>：等待 I/O 操作的时间</li>
+<li><strong><code>hi</code>（hardware IRQ）</strong>：硬件中断占用 CPU 百分比</li>
+<li><strong><code>si</code>（software IRQ）</strong>：软件中断占用 CPU 百分比</li>
+<li><strong><code>st</code>（steal）</strong>：虚拟化环境中被其他虚拟机抢占的 CPU 百分比</li>
+</ul>
+<pre><code class="language-scss">%Cpu(s):  12.3 us,  4.5 sy,  0.0 ni, 80.1 id,  2.9 wa,  0.0 hi,  0.2 si,  0.0 st
+</code></pre>
+<ul>
+<li>用户进程占用12.3%CPU</li>
+<li>内核进程占用4.5%CPU</li>
+<li>空闲80.1%CPU</li>
+</ul>
+<h2>2.2. 使用 <code>htop</code>（更美观的交互界面)</h2>
+<p>需要手动安装（部分 Linux 发行版可能没有预装）。</p>
+<pre><code class="language-shell">sudo apt install htop 
+# Ubuntu/Debian 
+sudo yum install htop  
+# CentOS/RHEL sudo dnf install htop  # Fedora`
+</code></pre>
+<ul>
+<li>显示每个 CPU 核心的负载情况</li>
+<li>颜色区分不同类型的 CPU 负载</li>
+<li>支持鼠标操作和快捷键<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250302162144690.png" alt="image.png"></li>
+</ul>
+<h2>2.3. 使用 <code>vmstat</code>（监控 CPU 使用情况）</h2>
+<p><code>vmstat 1</code><br>输出如下<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250302162217345.png" alt="image.png"></p>
+<ul>
+<li><strong><code>us</code>（user）</strong>：用户进程CPU使用率</li>
+<li><strong><code>sy</code>（system）</strong>：内核进程CPU使用率</li>
+<li><strong><code>id</code>（idle）</strong>：CPU空闲率</li>
+<li><strong><code>wa</code>（wait）</strong>：I/O等待占用CPU比例</li>
+</ul>
+<h2>2.4. 使用 <code>mpstat</code>（更详细的 CPU 统计信息）</h2>
+<p><code>mpstat -P ALL 1</code><br><strong>关键参数</strong></p>
+<ul>
+<li><code>-P ALL</code>：显示所有CPU核心的统计信息</li>
+<li><code>1</code>：每秒刷新一次<br>安装方式</li>
+</ul>
+<pre><code class="language-shell">sudo apt install sysstat  
+# Ubuntu/Debian 
+sudo yum install sysstat  
+# CentOS/RHEL`
+</code></pre>
+<p>输出如下<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250302162355778.png" alt="image.png"></p>
+<h2>2.5. 使用 <code>sar</code>（历史 CPU 使用情况）</h2>
+<p><code>sar -u 5 3</code></p>
+<ul>
+<li>需要安装 <code>sysstat</code>（同 <code>mpstat</code>）</li>
+<li><code>-u</code>：显示 CPU 使用情况。</li>
+<li><code>5 3</code>：每 5 秒采样一次，共 3 次。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250302162516258.png" alt="image.png"><br>top是实时显示cpu使用率，而sar适用于<strong>CPU 历史使用情况分析</strong>，可以查看过去的CPU负载趋势。sar从 <code>sysstat</code> 日志文件 <code>/var/log/sysstat/</code> 读取数据，适合长期分析。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250302162750842.png" alt="image.png"></li>
+</ul>
+<h2>2.6. 只查看 CPU 使用率数值</h2>
+<p>如果你只想获取当前的CPU使用率（去掉 <code>idle</code> 部分）：<br><code>top -bn1 | grep &quot;Cpu(s)&quot; | awk &#39;{print 100 - $8&quot;%&quot;}&#39;</code></p>
+<ul>
+<li><code>$8</code> 代表 <code>idle</code> 值（空闲 CPU）。</li>
+<li>计算 <code>100 - idle</code>，得到 CPU 使用率。</li>
+</ul>
+<pre><code class="language-scss">root@vultr:~# top -bn1 | grep &quot;Cpu(s)&quot; | awk &#39;{print 100 - $8&quot;%&quot;}&#39;
+16.7%
+</code></pre>
+<h1>3. 总结</h1>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>top</code></td>
+<td>实时查看CPU平均使用率，按 <code>1</code> 显示各核心情况</td>
+</tr>
+<tr>
+<td><code>htop</code></td>
+<td>交互式界面，类似<code>top</code>，更美观</td>
+</tr>
+<tr>
+<td><code>vmstat 1</code></td>
+<td>每秒显示一次CPU统计信息</td>
+</tr>
+<tr>
+<td><code>mpstat -P ALL 1</code></td>
+<td>按 CPU 核心统计使用率</td>
+</tr>
+<tr>
+<td><code>sar -u 5 3</code></td>
+<td>采样 CPU 负载历史数据</td>
+</tr>
+<tr>
+<td>`top -bn1</td>
+<td>grep &quot;Cpu(s)&quot;</td>
+</tr>
+<tr>
+<td>&quot;ps -eo pid,comm,%cpu --sort=-%cpu | head&quot;</td>
+<td>查看CPU实时利用率</td>
+</tr>
+<tr>
+<td><code>ps -C nginx -o %cpu</code></td>
+<td>查询 <code>nginx</code> 进程的 CPU 使用率</td>
+</tr>
+</tbody></table>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

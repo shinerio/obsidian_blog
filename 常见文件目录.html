@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>常见文件目录 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>常见文件目录</h1>
+        <time datetime="2026-01-03T13:04:29.267Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>各大发行版基本一致，遵循的是通用的FHS（Filesystem Hierarchy Standard）约定，（个别子目录如 lib64、multiarch 名称可能略有不同）</p>
+<h1>1. 开发者部署模板</h1>
+<p>用一个假想应用myapp为例，展示其在Linux系统中应该如何分布文件和目录。<br> 🏗️ myapp 部署模板（FHS 标准 + systemd）</p>
+<pre><code> # 核心可执行文件
+/usr/local/bin/myapp              # 主程序（编译/安装好的二进制）
+
+# 配置文件（小而精，可编辑）
+/etc/myapp/
+├─ config.yml                     # 主配置
+└─ logging.conf                   # 日志配置 (如 log4j, logback, python logging)
+
+# systemd 单元文件（管理启动/停止）
+/etc/systemd/system/myapp.service # 自定义服务单元
+
+# 持久化数据（需备份） 
+/var/lib/myapp/
+├─ db.sqlite                      # 内置数据库（如 SQLite）
+└─ state.json                     # 应用运行状态、索引文件
+
+# 日志（需轮转管理 logrotate/journald）
+/var/log/myapp/
+├─ myapp.log                      # 主日志
+└─ error.log                      # 错误日志
+
+# 缓存（可删除，会重建）
+/var/cache/myapp/
+├─ tmp_result/                     # 临时计算结果
+└─ images/                         # 下载或生成的图片缓存
+
+# 运行时文件（随重启清空）
+/run/myapp/
+├─ myapp.pid                       # 进程 PID 文件
+└─ myapp.sock                      # Unix socket (如 FastCGI/IPC)
+
+# 临时文件（不跨重启）
+/tmp/myapp.*                       # 中间数据、临时输出
+</code></pre>
+<h1>2. 精简版</h1>
+<pre><code>/
+├─ ⚙️   etc/              # 系统配置（小而精）
+│   └─ 📄 &lt;appname&gt;/         # 你的应用配置 (config.yml, app.conf)
+│
+├─ 🏠   home/            # 用户根目录
+│   └─ 👤 username/.local/   # 用户级安装 (bin, lib, share, config, cache)
+│
+├─ 👑   root/            # root 用户根目录
+│
+├─ 📦   usr/             # 系统安装的软件（包管理器管理）
+│   ├─ 🛠️ bin/           # 普通可执行程序 (gcc, git)
+│   ├─ 🔧 sbin/          # 管理命令
+│   ├─ 📚 lib/           # 系统库
+│   ├─ 📖 share/         # 数据资源 (man, icons, locale)
+│   └─ 📦   local/       # 本机编译安装的软件
+│       ├─ 🛠️ bin/       # 手工编译安装的可执行文件
+│       ├─ 📚 lib/       # 本机库
+│       ├─ 📄 etc/       # 本机配置
+│       └─ 📖 share/     # 本机数据资源
+│
+├─ 📦   opt/             # 第三方大软件（自带依赖）
+│   └─ 📂 &lt;vendor&gt;/&lt;app&gt;/  # 整个应用目录 (bin, lib, config, static)
+│
+├─ 🔄   var/             # 变动数据（日志、缓存、状态）
+│   ├─ 📝 log/&lt;app&gt;/     # 应用日志
+│   ├─ 💾 lib/&lt;app&gt;/     # 数据库、持久化状态
+│   ├─ 🗂️ cache/&lt;app&gt;/   # 缓存文件
+│   └─ 📬 spool/&lt;svc&gt;/   # 队列数据 (邮件、打印、任务)
+│
+├─ 🚀   run/             # 运行时状态（随重启清空）
+│   └─ 📄 &lt;appname&gt;/{pid,sock}  # PID 文件、socket
+│
+└─ 🗑️   tmp/             # 临时文件（重启清空）
+    └─ 🗂️ &lt;app&gt;.*        # 中间结果、临时缓存
+</code></pre>
+<h1>3. 详细版</h1>
+<pre><code>/
+├─ 🛠️ bin/             # 基本用户命令 (ls, cp, mv)
+├─ 🔧   sbin/            # 系统管理命令 (reboot, iptables)
+├─ 💻   boot/            # 引导文件 (内核 vmlinuz, grub)
+├─ 📀   dev/             # 设备文件 (/dev/sda, /dev/tty)
+├─ ⚙️   etc/             # 系统配置 (/etc/hosts, passwd, fstab)
+│   ├─ 🌐 network/       # 网络配置
+│   ├─ 🔄 systemd/       # systemd 配置
+│   └─ 🖥️ X11/           # 图形界面配置
+├─ 🏠   home/            # 用户家目录 (/home/user)
+│   ├─ 👤 user1/
+│   └─ 👤 user2/
+├─ 👑   root/            # root 用户家目录
+├─ 📚   lib/             # 系统库
+├─ 📚   lib64/           # 64 位系统库
+├─ 💽 media/             # 移动介质挂载点 (U盘, 光驱)
+├─ 📂 mnt/               # 临时挂载点
+├─ 📦   opt/             # 第三方/大型软件 (/opt/google)
+├─ 🔍   proc/            # 内核与进程信息 (/proc/cpuinfo)
+├─ 🚀   run/             # 运行时状态 (PID, socket)
+├─ 🌐   srv/             # 服务数据目录 (网站, FTP)
+├─ 🧩   sys/             # 硬件与内核信息 (/sys/class)
+├─ 🗑️   tmp/             # 临时文件 (重启清空)
+├─ 📦   usr/             # 用户应用和库 (绝大部分软件)
+│   ├─ 🛠️ bin/           # 用户命令 (gcc, python)
+│   ├─ 🔧 sbin/          # 管理命令 (apachectl)
+│   ├─ 📚 lib/           # 共享库
+│   ├─ 📑 include/       # 头文件
+│   ├─ 📖 share/         # 架构无关数据 (man, locale, icons)
+│   └─ 📦 local/         # 本机安装软件 (结构同 /usr)
+│       ├─ 🛠️ bin/
+│       ├─ 📚 lib/
+│       ├─ ⚙️ etc/
+│       └─ 📖 share/
+├─ 🔄   var/             # 变动数据 (日志, 缓存, DB)
+│   ├─ 📝 log/           # 日志文件
+│   ├─ 💾 lib/           # 服务持久化数据 (DB, 索引)
+│   ├─ 🗂️ cache/         # 缓存 (apt, yum)
+│   ├─ 📬 spool/         # 队列 (邮件, 打印, cron)
+│   ├─ 🗑️ tmp/           # 跨重启的临时文件
+│   └─ 🚀 run -&gt; /run    # 兼容符号链接
+└─ 🛟 lost+found/        # 文件系统修复时的残片
+</code></pre>
+<ul>
+<li><code>/bin</code>：bin是Binary的缩写, 这个目录存放着最经常使用的命令。👉 <strong>不要放自家程序</strong>。发行版维护</li>
+<li><code>/sbin</code>：s就是Super User的意思，这里存放的是系统管理员使用的系统管理程序.<code>/sbin -&gt; usr/sbin</code>。👉 <strong>不要放自家程序</strong>。发行版维护</li>
+<li><code>/usr</code>：这是一个非常重要的目录，用户的很多应用程序和文件都放在这个目录下，类似于windows下的program files目录。👉 <strong>打包分发（deb/rpm）时</strong>：把可执行文件放 <code>/usr/bin</code>，库放 <code>/usr/lib*</code>，数据放 <code>/usr/share/&lt;app&gt;</code>，头文件放 <code>/usr/include</code>（若公开开发包）。 <ul>
+<li><code>/usr/bin</code>：系统用户使用的应用程序。</li>
+<li><code>/usr/sbin</code>：超级用户使用的比较高级的管理程序和系统守护程序。</li>
+<li><code>/usr/src</code>：内核源代码默认的放置目录。</li>
+<li><code>/usr/lib*</code>：共享库</li>
+<li><code>/usr/share</code>：与架构无关的数据（man、示例、icons、locale）</li>
+<li><code>/usr/include</code>：头文件。        </li>
+<li><code>/usr/local</code>：<strong>本机手工安装</strong>的软件镜像 <code>/usr</code> 结构，避免与发行版冲突。  <ul>
+<li>👉 自行编译/安装的工具放这里：<code>/usr/local/bin</code>、<code>/usr/local/lib*</code>、<code>/usr/local/share/&lt;app&gt;</code>。  好处：一键清理、区分“官方包 vs 本机安装”。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>/opt/</code>：这是给主机额外安装软件所摆放的目录。比如你安装一个ORACLE数据库则就可以放到这个目录下，默认是空的。自包含的大型或第三方应用（如 <code>opt/vendor/app</code>），内部自带libs、runtime。  👉 商业软件、Node/Python 整个应用目录、前后端一体分发可放 <code>/opt/&lt;vendor&gt;/&lt;app&gt;</code>；再<strong>符号链接</strong>主可执行到 <code>/usr/local/bin/&lt;app&gt;</code> 便于 PATH使用。</li>
+<li><code>/etc</code>：这个目录用来存放所有的系统管理所需要的配置文件和子目录。你的应用的系统级默认配置：<code>/etc/&lt;app&gt;/config.yml</code>（只存配置，不存数据/密钥库)。 systemd 配置覆写放 <code>/etc/systemd/system/&lt;app&gt;.service</code>（或 drop-in：<code>&lt;service&gt;.d/*.conf</code>）。</li>
+<li><code>/var</code>：这个目录中存放着在不断扩充着的东西，我们习惯将那些经常被修改的目录放在这个目录下，包括各种日志文件。  👉 你的应用把<strong>日志/状态/缓存</strong>分别放在对应子目录。确保权限与轮转（logrotate 或 journald）。<ul>
+<li><code>/var/log/&lt;app&gt;/</code>：日志</li>
+<li><code>/var/lib/&lt;app&gt;/</code>：持久化状态（DB、索引、migrations 标记等）</li>
+<li><code>/var/cache/&lt;app&gt;/</code>：可丢弃缓存</li>
+<li><code>/var/spool/&lt;service&gt;/</code>：排队/待处理数据（邮件、打印、任务队列）</li>
+<li><code>/var/tmp/</code>：跨重启保留的临时文件</li>
+</ul>
+</li>
+<li><code>/run/</code>（早期叫 <code>/var/run</code>）：<strong>运行时状态</strong>（tmpfs，随重启清空）。  👉 PID 文件、Unix 套接字、锁文件、短期运行时数据：<code>/run/&lt;app&gt;/{app.pid,app.sock}</code>。</li>
+<li><code>/tmp</code>：这个目录是用来存放一些临时文件的（常在重启时清除）。  👉 临时中间文件、下载碎片等；<strong>不</strong>存需要保留的内容。  需要跨重启临时数据就用 <code>/var/tmp</code>。</li>
+<li><code>/srv/</code>：该目录存放一些服务启动之后需要提取的数据，如服务对外提供的数据根（如网站、FTP）。  👉 如你要维护“站点根目录”：<code>/srv/www/&lt;site&gt;/</code>。</li>
+<li><code>/home</code>：用户的主目录，在Linux中，每个用户都有一个自己的目录，一般该目录名是以用户的账号命名的。👉 用户级安装与配置：<ul>
+<li><code>~/.local/bin</code>：个人可执行（加入 PATH） </li>
+<li><code>~/.config/&lt;app&gt;/</code>：用户配置（XDG）</li>
+<li><code>~/.cache/&lt;app&gt;/</code>：用户缓存</li>
+<li><code>~/.local/share/&lt;app&gt;/</code>：用户数据</li>
+</ul>
+</li>
+<li><code>/lib</code>及<code>/lib64/</code>：这个目录里存放着系统最基本的动态连接共享库，其作用类似于Windows里的DLL文件。几乎所有的应用程序都需要用到这些共享库。<code>/lost+found</code>：这个目录一般情况下是空的，当系统非法关机后，这里就存放了一些文件。</li>
+<li><code>/media</code>：linux系统会自动识别一些设备，例如U盘、光驱等等，当识别后，linux会把识别的设备挂载到这个目录下。</li>
+<li><code>/mnt</code>：系统提供该目录是为了让用户临时挂载别的文件系统的，我们可以将光驱挂载在/mnt/上，然后进入该目录就可以查看光驱里的内容了。</li>
+<li><code>/dev</code>：dev是Device(设备)的缩写, 该目录下存放的是Linux的外部设备，在Linux中访问设备的方式和访问文件的方式是相同的。</li>
+<li><code>/proc</code>：这个目录是一个虚拟的目录，它是系统内存的映射，我们可以通过直接访问这个目录来获取系统信息。这个目录的内容不在硬盘上而是在内存里，我们也可以直接修改里面的某些文件</li>
+<li><code>/boot</code>：这里存放的是启动Linux时使用的一些核心文件，包括一些连接文件以及镜像文件。</li>
+<li><code>/sys</code>：这是linux2.6内核的一个很大的变化。该目录下安装了2.6内核中新出现的一个文件系统 sysfs 。sysfs文件系统集成了下面3种文件系统的信息：针对进程信息的proc文件系统、针对设备的devfs文件系统以及针对伪终端的devpts文件系统。该文件系统是内核设备树的一个直观反映。当一个内核对象被创建的时候，对应的文件和目录也在内核对象子系统中被创建。</li>
+<li><code>/root</code>：该目录为系统管理员，也称作超级权限者的用户主目录。</li>
+<li><code>/selinux</code>：这个目录是Redhat/CentOS所特有的目录，Selinux是一个安全机制，类似于windows的防火墙，但是这套机制比较复杂，这个目录就是存放selinux相关的文件的。</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

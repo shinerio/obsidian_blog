@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP协议解析 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>HTTP协议解析</h1>
+        <time datetime="2026-01-03T13:04:29.223Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. HTTP 1.0</h1>
+<p>!<a href="http10抓包pcapng.html" class="internal-link">http1.0抓包.pcapng</a><br>HTTP/1.0 默认为每一对 HTTP 请求/响应都打开一个单独的 TCP 连接。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241218203403332.png" alt="image.png"></p>
+<ul>
+<li>17945-17947：tcp三次握手</li>
+<li>17948：Server告诉Client更新自己的接收窗口大小</li>
+<li>17949：Client发起HTTP Request</li>
+<li>17950: Server对Client Request报文的ACK</li>
+<li>17951: <code>[PSH]</code>标志表示server请求立即推送数据，即server希望client方尽快将数据递交给应用层处理</li>
+<li>17952: client对17950-17951的ack</li>
+<li>17953: server响应HTTP Response</li>
+<li>17954：Client对Server响应的ACK</li>
+<li>17955-17958: tcp四次挥手</li>
+</ul>
+<h2>1.1. 17949-HTTP Request</h2>
+<p>一个HTTP Request包括请求行（Request Line）、请求头部（Request Headers）以及请求正文（Request Body，可选），三部分之间通过CRLF(0x0d0a)分割。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241218210500406.png" alt="image.png"></p>
+<h3>1.1.1. 请求行</h3>
+<p>Method、URI、HTTP-Version，三部分之间通过空格(0x20)分割</p>
+<h3>1.1.2. 请求头</h3>
+<p>多个<code>Header-Name:Header-Value</code>，key和value通过冒号（0x3a）分割，多个请求头之间通过CRLF(0x0d0a)分割</p>
+<h3>1.1.3. 请求体(可选)</h3>
+<p>一个请求体为hello的post请求<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241218212919400.png" alt="image.png"></p>
+<h2>1.2. 17953-HTTP Response</h2>
+<p>一个HTTP Response包括状态行（Response Line）、响应头部（Response Headers）以及响应正文（Reponse Body，可选），三部分之间通过CRLF(0x0d0a)分割。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241218211135818.png" alt="image.png"></p>
+<h3>1.2.1. 状态行</h3>
+<p>HTTP-Version、Status、Code Reason，三部分用空格(0x20)分割<br>Status: 三位数字的http状态码<br>Phrase：0x4f4b，在ASCII码表表示“ok”，对响应的简短描述</p>
+<h3>1.2.2. 响应头部</h3>
+<p>多个<code>Header-Name:Header-Value</code>，key和value通过冒号（0x3a）分割，多个请求头之间通过CRLF(0x0d0a)分割</p>
+<h3>1.2.3. 响应正文(可选)</h3>
+<h1>2. http/1.1</h1>
+<p>相比于http1.0，http1.1有以下改进。</p>
+<h2>2.1. <a href="http连接池14-http11长连接测试长连接.html" class="internal-link">http连接池<span class="tag">#1</span>.4. http1.1长连接测试|长连接</a></h2>
+<p>HTTP/1.1默认开启了长连接，避免了每次客户端与服务器请求都要重复建立释放TCP连接，提高了网络的利用率。如果客户端想关闭HTTP连接，可以在请求头中携带<code>Connection:false</code>来告知服务器关闭请求</p>
+<h2>2.2. 支持请求管道化（pipelining）</h2>
+<p>基于HTTP/1.1的长连接，使得请求管道化成为可能。管线化使得请求能够“并行”传输。举个例子来说，假如响应的主体是一个html页面，页面中包含了很多img，能够进行“并行”发送多个请求。注意这里的“并行”并不是真正意义上的并行传输，服务器必须按照客户端请求的先后顺序依次回送相应的结果，以保证客户端能够区分出每次请求的响应内容。也就是说，HTTP管道化的请求与响应其实是一个先进先出的队列。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241220224820551.png" alt="image.png"></p>
+<p>由于管道化请求和响应是一个先进先出的队列，因此仍然存在队头阻塞问题。目前大多数服务器和浏览器都不支持管道化能力，因此pipeline并不是一个被广泛使用的能力。</p>
+<h2>2.3. cache-control</h2>
+<p>在 HTTP/1.1 中，<code>cache-control</code>是一个非常重要的头字段，用于控制缓存机制。它允许服务器和客户端在请求和响应中传递有关缓存的指令，这些指令决定了浏览器和中间缓存服务器（如代理服务器）如何缓存和重用资源。通过合理使用<code>Cache-Control</code>，可以减少网络流量、提高性能和减轻服务器负载。<code>Cache-Control</code>最常用于管理静态资源缓存，这个报头独立应用于每一个资源，这意味着我们页面中的一切都可以拥有一个非常定制化、颗粒化的缓存政策。我们由此可以得到大量的控制权，得以制定异常复杂而强大的缓存策略。</p>
+<p>一个典型的cache-control报文可能如下：</p>
+<pre><code>ache-Control: public, max-age=31536000
+</code></pre>
+<p><code>Cache-Control</code>就是报头字段名，<code>public</code>和<code>max-age=31536000</code>是<strong>指令</strong>。</p>
+<h3>2.3.1. <code>public</code>和<code>private</code></h3>
+<p><code>public</code> 意味着包括CDN、代理服务器之类的任何缓存都可以存储响应的副本。<code>public</code> 指令经常是冗余的，因为其他指令的存在（例如 <code>max-age</code>）已经隐式表示响应是可以缓存的。<br>相比之下，<code>private</code> 是一个显式指令，表示只有响应的最终接收方（客户端或浏览器）可以缓存文件。虽然 <code>private</code>本身并不具备安全功能，但它意在有效防止公共缓存（如 cdn）存储包含用户个人信息的响应（所谓君子协定）。</p>
+<h3>2.3.2. max-age和s-maxage</h3>
+<p><code>max-age</code> 定义了一个确保响应被视为“新鲜”的时间单位（相对于请求时间，以秒计）。<code>Cache-Control: max-age=60</code>代表可在接下来的60秒缓存和重用响应。这个 <code>Cache-Control</code> 报头告诉浏览器可以在接下来的 60 秒内从缓存中使用这个文件而不必担心是否需要重新验证。60 秒后，浏览器将回访服务器以重新验证该文件。如果有了一个新文件供浏览器下载，服务器会返回 <code>200</code>，浏览器下载新文件，旧文件也会从 HTTP 缓存中被剔除，新的文件会接替它，并应用新缓存报头。如果并没有新的副本供下载，服务器会返回 <code>304</code>，不需要下载新文件，使用新的报头来更新缓存副本。也就是说如果 <code>Cache-Control: max-age=60</code> 报头依然存在，缓存文件的 60 秒会重新开始。这个文件的总缓存时间是 120 秒。</p>
+<blockquote>
+<p><strong>注意：</strong><code>max-age</code> 本身有一个巨坑，它告诉浏览器相关资源已经过期，但没有告诉这个过期版本绝对不能使用。浏览器可能使用它自己的机制来决定是否在不经验证的情况下释放文件的过期副本。这种行为有些不确定性，想确切知道浏览器会怎么做有点困难。</p>
+</blockquote>
+<p><code>s-maxage</code>（注意 <code>max</code> 和 <code>age</code> 之间没有 <code>-</code>）会覆盖 <code>max-age</code> 指令，但只在公共缓存中生效。<code>max-age</code> 和 <code>s-maxage</code> 结合使用可以让你针对私有缓存和公共缓存（例如代理、CDN）分别设定不同的刷新时间。</p>
+<h3>2.3.3. 其他类型</h3>
+<p>cache-control还有很多奇多可选值，这里不一一赘述。</p>
+<h2>2.4. 强制请求头添加host字段</h2>
+<p>与http1.0相比，http1.1的请求头中新增了host字段，指定请求服务器的域名/IP地址和端口号。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241220230727287.png" alt="image.png"><br>host请求头是必须要携带的，有以下几点原因。</p>
+<ul>
+<li>多应用部署，一台物理主机上可能通过tomcat等容器部署了多个应用服务，他们有不同的域名，在TCP层面他们的IP和端口号都是一样的，如果不添加host就无法区分访问的到底是哪个服务。</li>
+<li>LB技术，现在的服务器端大都使用7层LB技术进行负载均衡，一个LB可能会为大量的应用提供负载均衡服务，通过这些应用都会具有不同的域名，通过CNAME或者A记录的方式最终到指向了相同的LB节点，如果不添加host，就无法区分被访问服务。</li>
+</ul>
+<h2>2.5. 部分场景使用chunked transfer优化content-length</h2>
+<p>对于GET等没有请求体的请求来说，可以通过连续的两个<code>\r\n</code>来识别到客户端请求已经完整接收了。对于POST等有请求体的请求来说，则必须在请求头中添加<code>content-length</code>来说明请求体的大小，否则服务端无法知道什么时候请求体能够接收完整（不能通过\r\n识别，因为请求体中有可能携带这样的内容）。如果客户端请求携带了请求体，而又没携带content-length的话，那么大多数服务器都会返回400 Bad Request或者陷入无限等待直到连接超时。这点在http1.0和http1.1上都是一样的。对于响应体来说，非长连接的请求可以通过连接的关闭来确定响应已经完整接收。但是对于长连接来说，则无法确认响应体是否已经发送完整，必须通过<code>content-length</code>来确认。</p>
+<p>通常，HTTP应答消息中发送的数据是整个发送的，<code>Content-Length</code>消息头字段表示数据的长度。数据的长度很重要，因为客户端需要知道哪里是应答消息的结束，以及后续应答消息的开始。然而，使用分块传输编码（<code>Transfer-Encoding: chunked</code>)，数据分解成一系列数据块，并以一个或多个块发送，这样服务器可以发送数据而不需要预先知道发送内容的总大小。分块传输编码有以下好处：</p>
+<ol>
+<li><strong>分块传输</strong>：允许服务器逐步生成和发送响应数据，而无需等待整个响应生成完成。这对于大文件或需要长时间计算的响应非常有用，因为客户端可以边接收数据边处理它。</li>
+<li><strong>降低内存开销</strong>：对于大型响应，使用分块传输编码可以降低服务器和客户端的内存开销，因为它们不需要同时存储整个响应。</li>
+<li><strong>实时数据传输</strong>：允许服务器实时传输数据，而无需等待整个数据生成。这在一些实时应用程序中非常有用，如聊天应用或实时游戏。</li>
+<li><strong>减少延迟</strong>：分块传输可以减少客户端首次接收到数据的等待时间，因为服务器可以立即发送可用的数据块。</li>
+<li><strong>容错性</strong>：如果连接意外断开，客户端仍然可以处理已接收的chunk，而无需丢弃整个响应。</li>
+</ol>
+<p>分块传输时，请求体被分成多个块，每个块有自己的大小标识。每个分块包含十六进制的长度值和数据，长度值独占一行，长度不包括它结尾的 CRLF，也不包括分块数据结尾的 CRLF。最后一个分块长度值必须为 0，对应的分块数据没有内容，表示实体结束。例如，一个分块传输的请求体可能像这样：</p>
+<ul>
+<li>块1大小（十六进制表示） + <code>\r\n</code> + 块 1 内容 + <code>\r\n</code> </li>
+<li>块 2 大小 + <code>\r\n</code> + 块2内容 + <code>\r\n</code></li>
+<li><code>0\r\n</code>（最后一个块大小为 0，表示结束）<br>通过这种方式，服务器可以逐块读取并处理请求体，而不需要预先知道整个请求体的长度。</li>
+</ul>
+<h1>3. http/2</h1>
+<p>http1.1的问题</p>
+<ul>
+<li>HTTP/1.1客户端需要使用多个连接才能实现并发和缩短延迟</li>
+<li>HTTP/1.1不会压缩请求头字段和响应头字段，从而产生不必要的网络流量</li>
+<li>HTTP/1.1不支持有效的资源优先级，致使底层TCP连接的利用率低下。</li>
+</ul>
+<p>HTTP/2没有改动HTTP的应用语义，仍然使用HTTP的请求方法、状态码和头字段等规则。它主要修改了HTTP的报文传输格式，通过引入[二进制分帧](<a href="https://info.support.huawei.com/info-finder/encyclopedia/zh/HTTP--2.html">https://info.support.huawei.com/info-finder/encyclopedia/zh/HTTP--2.html</a><span class="tag">#section10316131182915</span>)层实现性能的提升。HTTP/2通过多路复用、头信息压缩、二进制分帧和服务器推送等特性，显著提高了性能，在网络条件相同的情况下，能够更快地加载网页，减少用户等待时间，提升用户体验。</p>
+<p>目前主流的平台均已支持了HTTP2协议，如图是baidu的请求页面数据<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241223223909543.png" alt="image.png"></p>
+<h2>3.1. 数据传输方式</h2>
+<ul>
+<li><strong>HTTP/1.1</strong><ul>
+<li><strong>文本格式</strong>：HTTP/1.1 的请求和响应数据以文本格式传输，这种格式虽然可读性强，但解析和处理效率相对较低。例如，在处理大量数据时，文本格式的解析需要更多的CPU资源和时间。</li>
+</ul>
+</li>
+<li><strong>HTTP/2</strong><ul>
+<li><strong>二进制分帧</strong>：HTTP/2 将数据分解为更小的帧，并以二进制格式进行传输。二进制格式比文本格式更紧凑，解析速度更快，能够更有效地利用网络带宽。帧是 HTTP/2 中最小的传输单位，包括头部帧、数据帧等不同类型，通过不同的帧类型和帧头标识来区分和处理不同的内容。</li>
+</ul>
+</li>
+</ul>
+<h3>3.1.1. 帧结构</h3>
+<p>HTTP/2 连接的初始帧，也就是 “连接序言”（Connection Preface）帧用于标识HTTP/2连接的开始，其格式是固定的 <code>PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n</code><br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241227220022616.png" alt="image.png"><br>HTTP/2的数据帧结构主要由帧头和帧主体两部分构成，帧头为固定的9字节，变化的为帧的负载(Frame Payload)，负载内容是由帧头中的帧类型（Type）定义。</p>
+<h4>3.1.1.1. 帧头</h4>
+<p>所有的帧都包含一个 9 字节的帧头，其结构如下</p>
+<pre><code>+-----------------------------------------------+ 
+| Length (24) | 
++---------------+---------------+---------------+ 
+| Type (8) | Flags (8) | 
++-+-------------+---------------+-------------------------------+ 
+|R| Stream Identifier (31) | +=+=============================================================+
+</code></pre>
+<ul>
+<li><strong>Length</strong>：无符号 24 位整型，表示帧的正文部分Payload的长度，最大值为即16384 字节。如果想要发送更大长度的帧，必须收到设置有<code>SETTINGS_MAX_FRAME_SIZE</code>的 SETTING帧 。需要注意的是，帧头的9字节不算在Length 的计算范围之内</li>
+<li><strong>Type</strong>：1 字节的帧类型标识，不同的帧类型具有不同的功能和用途，例如：<ul>
+<li><strong>0x0</strong>：DATA 帧，主要用来传递消息体135.</li>
+<li><strong>0x1</strong>：HEADERS 帧，主要用于传递消息头135.</li>
+<li><strong>0x2</strong>：PRIORITY 帧，用于设置流的优先级125.</li>
+<li><strong>0x3</strong>：RST_STREAM 帧，用于终止异常流56.</li>
+<li><strong>0x4</strong>：SETTINGS 帧，用于设置连接配置参数56.</li>
+<li><strong>0x5</strong>：PUSH_PROMISE 帧，服务器推送之前告知客户端56.</li>
+<li><strong>0x6</strong>：PING 帧，发送端测量最小的 RTT 时间，检测连接是否可用56.</li>
+<li><strong>0x7</strong>：GOAWAY 帧，通知对端不要在连接上建新流，并可包含关闭连接的原因等信息56.</li>
+<li><strong>0x8</strong>：WINDOW_UPDATE 帧，用于实现流量控制56.</li>
+<li><strong>0x9</strong>：CONTINUATION 帧，用于延续一个报头区块56.</li>
+</ul>
+</li>
+<li><strong>Flags</strong>：为帧类型保留的8位字段，有具体的布尔标识，不同帧类型的Flags有不同的含义，例如：<ul>
+<li><strong>END_STREAM（0x1）</strong>：用于标识该帧是发送端对确定的流发送的最后一帧，设置此标志会导致流进入 “半关闭” 状态或者 “关闭” 状态136.</li>
+<li><strong>END_HEADERS（0x4）</strong>：位3表示帧包含了整个的报头块，且后面没有延续帧。不带有 END_HEADERS 标记的报头帧在同个流上后面必须跟着延续帧。接收端接收到任何其他类型的帧或者在其他流上的帧必须作为类型为协议错误的连接错误处理6.</li>
+<li><strong>PADDED（0x8）</strong>：表示是否有Padding</li>
+<li><strong>PRIORITY（0x20）</strong>：位6设置指示专用标记（E），流依赖及权重字段将会呈现6.</li>
+</ul>
+</li>
+<li><strong>R</strong>：1位的保留字段，尚未定义语义，发送和接收时必须忽略，设置为 0x0</li>
+<li><strong>Stream Identifier</strong>：31 位无符号整型的流标识符，用于标识该帧属于哪个数据流。其中0x0作为保留值，表示与连接相关的帧作为一个整体而不是一个单独的流 。由客户端建立的 Stream ID 必须是奇数，由服务端建立的 Stream ID必须是偶数</li>
+</ul>
+<h2>3.2. 连接管理——多路复用</h2>
+<p>TCP连接会随着时间进行自我调节，起初会限制连接的最大速度，如果数据成功传输，会随着时间的推移提高传输的速度。这种调节被称为TCP慢启动。这种调节让具有突发性和短时性的HTTP连接变的十分低效。HTTP/2通过多路复用让所有数据流使用同一个连接，有效使用TCP连接，让高带宽也能真正的服务于HTTP的性能提升，这是HTTP/2的核心特性之一。它允许在一个TCP连接上同时发送多个请求和响应，不同请求和响应之间不会相互阻塞。每个请求和响应都被分配一个唯一的流标识符（stream ID），数据以帧（frame）为单位进行传输，多个帧可以交错发送，然后在接收端根据流标识符重新组装。例如，在加载一个包含多个图片、脚本和样式表的网页时，所有资源的请求可以同时在一个连接上进行，大大提高了传输效率。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241223224526962.png" alt="image.png"></p>
+<h2>3.3. 头部信息压缩</h2>
+<p>HTTP/1.1 的请求和响应头信息通常以明文形式传输，而且每次请求都要重复发送一些相同的头部字段（如<code>User-Agent</code>、<code>Host</code>等），这会增加不必要的传输开销。例如，对于一个包含多个资源请求的网页，每个请求都携带相同的<code>User-Agent</code>字段，浪费了带宽。</p>
+<p><strong>HPACK 压缩算法</strong>：HTTP/2 采用HPACK算法对头信息进行压缩。它通过建立一个静态和动态的字典，将常用的头部字段及其值映射为索引，在传输时只发送索引值，从而大大减少了头信息的大小。同时，动态字典会根据传输的内容不断更新，提高压缩效率。例如，对于频繁出现的<code>User-Agent</code>字段，在首次传输时可能会发送完整内容，后续传输时则可以通过字典索引来表示，显著降低了头信息的传输量。-不同流的头部信息（Header）是相互独立的，当客户端发起多个请求时，每个请求在各自的流中传输，其头部信息只与该流相关。</p>
+<p>在 HTTP/2 中，头部信息主要通过 HEADERS 帧和 CONTINUATION 帧来传输。</p>
+<ul>
+<li><strong>HEADERS 帧</strong>：找到类型为<code>HEADERS</code>的帧。这些帧包含了请求或响应的头部信息。</li>
+<li><strong>CONTINUATION 帧</strong>：如果头部信息较长，无法在一个 HEADERS 帧中传输完，就会用到CONTINUATION帧来继续传输头部信息。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241227221018221.png" alt="image.png"></li>
+</ul>
+<h3>3.3.1.  帧头信息</h3>
+<ul>
+<li><strong>Type</strong>: HEADERS (1)<ul>
+<li>表明这是一个 HEADERS 帧，在 HTTP/2 中，HEADERS 帧用于传输请求或响应的头部信息。</li>
+</ul>
+</li>
+<li><strong>Flags</strong>: 0x25<ul>
+<li><strong>Priority</strong>: 该标志位被设置，表示此帧包含了优先级信息。</li>
+<li><strong>End Headers</strong>: 表示这是头部信息的最后一个帧。</li>
+<li><strong>End Stream</strong>: 表示此流的结束。</li>
+</ul>
+</li>
+<li><strong>Reserved</strong>: 0x0<ul>
+<li>保留位，未被使用。</li>
+</ul>
+</li>
+<li><strong>Stream Identifier</strong>: 1<ul>
+<li>标识这个帧所属的流 ID 为 1。</li>
+</ul>
+</li>
+</ul>
+<h3>3.3.2. 帧主体信息</h3>
+<ul>
+<li><strong>Pad Length</strong>: 0<ul>
+<li>表示没有填充（Padding）。</li>
+</ul>
+</li>
+<li><strong>Header Length</strong>: 668<ul>
+<li>头部信息块的长度为 668 字节。</li>
+</ul>
+</li>
+<li><strong>Header Block Fragment</strong><ul>
+<li>这是头部信息压缩后的数据片段，这些数据是经过HPACK压缩算法处理后的头部信息。上图抓包结果中HEADER: method: GET后面是解压缩后的头。注意到，在HTTP/2中URL被编码在头部中的PATH字段中。</li>
+</ul>
+</li>
+<li><strong>动态表相关信息</strong><ul>
+<li><strong>Header Count</strong>: 17<ul>
+<li>表示头部字段的数量为 17 个。</li>
+</ul>
+</li>
+<li><strong>Weight</strong>: 255 (Weight real: 256)<ul>
+<li>流的权重为 255（实际权重为 256），用于优先级设置。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2>3.4. 服务器推</h2>
+<ul>
+<li><strong>HTTP/1.1</strong><ul>
+<li><strong>无服务器推送</strong>：在 HTTP/1.1 中，服务器只能被动地响应客户端的请求，无法主动向客户端推送数据。如果客户端需要获取多个资源，必须逐个发送请求。</li>
+</ul>
+</li>
+<li><strong>HTTP/2</strong><ul>
+<li><strong>支持服务器推送</strong>：服务器可以主动向客户端推送资源，而无需客户端事先请求。例如，当客户端请求一个HTML页面时，服务器可以预见到客户端可能还需要加载相关的CSS和JavaScript文件，于是在响应HTML页面的同时，主动将这些资源推送给客户端，减少了客户端后续的请求次数，加快了页面的加载速度。</li>
+</ul>
+</li>
+</ul>
+<h1>4. http/3</h1>
+<p>HTTP2协议虽然大幅提升了HTTP/1.1的性能，然而，基于TCP实现的HTTP2遗留下3个问题：</p>
+<ul>
+<li>有序字节流引出的<strong>队头阻塞</strong>（<a href="https://link.zhihu.com/?target=https%3A//en.wikipedia.org/wiki/Head-of-line_blocking">Head-of-line blocking</a>），使得HTTP2的多路复用能力大打折扣；</li>
+<li><strong>TCP与TLS叠加了握手时延</strong>，建链时长还有1倍的下降空间；</li>
+<li>基于TCP四元组确定一个连接，这种诞生于有线网络的设计，并不适合移动状态下的无线网络，这意味着**IP地址的频繁变动会导致TCP连接、TLS会话反复握手，**成本高昂。</li>
+</ul>
+<h1>5. reference</h1>
+<p><a href="https://info.support.huawei.com/info-finder/encyclopedia/zh/HTTP--2.html">https://info.support.huawei.com/info-finder/encyclopedia/zh/HTTP--2.html</a><br><a href="http连接池.html" class="internal-link">http连接池</a><br><a href="https://www.cnblogs.com/caoweixiong/p/14720254.html">https://www.cnblogs.com/caoweixiong/p/14720254.html</a><br><a href="https://juejin.cn/post/6844903935648497678">https://juejin.cn/post/6844903935648497678</a><br><a href="https://halfrost.com/http2-http-frames-definitions/">HTTP2中帧的定义</a><br><a href="https://www.cnblogs.com/jesse131/p/12686304.html">wireshark抓包http2</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

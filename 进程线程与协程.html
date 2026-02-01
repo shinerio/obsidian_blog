@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进程、线程与协程 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>进程、线程与协程</h1>
+        <time datetime="2026-01-03T13:04:29.154Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. go中线程的数量</h1>
+<p>Go 使用<strong>Goroutine 调度器 (Scheduler)</strong> 来管理Goroutine的执行。调度器的核心概念如下</p>
+<h2>1.1. GMP模型</h2>
+<p>goalng采用特有的<strong>GMP</strong>模型。</p>
+<ol>
+<li>G（Goroutine)：指的是 Go 代码中的 Goroutine。</li>
+<li>M（machine）：它直接关联一个os内核线程，用于执行G。</li>
+<li>P（Processor）：P里面一般会存当前goroutine运行的上下文环境（函数指针，堆栈地址及地址边界），P会对自己管理的goroutine队列做一些调度<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202503021729567.png" alt="image.png"><br>P与M一般是一一对应的。P（上下文）管理着一组G（goroutine）挂载在M（内核线程）上运行，图中左边蓝色为正在执行状态的goroutine，右边为待执行状态的goroutiine队列。GO不能设置使用的线程数上限，但可以通过设置环境变量<code>GOMAXPROCS</code>的值或程序运行<code>runtime.GOMAXPROCS()</code>设置go进程使用的逻辑CPU核心数，间接影响线程的使用数量。</li>
+</ol>
+<pre><code class="language-go">package main
+import (
+    &quot;fmt&quot;
+    &quot;runtime&quot;
+)
+
+func main() {
+    runtime.GOMAXPROCS(2) // 设定最多使用2个CPU核心
+    fmt.Println(&quot;GOMAXPROCS:&quot;, runtime.GOMAXPROCS(0)) // 获取当前值
+}
+</code></pre>
+<h2>1.2. 默认GOMAXPROCS</h2>
+<blockquote>
+<p>[!note]</p>
+<ul>
+<li>在 Go 1.5 之前，<code>GOMAXPROCS</code> 默认是 <code>1</code>（单线程执行）。</li>
+<li><strong>Go 1.5 之后</strong>，Go 运行时默认将 <code>GOMAXPROCS</code> 设为 <strong>CPU 逻辑核心数</strong>（<code>runtime.NumCPU()</code>）。这样可以<strong>充分利用 CPU 并行计算能力</strong>，提高 Goroutine 执行效率</li>
+</ul>
+</blockquote>
+<pre><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;runtime&quot;
+)
+
+func main() {
+    fmt.Println(&quot;默认 GOMAXPROCS:&quot;, runtime.GOMAXPROCS(0)) // 传入 0 只获取当前值，不修改
+}
+</code></pre>
+<p>输出：默认 GOMAXPROCS: 32，查看系统CPU数量</p>
+<pre><code class="language-shell">devbox@devbox:~/project$ lscpu             
+Architecture:            x86_64
+  CPU op-mode(s):        32-bit, 64-bit
+  Address sizes:         40 bits physical, 48 bits virtual
+  Byte Order:            Little Endian
+CPU(s):                  32
+  On-line CPU(s) list:   0-31
+Vendor ID:               GenuineIntel
+</code></pre>
+<h2>1.3. GMP调度</h2>
+<p>当一个os线程在执行M1一个G1发生阻塞时，调度器让M1抛弃P，等待G1返回，然后另起一个M2接收P来执行剩下的goroutine队列（G2、G3...），这是golang调度器厉害的地方，可以保证有足够的线程来运行剩下所有的goroutine。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202503021730188.png" alt="image.png"><br>当G1结束后，M1会重新拿回P来完成，如果拿不到就丢到全局runqueue中，然后自己放到线程池或转入休眠状态。空闲的上下文P会周期性的检查全局runqueue上的goroutine，并且执行它。另一种情况就是当有些P1太闲而其他P2很忙碌的时候，会从其他上下文P2拿一些G来执行。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202503021731057.png" alt="image.png"></p>
+<h1>2. 进程、线程、协程</h1>
+<p><strong>进程</strong>：系统中所有的应用程序都是以进程(process)的方式运行，是系统进行&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;资源分配和调度的基本单位</span>，每个进程都有自己的独立的地址空间，使得进程之间的地址空间相互隔离。<br><strong>线程</strong>：线程是&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;CPU调度的最小单元</span>，通常意义上，一个进程由一个到多个线程组成，各个线程之间共享程序的内存空间(包括代码段、数据段、堆等)及一些进程级的资源(如打开的文件和信号)。<br><strong>协程</strong>：协程在Go语言中，由轻量级线程实现，由Go运行时(runtime)管理。</p>
+<blockquote>
+<p>[!note]<br>并发：多线程程序在单核上运行<br>并行：多线程程序在多核上运行</p>
+</blockquote>
+<h1>3. 协程与进程、线程的区别</h1>
+<p>1）进程拥有自己的堆栈，不共享堆和栈，是由操作系统进行调度的。<br>2）线程拥有自己的独立的栈和共享的堆，也是由操作系统进行调度。<br>3）协程共享堆，不共享栈，协程的调度由用户控制。</p>
+<h2>3.1. 协程的优点</h2>
+<ol>
+<li><strong>代码开发简单</strong>，可以将异步处理逻辑代码用同步的方式编写，将多个异步操作集中到一个函数中完成。</li>
+<li>单线程模式，<strong>没有线程安全的问题</strong>，不需要加锁操作。</li>
+<li><strong>性能好</strong>，协程是用户态线程，切换更加高效。</li>
+<li><strong>Go协程占用内存小</strong>。执行Go协程只需要极少的栈内存(大概4~5KB)，默认情况下，线程栈的大小为1MB。Goroutine就是一段代码，一个函数入口，以及在堆上为其分配的一个堆栈，所以它非常廉价，我们可以很轻松的创建上万个Goroutine，但它们并不是被操作系统所调度执行。</li>
+</ol>
+<h2>3.2. Go协程调用跟切换比线程效率高</h2>
+<p>线程并发执行流程：<br>线程是内核对外提供的服务，应用程序可以通过系统调用让内核启动线程，由内核来负责线程调度和切换，线程在等待IO操作时标为unrunnable状态会触发上下文切换。现代操作系统一般采用抢占式调度，上下文切换一般发生在时钟中断和系统调用返回前，调度器计算当前线程的时间片，如果需要切换就从运行队列中选出一个目标线程，保存当前线程的环境，并且恢复目标线程的运行环境，最典型的就是切换ESP指向目标线程内核堆栈，将EIP指向目标线程上次被调度出时的指令地址。一旦我们创建完线程，就无法决定它什么时候获得时间片，什么时候让出时间片，这里都交给了内核。但我们编写协程时可以控制，可控的切换时机和很小的切换代价，从操作系统有没有调度权来看，<strong>协程就是因为不需要进行内核态的切换</strong>。</p>
+<p>Go协程并发执行流程：<br>不依赖操作系统和其提供的线程，Golang自己实现的CSP并发模型实现：M,P,G<br>Go协程也叫用户态线程，协程之间的切换发生在用户态，在用户态没有时钟中断，系统调用等机制，因此效率高。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

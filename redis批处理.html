@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis批处理 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Redis批处理</h1>
+        <time datetime="2026-01-03T13:04:29.193Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. pipeline</h1>
+<p>Redis执行一条命令需要经历以下过程：<code>发送命令</code>、<code>命令排队</code>、<code>命令执行</code>、<code>结果响应</code>。由于Redis本身是基于<code>Request/Response</code>协议（停等机制）的，虽然Redis已经提供了像 <code>mget</code> 、<code>mset</code> 这种批量的命令，但是如果某些操作根本就不支持或没有批量的操作或者需要连续执行好几个不同命令，那我们就只能一条一条地执行命令，每执行一条命令都要消耗请求与响应的时间，性能就会大大损耗。Redis中通过<code>Pipeline</code>机制能改善上面这类问题，<strong>它能将一组Redis 命令进行组装，通过一次传输给 Redis 并返回结果集</strong>。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250507220852.png" alt="image.png"><br>pipeline的方式相对于非pipeline的方式在执行多条命令的情况下性能会显著提升，网络环境越差，执行命令数量越多，提升越大，可以通过如下测试查看</p>
+<pre><code class="language-python">import redis
+import time
+
+r = redis.from_url(&quot;redis://default:tlq8mzql@dbconn.sealoshzh.site:41787&quot;)
+pipe = r.pipeline()
+start = int(1000 * time.time())
+for i in range(0, 10000):
+    pipe.set(&#39;key1&#39;, &#39;value1&#39;)
+results = pipe.execute()
+print(&quot;time: %dms&quot; % (int(1000 * time.time()) - start))
+start = int(1000 * time.time())
+for i in range(0, 10000):
+    r.execute_command(&quot;set key1 value1&quot;)
+print(&quot;time: %dms&quot; % (int(1000 * time.time()) - start))
+
+&gt; time: 126ms
+&gt; time: 43839ms
+</code></pre>
+<blockquote>
+<p>[!note]</p>
+<ul>
+<li><code>Pipeline</code>是&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;非原子</font>的，Redis实际上还是一条一条的执行的，而执行命令是需要排队执行的，所以就会出现原子性问题。</li>
+<li><code>Pipeline</code>中包含的命令不要包含过多</li>
+<li><code>Pipeline</code>每次只能作用在一个 Redis 节点上，redis集群化部署的时候，需要确保pipeline中执行的所有命令的key相同，或者将不同的key按照所属redis node拆分到不同的pipeline中</li>
+</ul>
+</blockquote>
+<h1>2. 原子性</h1>
+<p>先说结论，redis的原子性仅保证批量执行当前命令的时候，不会有其他任务或线程能够执行redis命令，也就是保证了不会并发，但是如果执行多个命令，其中部分命令失败不会触发回滚，也不会影响后续的命令的执行。</p>
+<p>redis原子执行命令有两种方式：1. multi+exec 2. lua脚本</p>
+<h2>2.1. multi + exec</h2>
+<h3>2.1.1. 语法错误</h3>
+<pre><code class="language-shell">test-db-redis.ns-t5f2m76w.svc:6379&gt; multi
+OK
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; set name shinerio
+QUEUED
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; error_commnd
+(error) ERR unknown command &#39;error_commnd&#39;, with args beginning with: 
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; set age 30
+QUEUED
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; exec
+(error) EXECABORT Transaction discarded because of previous errors.
+test-db-redis.ns-t5f2m76w.svc:6379&gt; get name
+(nil)
+test-db-redis.ns-t5f2m76w.svc:6379&gt; get age
+(nil)
+</code></pre>
+<p>error_command不是一个合法命令，在命令入队时就会立刻提示，使用exec执行命令会直接报错，任何命令都不会生效</p>
+<h3>2.1.2. 运行时错误</h3>
+<pre><code class="language-shell">test-db-redis.ns-t5f2m76w.svc:6379&gt; multi
+OK
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; set name shinerio
+QUEUED
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; lpush name shinerio1 shinerio2
+QUEUED
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; set age 30
+QUEUED
+test-db-redis.ns-t5f2m76w.svc:6379(TX)&gt; exec
+1) OK
+2) (error) WRONGTYPE Operation against a key holding the wrong kind of value
+3) OK
+test-db-redis.ns-t5f2m76w.svc:6379&gt; get name
+&quot;shinerio&quot;
+test-db-redis.ns-t5f2m76w.svc:6379&gt; get age
+&quot;30&quot;
+</code></pre>
+<p>运行错误是指输入的指令格式正确，但是在命令执行期间出现的错误，典型场景是当输入参数的数据类型不符合命令的参数要求时，就会发生运行错误。例如下面的例子中，对一个string类型的值执行列表的操作，就会报错。但是除执行中出现错误的命令外，其他命令都能正常执行。</p>
+<blockquote>
+<p>[!note]<br>通过分析我们知道了redis中的事务是不满足原子性的，在运行错误的情况下，并没有提供类似数据库中的回滚功能。那么为什么redis不支持回滚呢，官方文档给出了说明，大意如下：</p>
+<ul>
+<li>redis命令失败只会发生在语法错误或数据类型错误的情况，这一结果都是由编程过程中的错误导致，这种情况应该在开发环境中检测出来，而不是生产环境</li>
+<li>不使用回滚，能使redis内部设计更简单，速度更快</li>
+<li>回滚不能避免编程逻辑中的错误，如果想要将一个键的值增加2却只增加了1，这种情况即使提供回滚也无法提供帮助</li>
+</ul>
+</blockquote>
+<h2>2.2. lua</h2>
+<p>最常用的EVAL用于执行一段脚本，它的命令的格式如下：</p>
+<pre><code class="language-shell">EVAL script numkeys key [key ...] arg [arg ...]  
+</code></pre>
+<p>简单解释一下其中的参数：</p>
+<ul>
+<li>script是一段lua脚本程序</li>
+<li>numkeys指定后续参数有几个key，如没有key则为0</li>
+<li>key [key …]表示脚本中用到的redis中的键，在lua脚本中通过KEYS[i]的形式获取</li>
+<li>arg [arg …]表示附加参数，在lua脚本中通过ARGV[i]获取<br>看一个简单的例子：</li>
+</ul>
+<pre><code class="language-shell">127.0.0.1:6379&gt; eval &quot;return {KEYS[1],KEYS[2],ARGV[1],ARGV[2]}&quot; 2 key1 key2 value1 vauel2 
+1) &quot;key1&quot; 
+2) &quot;key2&quot; 
+3) &quot;value1&quot; 
+4) &quot;vauel2&quot; 
+</code></pre>
+<p>在上面的命令中，双引号中是lua脚本程序，后面的2表示存在两个key，分别是key1和key2，之后的参数是附加参数value1和value2。</p>
+<p>如果想要使用lua脚本执行set命令，可以写成这样：</p>
+<pre><code class="language-shell">127.0.0.1:6379&gt; EVAL &quot;redis.call(&#39;SET&#39;, KEYS[1], ARGV[1]);&quot; 1 name Hydra 
+(nil) 
+</code></pre>
+<p>这里使用了redis内置的lua函数redis.call来完成set命令，这里打印的执行结果nil是因为没有返回值，如果不习惯的话，其实我们可以在脚本中添加return 0;的返回语句。</p>
+<h3>2.2.1. SCRIPT LOAD 和 EVALSHA命令</h3>
+<p>这两个命令放在一起是因为它们一般成对使用。先看SCRIPT LOAD，它用于把脚本加载到缓存中，返回SHA1校验和，这时候只是缓存了命令，但是命令没有被马上执行，看一个例子：</p>
+<pre><code>127.0.0.1:6379&gt; SCRIPT LOAD &quot;return redis.call(&#39;GET&#39;, KEYS[1]);&quot;
+&quot;228d85f44a89b14a5cdb768a29c4c4d907133f56&quot; 
+</code></pre>
+<p>这里返回了一个SHA1的校验和，接下来就可以使用EVALSHA来执行脚本了：</p>
+<pre><code>127.0.0.1:6379&gt; EVALSHA &quot;228d85f44a89b14a5cdb768a29c4c4d907133f56&quot; 1 name 
+&quot;shinerio&quot; 
+</code></pre>
+<p>这里使用这个SHA1值就相当于导入了上面缓存的命令，在之后再拼接numkeys、key、arg等参数，命令就能够正常执行了。</p>
+<h3>2.2.2. 其他命令</h3>
+<p>使用SCRIPT EXISTS命令判断脚本是否被缓存：</p>
+<pre><code>127.0.0.1:6379&gt; SCRIPT EXISTS 228d85f44a89b14a5cdb768a29c4c4d907133f56 
+1) (integer) 1 
+</code></pre>
+<p>使用SCRIPT FLUSH命令清除redis中的lua脚本缓存：</p>
+<pre><code>127.0.0.1:6379&gt; SCRIPT FLUSH 
+OK 
+127.0.0.1:6379&gt; SCRIPT EXISTS 228d85f44a89b14a5cdb768a29c4c4d907133f56 
+1) (integer) 0 
+</code></pre>
+<p>可以看到，执行了SCRIPT FLUSH后，再次通过SHA1值查看脚本时已经不存在。最后，还可以使用SCRIPT KILL命令杀死当前正在运行的 lua 脚本，但是只有当脚本没有执行写操作时才会生效。<br>从这些操作看来，lua脚本具有下面的优点：</p>
+<ul>
+<li>多次网络请求可以在一次请求中完成，减少网络开销，减少了网络延迟</li>
+<li>客户端发送的脚本会存在redis中，其他客户端可以复用这一脚本，而不需要再重复编码完成相同的逻辑</li>
+</ul>
+<h3>2.2.3. Java代码中使用lua脚本</h3>
+<p>在Java代码中可以使用Jedis中封装好的API来执行lua脚本，下面是一个使用Jedis执行lua脚本的例子：</p>
+<pre><code class="language-java">public static void main(String[] args) { 
+    Jedis jedis = new Jedis(&quot;127.0.0.1&quot;, 6379); 
+    String script=&quot;redis.call(&#39;SET&#39;, KEYS[1], ARGV[1]);&quot; 
+            +&quot;return redis.call(&#39;GET&#39;, KEYS[1]);&quot;; 
+    List&lt;String&gt; keys= Arrays.asList(&quot;age&quot;); 
+    List&lt;String&gt; values= Arrays.asList(&quot;eighteen&quot;); 
+    Object result = jedis.eval(script, keys, values); 
+    System.out.println(result); 
+} 
+</code></pre>
+<p>执行上面的代码，控制台打印了get命令返回的结果：</p>
+<pre><code>eighteen 
+</code></pre>
+<p>简单的铺垫完成后，我们来看一下lua脚本究竟能否实现回滚级别的原子性。对上面的代码进行改造，插入一条运行错误的命令：</p>
+<pre><code class="language-java">public static void main(String[] args) { 
+    Jedis jedis = new Jedis(&quot;127.0.0.1&quot;, 6379); 
+    String script=&quot;redis.call(&#39;SET&#39;, KEYS[1], ARGV[1]);&quot; 
+            +&quot;redis.call(&#39;INCR&#39;, KEYS[1]);&quot; 
+            +&quot;return redis.call(&#39;GET&#39;, KEYS[1]);&quot;; 
+    List&lt;String&gt; keys= Arrays.asList(&quot;age&quot;); 
+    List&lt;String&gt; values= Arrays.asList(&quot;eighteen&quot;); 
+    Object result = jedis.eval(script, keys, values); 
+    System.out.println(result); 
+} 
+</code></pre>
+<p>查看执行结果：<br><a href="https://s2.51cto.com/oss/202109/08/6ad6b25e76bf821c1106e8c9c35bb0fc.png"><img src="https://s2.51cto.com/oss/202109/08/6ad6b25e76bf821c1106e8c9c35bb0fc.png" alt=""></a><br>再到客户端执行一下get命令：</p>
+<pre><code>127.0.0.1:6379&gt; get age 
+&quot;eighteen&quot; 
+</code></pre>
+<p>也就是说，虽然程序抛出了异常，但异常前的命令还是被正常的执行了且没有被回滚。再试试直接在redis客户端中运行这条指令：</p>
+<pre><code class="language-shell">test-db-redis.ns-t5f2m76w.svc:6379&gt; eval &quot;redis.call(&#39;SET&#39;, KEYS[1], ARGV[1]);redis.call(&#39;INCR&#39;, KEYS[1]);redis.call(&#39;SET&#39;, KEYS[2], ARGV[2])&quot; 2 name age shinerio1 31
+(error) ERR value is not an integer or out of range script: c0a1a8d54c17320de3688942a347d37d79b34ca7, on @user_script:1.
+test-db-redis.ns-t5f2m76w.svc:6379&gt; get name
+&quot;shinerio1&quot;
+test-db-redis.ns-t5f2m76w.svc:6379&gt; get age
+(nil)
+</code></pre>
+<p>同样，错误之前的指令仍然没有被回滚，在redis中是使用的同一个lua解释器来执行所有命令，也就保证了当一段lua脚本在执行时，不会有其他脚本或redis命令同时执行，保证了操作不会被其他指令插入或打扰，实现的仅仅是这种程度上的原子操作。遗憾的是，如果<strong>lua脚本运行时出错并中途结束，之后的操作不会进行，之前已经发生的写操作也不会撤销</strong>，所以即使使用了lua脚本，也不能实现类似数据库回滚的原子性。</p>
+<h1>3. redis消费组</h1>
+<p>Redis会将流中的消息动态分配给消费者组中的各个消费者，确保每条消息只被一个消费者处理。消费者处理完消息后需要显式确认（XACK 命令），Redis 会记录每个消息的处理状态。<br><strong>分配算法：</strong></p>
+<ul>
+<li>Redis 使用&quot;先到先得&quot;原则，消费者通过XREADGROUP命令主动获取新消息</li>
+<li>获取消息时，Redis 会将尚未分配给其他消费者的消息分配给请求的消费者<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250510230122.png" alt="image.png"></li>
+<li>每个Redis Stream都有唯一的名称 ，对应唯一的Redis Key 。</li>
+<li>同一个Stream可以挂载多个<strong>消费组ConsumerGroup</strong> , 消费组不能自动创建，需要<strong>使用XGROUP CREATE命令创建</strong>。</li>
+<li>每个消费组会有个<strong>游标 last_delivered_id</strong>，任意一个消费者<strong>读取</strong>了（无需ack）消息都会使游标 last_delivered_id往前移动 ，标识当前消费组消费到哪条消息了。</li>
+<li>消费组ConsumerGroup同样可以挂载多个消费者Consumer , 每个Consumer并行的读取消息，任意一个消费者读取了消息都会使游标 last_delivered_id 往前移动。</li>
+<li>消费者内部有一个属性<strong>pending_ids</strong> ， 记录了当前消费者读取但没有回复ACK的消息ID列表 。<blockquote>
+<p>[!note]<br>redis没有kafka那种partition局部保序的能力，应用程序可以自行创建多个stream实现。</p>
+</blockquote>
+</li>
+</ul>
+<h2>3.1. 核心命令</h2>
+<h3>3.1.1. 添加消息</h3>
+<pre><code class="language-shell">xadd key [NOMKSTREAM] [MAXLEN|MINID [=|~] threshold [LIMIT count]] *|id field value [field value ...]
+</code></pre>
+<ul>
+<li>key：redis stream名称</li>
+<li>NOMKSTREAM：当流不存在时，阻止自动创建流。如果流不存在，命令会返回 <code>(nil)</code>。</li>
+<li>MAXLEN：限制流的最大消息数量，超出时自动删除旧消息<ul>
+<li>&quot;=&quot; 精确截断，严格保持消息数量不超过阈值</li>
+<li>&quot;~&quot; 近似截断（推荐），允许少量超过阈值以提高性能。</li>
+<li>threshold：阈值</li>
+<li><code>LIMIT count</code>：限制每次删除的最大消息数（Redis 6.2+）。</li>
+<li><code>*|id</code>：自定义id，必须大于流中已有最大 ID，否则会报错；自动生成，格式为 <code>&lt;毫秒时间戳&gt;-&lt;序列号&gt;</code>（推荐）</li>
+</ul>
+</li>
+<li><code>MINID</code>: 删除 ID 小于指定值的消息，保留较新的消息</li>
+<li><code>field value [field value ...]</code>: 消息的字段和值，类似哈希表结构。</li>
+</ul>
+<pre><code class="language-shell">xadd mystream MAXLEN ~ 1000 * name &quot;Eve&quot; age 25 city &quot;London&quot;
+</code></pre>
+<blockquote>
+<p>[!note]<br>此命令添加了<strong>一条</strong>包含<strong>多个字段</strong>的消息</p>
+</blockquote>
+<p>python代码读取stream示例如下</p>
+<pre><code class="language-python">import redis
+import time
+
+# 连接 Redis
+r = redis.Redis(host=&#39;localhost&#39;, port=6379, db=0)
+stream_key = &#39;mystream&#39;
+
+# 初始 ID 设为 0，表示从第一条消息开始获取
+last_id = &#39;0&#39;
+
+while True:
+    # 阻塞读取，timeout=0 表示永久阻塞，直到有新消息
+    messages = r.xread({stream_key: last_id}, count=10, block=5000)
+    
+    if not messages:
+        print(&quot;没有新消息，继续等待...&quot;)
+        continue
+        
+    # 处理消息
+    for stream, entries in messages:
+        for message_id, fields in entries:
+            print(f&quot;收到消息 ID: {message_id}, 内容: {fields}&quot;)
+            
+            # 更新 last_id 为当前消息的 ID，下次从下一条消息开始获取
+            last_id = message_id
+            
+            # 模拟处理耗时
+            time.sleep(0.1)
+</code></pre>
+<p>输出如下</p>
+<pre><code>收到消息 ID: b&#39;1746885666676-0&#39;, 内容: {b&#39;name&#39;: b&#39;Eve&#39;, b&#39;age&#39;: b&#39;25&#39;, b&#39;city&#39;: b&#39;London&#39;}
+</code></pre>
+<h3>3.1.2. 获取指定消息列表</h3>
+<pre><code class="language-shell">xrange key start end [COUNT count]
+</code></pre>
+<ul>
+<li><strong>start</strong> ：开始值， <strong>-</strong> 表示最小值</li>
+<li><strong>end</strong> ：结束值， <strong>+</strong> 表示最大值</li>
+<li><strong>count</strong> ：数量</li>
+</ul>
+<pre><code class="language-shell">xrange mystream - +
+1) 1) &quot;1746885666676-0&quot;
+   2) 1) &quot;name&quot;
+      2) &quot;Eve&quot;
+      3) &quot;age&quot;
+      4) &quot;25&quot;
+      5) &quot;city&quot;
+      6) &quot;London&quot;
+</code></pre>
+<h3>3.1.3. XREAD 以阻塞/非阻塞方式获取消息列表</h3>
+<pre><code class="language-shell">xread [COUNT count] [BLOCK milliseconds] STREAMS key [key ...] id [id ...]
+</code></pre>
+<ul>
+<li><strong>count</strong> ：数量</li>
+<li><strong>milliseconds</strong> ：可选，阻塞毫秒数，没有设置就是非阻塞模式</li>
+<li><strong>key</strong> ：队列名</li>
+<li><strong>id</strong> ：id<strong>大于</strong>指定消息ID的消息才会被读取</li>
+</ul>
+<pre><code class="language-shell">127.0.0.1:6379&gt; XREAD block 1000 streams mystream $
+(nil)
+(1.07s)
+</code></pre>
+<p>使用 Block 模式，配合<code>$</code>作为ID ，表示读取最新的消息，若没有消息，命令阻塞；等待过程中，其他客户端向队列追加消息，则会立即读取到。因此，典型的队列就是XADD配合 XREAD Block完成。XADD负责生成消息，XREAD负责消费消息。</p>
+<pre><code class="language-shell">xread streams mystream 0-0
+1) 1) &quot;mystream&quot;
+   2) 1) 1) &quot;1746885666676-0&quot;
+         2) 1) &quot;name&quot;
+            2) &quot;Eve&quot;
+            3) &quot;age&quot;
+            4) &quot;25&quot;
+            5) &quot;city&quot;
+            6) &quot;London&quot;
+      2) 1) &quot;1746886506263-0&quot;
+         2) 1) &quot;name&quot;
+            2) &quot;Shinerio&quot;
+            3) &quot;age&quot;
+            4) &quot;30&quot;
+            5) &quot;city&quot;
+</code></pre>
+<h3>3.1.4. 创建消费者组</h3>
+<pre><code class="language-shell">XGROUP CREATE key groupname id|$ [MKSTREAM] [ENTRIESREAD entries_read]
+</code></pre>
+<ul>
+<li><code>id|$</code>: 指定消费者组的起始消费位置。<ul>
+<li><code>$</code>：从流的末尾开始消费，只处理创建组之后新添加的消息。</li>
+<li><code>id</code>：指定具体的消息 ID，从该 ID 之后开始消费（不包含该 ID 本身）。例如：<code>0</code> 表示从流的第一条消息开始消费；<code>1620000000000-0</code> 表示从指定 ID 之后开始。</li>
+</ul>
+</li>
+<li><code>MKSTREAM</code>：如果流不存在，则自动创建流、</li>
+<li><code>ENTRIESREAD entries_read</code>（可选，Redis 6.2+）：记录消费者组创建时流的历史消息数量（仅用于统计，不影响消费行为）。</li>
+</ul>
+<pre><code class="language-shell">XGROUP CREATE mystream mygroup 0-0
+</code></pre>
+<h3>3.1.5. 从消费者组读取消息</h3>
+<pre><code class="language-shell">xreadgroup GROUP group consumer [COUNT count] [BLOCK milliseconds] [NOACK] STREAMS key [key ...] id [id ...]
+</code></pre>
+<ul>
+<li><code>group</code>：消费者组名称（需提前用 <code>XGROUP CREATE</code> 创建）。</li>
+<li><code>consumer</code>：当前消费者的唯一标识（可动态创建）。</li>
+<li><code>key</code>：流的名称。</li>
+<li><code>id</code>：起始 ID，控制从何处开始读取：<ul>
+<li><code>&gt;</code>：只获取从未分配给其他消费者的新消息（推荐）。</li>
+<li><code>ID</code>：处理特定ID之后的消息（包括未确认的历史消息）。例如：<code>0</code> 表示处理所有待处理消息（包括历史遗留）。</li>
+</ul>
+</li>
+</ul>
+<h4>3.1.5.1. NOACK行为</h4>
+<p>默认行为（无 <code>NOACK</code>），<strong>工作流程</strong>：</p>
+<ol>
+<li><strong>读取消息</strong>：使用 <code>XREADGROUP</code> 读取消息时，Redis 会自动将消息标记为「已分配」（状态为 Pending）。</li>
+<li><strong>处理消息</strong>：消费者处理消息。</li>
+<li><strong>手动确认</strong>：处理完成后，必须显式调用 <code>XACK</code> 命令确认消息，将其从 PEL（Pending Entries List）中移除。<br>使用 <code>NOACK</code> 选项，<strong>工作流程</strong></li>
+<li><strong>读取消息</strong>：使用 <code>XREADGROUP NOACK</code> 读取消息时，Redis<strong>不会</strong>将消息标记为 Pending。</li>
+<li><strong>处理消息</strong>：消费者处理消息。</li>
+<li><strong>无需手动确认</strong>：系统会假设消息已被即时处理，无需后续确认<br><strong>核心区别对比</strong></li>
+</ol>
+<table>
+<thead>
+<tr>
+<th><strong>对比项</strong></th>
+<th><strong>默认行为（无 <code>NOACK</code>）</strong></th>
+<th><strong>使用 <code>NOACK</code></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>消息是否自动进入 PEL</strong></td>
+<td>是，读取后立即进入 PEL（状态为 Pending）</td>
+<td>否，需手动 <code>XACK</code> 才会记录到历史</td>
+</tr>
+<tr>
+<td><strong>未确认消息的处理</strong></td>
+<td>留在 PEL 中，可能被重新分配给其他消费者</td>
+<td>消息状态不变，不会被重新分配（除非手动 <code>XCLAIM</code>）</td>
+</tr>
+<tr>
+<td><strong>典型场景</strong></td>
+<td>需要可靠消费，确保消息至少被处理一次</td>
+<td>1. 处理非关键性数据，可以接受偶尔的消息丢失<br>2. 追求更高的处理性能，减少确认带来的开销<br>3. 实现&quot;至多一次&quot;传递语义而非&quot;至少一次&quot;</td>
+</tr>
+</tbody></table>
+<h3>3.1.6. XACK 消息消费确认</h3>
+<p>每一个消息都需要单独ack</p>
+<pre><code class="language-shell">xack key group id [id ...]
+</code></pre>
+<h3>3.1.7. XTRIM 限制Stream长度</h3>
+<pre><code class="language-shell">xtrim key MAXLEN|MINID [=|~] threshold [LIMIT count]
+</code></pre>
+<p>对stream消息进行淘汰，暴露最近的threashold个消息</p>
+<ul>
+<li>MAXLEN：按消息长度淘汰</li>
+<li>MINID：按最小消息ID淘汰</li>
+</ul>
+<h3>3.1.8. 删除消费者组</h3>
+<pre><code class="language-shell">XGROUP DELCONSUMER key groupname consumername
+</code></pre>
+<h3>3.1.9. 查看指定stream所有消费者组</h3>
+<pre><code class="language-shell">XINFO GROUPS mystream
+1)  1) &quot;name&quot;
+    2) &quot;mygroup&quot;
+    3) &quot;consumers&quot;
+    4) (integer) 1
+    5) &quot;pending&quot;
+    6) (integer) 3
+    7) &quot;last-delivered-id&quot;
+    8) &quot;1746886620493-0&quot;
+    9) &quot;entries-read&quot;
+   2) (integer) 3
+   3) &quot;lag&quot;
+   4) (integer) 0
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td><code>&quot;mygroup&quot;</code></td>
+<td>消费者组的名称。</td>
+</tr>
+<tr>
+<td><code>consumers</code></td>
+<td><code>(integer) 1</code></td>
+<td>该消费者组当前有1个活跃的消费者。</td>
+</tr>
+<tr>
+<td><code>pending</code></td>
+<td><code>(integer) 3</code></td>
+<td>待处理消息的数量（即 PEL 中已分配但未确认的消息）。</td>
+</tr>
+<tr>
+<td><code>last-delivered-id</code></td>
+<td><code>&quot;1746886620493-0&quot;</code></td>
+<td>最后一次分配给该组的消息 ID，标志着消费进度。</td>
+</tr>
+<tr>
+<td><code>entries-read</code></td>
+<td><code>(integer) 3</code></td>
+<td>该组从流中读取的消息总数（自组创建以来）。</td>
+</tr>
+<tr>
+<td><code>lag</code></td>
+<td><code>(integer) 0</code></td>
+<td>未被该组消费的消息数量（<code>lag = 流总长度 - entries-read</code>）。</td>
+</tr>
+</tbody></table>
+<pre><code class="language-shell">test-db-redis.ns-12pvbug6.svc:6379&gt; XACK mystream mygroup 1746886620493-0
+(integer) 1
+test-db-redis.ns-12pvbug6.svc:6379&gt; XINFO GROUPS mystream
+1)  1) &quot;name&quot;
+    2) &quot;mygroup&quot;
+    3) &quot;consumers&quot;
+    4) (integer) 1
+    5) &quot;pending&quot;
+    6) (integer) 2
+    7) &quot;last-delivered-id&quot;
+    8) &quot;1746886620493-0&quot;
+    9) &quot;entries-read&quot;
+   2) (integer) 3
+   3) &quot;lag&quot;
+   4) (integer) 0
+</code></pre>
+<h3>3.1.10. 故障检测</h3>
+<p>Redis通过消费者组的维护机制来检测故障消费者并重新分配pending消息，Redis Stream没有自动的消费者故障检测机制，而是通过以下方式处理：</p>
+<ol>
+<li><strong>空闲时间检查</strong><ul>
+<li>Redis记录每个消费者的最后活动时间</li>
+<li><strong>应用程序负责</strong>主动检查长时间不活跃的消费者</li>
+</ul>
+</li>
+<li><strong>手动声明故障</strong><ul>
+<li>系统中通常需要有监控组件来检测消费者状态</li>
+<li>发现消费者故障后，需要<strong>手动声明</strong>该消费者已经失效</li>
+</ul>
+</li>
+</ol>
+<h4>3.1.10.1. 重新分配pending消息的方法</h4>
+<ol>
+<li><strong>使用XPENDING命令查看未确认消息</strong><pre><code class="language-shell">XPENDING mystream mygroup [start-id end-id count [consumer-name]]
+</code></pre>
+<ul>
+<li>查看消费者组中所有未确认的消息</li>
+<li>可以筛选特定消费者的未确认消息<br>每个Pending的消息有4个属性：</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>消息ID</li>
+<li>所属消费者</li>
+<li>IDLE，已读取时长</li>
+<li>delivery counter，消息被读取次数</li>
+</ul>
+<ol>
+<li><strong>使用XCLAIM重新分配消息</strong><pre><code class="language-shell">XCLAIM mystream mygroup new-consumer-name min-idle-time ID1 [ID2 ...]
+</code></pre>
+<ul>
+<li>将已被分配但未确认的消息转移给新的消费者</li>
+<li><code>min-idle-time</code>参数指定消息必须处于未确认状态的最小时长，只有超过这个时长，才能被转移</li>
+</ul>
+</li>
+<li><strong>使用XAUTOCLAIM自动认领消息</strong>（Redis 6.2+）<pre><code class="language-shell">XAUTOCLAIM mystream mygroup new-consumer-name min-idle-time start-id [COUNT count]
+</code></pre>
+<ul>
+<li>自动认领超过指定空闲时间的消息</li>
+<li>比XCLAIM更便捷，可一次操作多条消息</li>
+</ul>
+</li>
+</ol>
+<pre><code class="language-shell">XAUTOCLAIM mystream mygroup myconsumer2 1000 0-0
+1) &quot;0-0&quot;
+2) 1) 1) &quot;1746885666676-0&quot;
+      2) 1) &quot;name&quot;
+         2) &quot;Eve&quot;
+         3) &quot;age&quot;
+         4) &quot;25&quot;
+         5) &quot;city&quot;
+         6) &quot;London&quot;
+   3) 1) &quot;1746886506263-0&quot;
+      2) 1) &quot;name&quot;
+         2) &quot;Shinerio&quot;
+         3) &quot;age&quot;
+         4) &quot;30&quot;
+         5) &quot;city&quot;
+         6) &quot;ShangHai&quot;
+4) (empty array)
+XINFO GROUPS mystream
+5)  1) &quot;name&quot;
+    2) &quot;mygroup&quot;
+    3) &quot;consumers&quot;
+    4) (integer) 2
+    5) &quot;pending&quot;
+    6) (integer) 2
+    7) &quot;last-delivered-id&quot;
+    8) &quot;1746886620493-0&quot;
+    9) &quot;entries-read&quot;
+   6) (integer) 3
+   7) &quot;lag&quot;
+   8) (integer) 0
+xack mystream mygroup 1746885666676-0 1746886506263-0
+(integer) 2
+XINFO GROUPS mystream
+9)  1) &quot;name&quot;
+    2) &quot;mygroup&quot;
+    3) &quot;consumers&quot;
+    4) (integer) 2
+    5) &quot;pending&quot;
+    6) (integer) 0
+    7) &quot;last-delivered-id&quot;
+    8) &quot;1746886620493-0&quot;
+    9) &quot;entries-read&quot;
+   10) (integer) 3
+   11) &quot;lag&quot;
+   12) (integer) 0
+</code></pre>
+<blockquote>
+<p>[!note]<br>在实际应用中，通常需要</p>
+<ol>
+<li>定期执行检查脚本，识别长时间未活动的消费者</li>
+<li>检测空闲时间超过预设阈值（如60秒）的消息</li>
+<li>将这些消息通过XCLAIM或XAUTOCLAIM重新分配给活跃的消费者</li>
+</ol>
+</blockquote>
+<p>这一机制需要应用程序层面实现，Redis自身不会自动检测故障或重新分配消息。系统需要设计专门的监控和恢复组件来处理这些情况，确保消息不会因消费者故障而丢失。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

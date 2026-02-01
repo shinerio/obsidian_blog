@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dns Zone - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Dns Zone</h1>
+        <time datetime="2026-01-03T13:04:29.220Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>DNS Zone是指域名系统（DNS）中管理的<strong>一部分域空间</strong>，包含了该区域内所有域名的记录信息。它是确保网络中计算机能够通过域名解析到正确 IP 地址的关键组成部分，对于维持互联网的正常运行至关重要。一个DNS Zone通常由一个组织或个人负责维护，这个区域包括了域名及其子域的权威信息，如IP地址、邮件交换记录等。</p>
+<table>
+<thead>
+<tr>
+<th>区域类型</th>
+<th>功能</th>
+<th>数据权限</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主要区域</td>
+<td>维护和管理完整的DNS记录</td>
+<td>读写</td>
+<td>主DNS服务器用于直接管理域名解析数据</td>
+</tr>
+<tr>
+<td>辅助区域</td>
+<td>主区域的只读副本</td>
+<td>只读</td>
+<td>用于冗余、负载均衡和容灾</td>
+</tr>
+<tr>
+<td>存根区域</td>
+<td>存储目标区域的NS记录</td>
+<td>部分信息</td>
+<td>用于加速DNS查询和优化跨区域解析</td>
+</tr>
+</tbody></table>
+<h1>1. 结构组成</h1>
+<p><strong>域名称空间分层</strong>: DNS被分解成多个不同的zone。这些区域区分了DNS命名空间中不同管理的区域。DNS区域是由特定组织或管理员管理的DNS命名空间的一部分。DNS区域是一个管理空间，允许对DNS组件（如权威域名服务器）进行更精细的控制。域名空间是一个层次树状结构，DNS根域位于树的顶端。一个DNS区域从树中的某个域开始，<strong>并可以延伸到所有子域</strong>，每个节点代表一个域名的权威区域/使得多个子域可以由同一个实体管理。</p>
+<p><strong>权威名称服务器</strong>: 对于每个DNS Zone, 至少有一个<a href="应用层dns协议解析213-权威域名服务器权威名称服务器.html" class="internal-link">应用层DNS协议解析<span class="tag">#2</span>.1.3. 权威域名服务器|权威名称服务器</a>负责解析属于该区域的查询请求，返回相应的IP地址或其他资源记录。</p>
+<h1>2. DNS zone与subzone</h1>
+<p>一个常见的误解是将DNS区域等同于域名或单个DNS服务器。事实上，一个DNS区域可以<strong>包含多个子域</strong>，并且多个区域可以存在于同一台服务器上。DNS区域<strong>并非</strong>物理上相互分离，区域严格用于<strong>委派控制</strong>。</p>
+<h2>2.1. 例一</h2>
+<p>在baidu中设置一个DNS服务器，这个DNS服务器将完成域名空间&quot;baidu.com&quot;下的域名解析工作，我们称之为一个区域(ZONE)。<br>在huawei中设置一个DNS服务器，这个服务器完成域名空间&quot;huawei.com&quot;下的域名解析工作，我们称之为一个区域(ZONE)。</p>
+<blockquote>
+<p>[!note]<br>在DNS服务器中，必须先建立区域，在区域中建立子域，在区域或者子域中添加主机记录。一个zone的所有信息被存储在DNS zone文件中，这个文件是理解一个DNS zone如何工作的关键。一台DNS服务器上可以存放多个区域文件，同一个区域文件也可以存放在多台DNS服务器上。</p>
+</blockquote>
+<h2>2.2. 例二</h2>
+<p>假设有一个cloudflare.com域，包括三个子域：support.cloudflare.com、community.cloudflare.com和blog.cloudflare.com。假设博客是一个需要独立管理的强大站点，而支持和社区页面与cloudflare.com更紧密相关，可以与主域在同一个区域中管理。在这种情况下，cloudflare.com以及支持和社区站点将全部位于同一个区域，而blog.cloudflare.com将存在于其自身的区域中。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250328223840.png" alt="image.png"></p>
+<h1>3. DNS zone分类</h1>
+<h2>3.1. 正向与反向DNS Zone:</h2>
+<ul>
+<li>正向DNS Zone通过域名来解析IP地址</li>
+<li>反向DNS Zone则是通过IP地址来解析域名，适用于不同的查询需求。</li>
+</ul>
+<h2>3.2. 主从DNS Zone</h2>
+<ul>
+<li>主DNS Zone是读写的原版区域</li>
+<li>从DNS Zone仅可读并从主区域同步数据，用于负载均衡和容错。</li>
+</ul>
+<h2>3.3. public与private zone</h2>
+<h3>3.3.1. public zone</h3>
+<p>用于管理和解析公网域名。公网域名是指在Internet中，使用公网解析的域名，用于访问网站或Web应用程序，需要通过域名注册商注册。</p>
+<h3>3.3.2. private zone</h3>
+<p>用于管理和解析内网域名。内网域名是指在VPC中生效的域名。云解析服务将内网域名与私网IP地址相关联，为云上云服务提供<strong>VPC内</strong>的域名解析服务。</p>
+<p>内网域名具有以下特点：</p>
+<ul>
+<li>可以随意创建，无需进行注册、域名实名认证以及备案。</li>
+<li>仅在关联VPC内生效，一个域名可以关联多个VPC，且数量没有限制。</li>
+</ul>
+<p>启该子域名递归解析代理功能后，解析的子域名未在内网域名记录集中配置时，支持使用公网域名递归解析。</p>
+<p>不同的VPC（虚拟私有云）可以配置不同的DNS区域（DNS Zone），并且在这些不同的DNS区域中，对于相同的域名可以设置不同的域名解析记录。</p>
+<h4>3.3.2.1. 多环境部署</h4>
+<p>在不同的VPC中，比如开发、测试和生产环境，可以为同一个域名配置不同的解析地址。例如：</p>
+<ul>
+<li>开发环境的DNS Zone可能将<code>app.example.com</code>解析到开发服务器IP</li>
+<li>生产环境的DNS Zone将同一个域名解析到生产服务器IP</li>
+</ul>
+<h4>3.3.2.2. 多区域/多地域部署</h4>
+<p>对于跨地域的服务，可以根据不同VPC的地理位置配置就近的服务器解析：</p>
+<ul>
+<li>中国区的VPC解析到中国的服务器</li>
+<li>美国区的VPC解析到美国的服务器</li>
+</ul>
+<h4>3.3.2.3. 灾备和负载均衡</h4>
+<p>可以在不同的DNS Zone中配置不同的解析策略，实现流量分配和故障切换。</p>
+<h1>4. ref</h1>
+<p><a href="https://www.cloudflare.com/learning/dns/glossary/dns-zone/">What is a dns zone?</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

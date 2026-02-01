@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java9 Java17新特性 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Java9 Java17新特性</h1>
+        <time datetime="2026-01-03T13:04:29.159Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 集合</h1>
+<p>增加 了 List.of()、Set.of()、Map.of() 和 Map.ofEntries()等工厂方法来创建不可变集合。</p>
+<pre><code class="language-java">List&lt;Integer&gt; list = List.of(1, 2, 3, 4, 5);  
+Set&lt;Integer&gt; set = Set.of(1, 2, 3, 4, 5);  
+Map&lt;String, Integer&gt; map = Map.of(&quot;a&quot;, 1, &quot;b&quot;, 2, &quot;c&quot;, 3, &quot;d&quot;, 4);
+</code></pre>
+<h1>2. 私有方法</h1>
+<p>java8中允许接口有默认方法，java9中允许接口有默认私有方法</p>
+<h1>3. Optioal的ifPresentOrElse</h1>
+<pre><code class="language-java">Optional.of(1).ifPresentOrElse(  
+        System.out::println,  
+        () -&gt; System.out.println(&quot;not exist.&quot;)  
+);
+</code></pre>
+<h1>4. 类型推断</h1>
+<p>类型只是个语法糖，定义的变量在编译期就必须确定类型，不能用作函数入参或返回值</p>
+<pre><code class="language-java">var map = Map.of(&quot;a&quot;, 1);  
+var str = &quot;hello&quot;;
+</code></pre>
+<h1>5. instanceof模式匹配</h1>
+<pre><code class="language-java">public static void testType(Object str) {  
+    if (str instanceof String s) {  
+        System.out.println(&quot;string is &quot; + s);  
+    } else if (str instanceof Integer i) {  
+        System.out.println(&quot;integer is &quot; + i);  
+    }  
+}
+</code></pre>
+<h1>6. switch表达式扩展</h1>
+<p>引入了类似lambda语法条件，支持多值匹配，匹配成功后的执行块不需要break</p>
+<pre><code class="language-java">for (int i = 0; i &lt; 10; i++) {  
+    switch (i) {  
+        case 0,1,8,9 -&gt; System.out.println(&quot;i小于2或大于7&quot;);  
+        default -&gt; System.out.println(&quot;i大于等于2且小于等于7&quot;);  
+    }  
+}
+/**
+i小于2或大于7
+i小于2或大于7
+i大于等于2且小于等于7
+i大于等于2且小于等于7
+i大于等于2且小于等于7
+i大于等于2且小于等于7
+i大于等于2且小于等于7
+i大于等于2且小于等于7
+i小于2或大于7
+i小于2或大于7
+**/
+</code></pre>
+<p>swich作为表达式</p>
+<pre><code class="language-java">var score = &#39;C&#39;;  
+String s = switch (score){  
+    case &#39;A&#39; -&gt; &quot;优秀&quot;;  
+    case &#39;B&#39; -&gt; &quot;良好&quot;;  
+    case &#39;C&#39; -&gt; {  
+        System.out.println(&quot;do something&quot;);  
+        // 通过yield返回值  
+        yield &quot;中&quot;;  
+    }  
+    case &#39;D&#39; -&gt; &quot;及格&quot;;  
+    case &#39;F&#39; -&gt; &quot;不及格&quot;;  
+    default -&gt; &quot;成绩输入错误&quot;;  
+};  
+</code></pre>
+<ol>
+<li>和<code>instanceof</code> 一样， <code>switch</code> 也紧跟着增加了类型匹配自动转换功能。</li>
+<li>case可以匹配null</li>
+</ol>
+<pre><code class="language-java">// Old code  
+static String formatter(Object o) {  
+    String formatted = &quot;unknown&quot;;  
+    if (o == null) {  
+        formatted = &quot;null&quot;;  
+    } else if (o instanceof String s) {  
+        formatted = String.format(&quot;String %s&quot;, s);  
+    } else if (o instanceof Integer i) {  
+        formatted = String.format(&quot;int %d&quot;, i);  
+    } else if (o instanceof Long l) {  
+        formatted = String.format(&quot;long %d&quot;, l);  
+    } else if (o instanceof Double d) {  
+        formatted = String.format(&quot;double %f&quot;, d);  
+    } else {  
+        formatted = o.toString();  
+    }  
+    if (o instanceof Integer i) {  
+        formatted = String.format(&quot;int %d&quot;, i);  
+    } else if (o instanceof Long l) {  
+        formatted = String.format(&quot;long %d&quot;, l);  
+    } else if (o instanceof Double d) {  
+        formatted = String.format(&quot;double %f&quot;, d);  
+    } else if (o instanceof String s) {  
+        formatted = String.format(&quot;String %s&quot;, s);  
+    }  
+    return formatted;  
+}  
+  
+// New code  
+static String formatterPatternSwitch(Object o) {  
+    return switch (o) {  
+        case null -&gt; &quot;null&quot;;  
+        case Integer i -&gt; String.format(&quot;int %d&quot;, i);  
+        case Long l    -&gt; String.format(&quot;long %d&quot;, l);  
+        case Double d  -&gt; String.format(&quot;double %f&quot;, d);  
+        case String s  -&gt; String.format(&quot;String %s&quot;, s);  
+        default        -&gt; o.toString();  
+    };  
+}
+</code></pre>
+<h1>7. 文本块</h1>
+<pre><code class="language-java">var str = &quot;&quot;&quot;  
+        this is the first line        
+        this is the second line        
+        this is the third line        
+        &quot;&quot;&quot;;  
+var json = &quot;&quot;&quot;  
+        {             
+            &quot;firstName&quot;: &quot;Piotr&quot;,            
+             &quot;lastName&quot;: &quot;Mińkowski&quot;        
+         }        
+         &quot;&quot;&quot;;
+/**
+编译后结果
+String str = &quot;this is the first line\nthis is the second line\nthis is the third line\n&quot;;  
+String json = &quot;{\n     \&quot;firstName\&quot;: \&quot;Piotr\&quot;,\n     \&quot;lastName\&quot;: \&quot;Mińkowski\&quot;\n}\n&quot;;
+**/
+</code></pre>
+<h1>8. record类</h1>
+<pre><code class="language-java">public record Point(int x, int y) {  
+    public Point(int x, int y) {  
+        // 这是我们编写的Compact Constructor:  
+        if (x &lt; 0 || y &lt; 0) {  
+            throw new IllegalArgumentException();  
+        }  
+        // 这是编译器继续生成的赋值代码:  
+        this.x = x;  
+        this.y = y;  
+    }  
+  
+    // 可以自定义成员方法或静态方法  
+    public static Point of(int x, int y) {  
+        return new Point(x, y);  
+    }  
+}
+</code></pre>
+<p>等效于下面这个类</p>
+<ol>
+<li>它是一个<code>final</code>类</li>
+<li>自动实现<code>equals</code>、<code>hashCode</code>、<code>toString</code>函数</li>
+<li>自动生成filed()方法获取成员属性</li>
+</ol>
+<pre><code class="language-java">final class Point extends Record {
+    private final int x;
+    private final int y;
+
+    public Point(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    public int x() {
+        return this.x;
+    }
+
+    public int y() {
+        return this.y;
+    }
+
+    public String toString() {
+        return String.format(&quot;Point[x=%s, y=%s]&quot;, x, y);
+    }
+
+    @Override  
+    public boolean equals(Object o) {  
+        if (this == o) return true;  
+        if (o == null || getClass() != o.getClass()) return false;  
+        Point point = (Point) o;  
+        return x == point.x &amp;&amp; y == point.y;  
+    }  
+      
+    @Override  
+    public int hashCode() {  
+        return Objects.hash(x, y);  
+    }
+}
+</code></pre>
+<p>测试输出</p>
+<pre><code class="language-java">Point point1 = Point.of(1, 2);  
+Point point2 = Point.of(1, 2);  
+System.out.println(point1);  
+System.out.println(point1.equals(point2));
+/**
+Point[x=1, y=2]
+true
+**/
+</code></pre>
+<h1>9. 密封类</h1>
+<table>
+<thead>
+<tr>
+<th>关键字</th>
+<th>作用</th>
+<th>继承限制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sealed</code></td>
+<td>限制继承为指定子类</td>
+<td>仅允许<code>permits</code>列表中的类</td>
+</tr>
+<tr>
+<td><code>non-sealed</code></td>
+<td>解除密封，允许自由继承</td>
+<td>无限制</td>
+</tr>
+<tr>
+<td><code>final</code></td>
+<td>禁止任何继承</td>
+<td>不可被继承</td>
+</tr>
+</tbody></table>
+<h2>9.1. sealed</h2>
+<ul>
+<li><strong>限制继承/实现</strong>：<code>sealed</code>类或接口只能被指定的子类继承（类）或实现（接口）。</li>
+<li><strong>明确层级结构</strong>：通过<code>permits</code>子句列出所有允许的直接子类 / 实现类，确保继承关系可控。</li>
+</ul>
+<pre><code class="language-java">// 定义一个sealed接口，仅允许Circle和Rectangle实现
+public sealed interface Shape permits Circle, Rectangle, ColorfulShape {
+    double area();
+}
+
+// 具体实现类必须声明为final、sealed或non-sealed
+public final class Circle implements Shape { ... }
+public sealed class Rectangle implements Shape permits Square { ... }
+</code></pre>
+<p>如果允许扩展的子类和封闭类在同一个源代码文件里，封闭类可以不使用 permits 语句，Java 编译器将检索源文件，在编译期为封闭类添加上许可的子类。</p>
+<pre><code class="language-java">package com.shinerio.tutorial.jdk;
+
+public sealed class ColorfulShape implements Shape {
+    static final class CircleColorfulShape extends ColorfulShape {
+    }
+}
+
+final class RectangleColorfulShape extends ColorfulShape {
+}
+</code></pre>
+<h2>9.2. non-sealed</h2>
+<ul>
+<li><strong>解除密封限制</strong>：允许<code>sealed</code>类的子类被其他类继续继承（即打破<code>sealed</code>的封闭性）。</li>
+</ul>
+<pre><code class="language-java">// Rectangle是sealed类，但允许Square继承
+public sealed class Rectangle implements Shape permits Square { ... }
+
+// Square声明为non-sealed，允许其他类继续继承
+public non-sealed class Square extends Rectangle { ... }
+
+// 其他类可以继承Square
+public class ColoredSquare extends Square { ... }
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2. 基本语法 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>2. 基本语法</h1>
+        <time datetime="2026-01-03T13:04:29.122Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 程序入口</h1>
+<p>在 C++ 标准中，<code>main</code> 函数是程序启动后调用的第一个用户定义函数，它有两种标准的定义形式：</p>
+<ol>
+<li><strong><code>int main()</code></strong>：这种形式表示 <code>main</code> 函数不接受任何命令行参数。它向调用者返回一个整数值，用于表示程序的退出状态。通常，返回值 <code>0</code> 表示程序正常结束，非零值表示程序出现异常或错误。</li>
+<li><strong><code>int main(int argc, char *argv[])</code></strong>：这种形式允许程序接收命令行参数。<code>argc</code> 是一个整数，表示命令行参数的数量（包括程序名本身）；<code>argv</code> 是一个指向字符指针数组的指针，每个字符指针指向一个命令行参数的字符串，其中<code>argv[0]</code>是启动进程进程的命令。同样，该函数也返回一个整数值作为程序的退出状态。<br>返回值：虽然 <code>main</code> 函数的返回类型是 <code>int</code>，但在 C++ 中，如果 <code>main</code> 函数执行到末尾时没有显式地使用 <code>return</code> 语句，编译器会隐式地插入 <code>return 0;</code>，这意味着程序默认以正常状态退出。不过，为了代码的可读性和可维护性，建议显式地添加 <code>return</code> 语句。</li>
+</ol>
+<h1>2. 命名规范</h1>
+<ul>
+<li>文件名：小写蛇形</li>
+<li>类名：大驼峰</li>
+<li>数据类型：大驼峰</li>
+<li>变量：小写蛇形</li>
+<li>全局变量：g_开头</li>
+<li>命名空间：小写蛇形</li>
+<li>函数名：小驼峰</li>
+<li>枚举名：大驼峰</li>
+<li>宏变量：大蛇形</li>
+</ul>
+<h1>3. 类型别名</h1>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt;&lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;limits&gt;
+
+using namespace std;
+typedef long int intsize8;  // 类型别名
+int main()
+{
+intsize8 count = 0;
+# size: 8
+cout &lt;&lt; &quot;size: &quot; &lt;&lt; sizeof(count) &lt;&lt; endl;
+return 0;
+}
+</code></pre>
+<h1>4. 枚举类型</h1>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt;&lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;limits&gt;
+
+using namespace std;
+enum Color {
+red,
+green=5,
+yellow,
+};
+
+int main()
+{
+// red value: 0 green value: 5 yelow value: 6
+cout &lt;&lt; &quot;red value: &quot; &lt;&lt; red &lt;&lt; &quot; green value: &quot; &lt;&lt; green &lt;&lt; &quot; yelow value: &quot; &lt;&lt; yellow &lt;&lt; endl;
+}
+</code></pre>
+<h1>5. 流运算符</h1>
+<p><code>&lt;&lt;</code>和<code>&gt;&gt;</code>是用于位移运算符，在标准库中，<code>std::cout</code> 和 <code>std::cin</code> 分别是 <code>std::ostream</code> 和 <code>std::istream</code> 类型的对象。为了能让这些流对象可以处理不同类型的数据（如 <code>int</code>、<code>double</code>、<code>char</code> 等），标准库对 <code>&lt;&lt;</code> 和 <code>&gt;&gt;</code> 运算符进行了大量的重载。这样就能把不同类型的数据插入到输出流中。例如，对于字符串类型<code>const char*</code>，<code>&lt;&lt;</code> 运算符会把字符串的内容输出到控制台；对于整数类型（<code>int</code>），<code>&lt;&lt;</code> 运算符会把整数的十进制表示输出到控制台。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+int main() {
+    int num = 10;
+    double d = 3.14;
+    char ch = &#39;A&#39;;
+
+    std::cout &lt;&lt; &quot;整数: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;浮点数: &quot; &lt;&lt; d &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;字符: &quot; &lt;&lt; ch &lt;&lt; std::endl;
+
+    return 0;
+}
+</code></pre>
+<p><code>&lt;&lt;</code> 主要用于将数据插入到输出流中。具体解释如下：</p>
+<ul>
+<li><strong><code>std::cout</code></strong>：这是 C++ 标准库中定义的标准输出流对象，它与控制台屏幕相关联，主要用于向控制台输出数据。</li>
+<li><strong><code>&lt;&lt;</code> 运算符</strong>：它会把右侧的数据插入到左侧的输出流对象中。当你使用 <code>std::cout &lt;&lt; &quot;This is a custom cout function.&quot;</code> 时，字符串 <code>&quot;This is a custom cout function.&quot;</code> 就会被插入到 <code>std::cout</code> 输出流里，进而显示在控制台上。</li>
+<li><strong>链式使用</strong>：<code>&lt;&lt;</code> 运算符支持链式调用，也就是说你可以连续使用多个 <code>&lt;&lt;</code> 运算符，像 <code>std::cout &lt;&lt; &quot;This is a custom cout function.&quot; &lt;&lt; std::endl;</code> 这样。这行代码会先把字符串插入到输出流，接着把 <code>std::endl</code> 插入到输出流。<code>std::endl</code> 是一个操纵符，它的作用是插入换行符并刷新输出缓冲区。</li>
+</ul>
+<p><code>&gt;&gt;</code> 作为流提取运算符，主要用于从输入流中读取数据并将其存储到变量中。<code>&gt;&gt;</code> 运算符是一个二元运算符，它从左侧的输入流对象（如 <code>std::cin</code> 或文件输入流对象）中提取数据，并将提取的数据存储到右侧的变量中。输入流可以是标准输入（键盘输入）、文件输入等。该运算符会根据右侧变量的类型来解析输入数据。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+int main() {
+    int num;
+    double d;
+    char ch;
+
+    // 从标准输入读取一个整数
+    std::cout &lt;&lt; &quot;请输入一个整数: &quot;;
+    std::cin &gt;&gt; num;
+
+    // 从标准输入读取一个浮点数
+    std::cout &lt;&lt; &quot;请输入一个浮点数: &quot;;
+    std::cin &gt;&gt; d;
+
+    // 从标准输入读取一个字符
+    std::cout &lt;&lt; &quot;请输入一个字符: &quot;;
+    std::cin &gt;&gt; ch;
+
+    // 输出读取到的数据
+    std::cout &lt;&lt; &quot;你输入的整数是: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;你输入的浮点数是: &quot; &lt;&lt; d &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;你输入的字符是: &quot; &lt;&lt; ch &lt;&lt; std::endl;
+
+    return 0;
+}
+</code></pre>
+<h1>6. extern关键字</h1>
+<ol>
+<li><strong>共享全局变量</strong>：当你在一个源文件中定义了一个全局变量，而在另一个源文件中需要访问这个变量时，就需要在第二个文件中声明这个变量，并使用<code>extern</code>关键字。</li>
+<li><strong>函数声明</strong>：当在某个源文件中定义了一个函数，并希望在另一个源文件中调用它时，同样需要在调用它的文件中声明这个函数，并可以使用<code>extern</code>关键字（虽然在C/C++中通常省略<code>extern</code>，仅使用函数原型声明也是可以的）。</li>
+<li><strong>链接属性</strong>：<code>extern</code>关键字还可以用来控制变量或函数的链接属性。例如，可以使用<code>extern &quot;C&quot;</code>在C++代码中声明C语言的函数，以便正确链接。</li>
+</ol>
+<p>详细研究下。。。。。。。</p>
+<p>b.cpp</p>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt;&lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &quot;a.h&quot;
+
+using namespace std;
+
+// 也可以不通过引头文件的方式，直接声明外部变量或函数引用
+// extern int global_var;
+// extern void global_say_hello(); // 声明 global_say_hello
+// void global_say_world(); // 声明 global_say_world，可以省略extern
+
+int main()
+{
+cout &lt;&lt; global_var &lt;&lt; endl;
+global_say_hello();
+global_say_world();
+}
+</code></pre>
+<p>a.h</p>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#ifndef&lt;/span&gt; GLOBALS_H
+&lt;span class=&quot;tag&quot;&gt;#define&lt;/span&gt; GLOBALS_H
+
+extern int global_var;   // extern不可省略
+extern void global_say_hello(); // extern可省略
+extern void global_say_world(); // extern可省略
+&lt;span class=&quot;tag&quot;&gt;#endif&lt;/span&gt; // GLOBALS_H
+ 
+// &lt;span class=&quot;tag&quot;&gt;#ifndef&lt;/span&gt;, &lt;span class=&quot;tag&quot;&gt;#define&lt;/span&gt;, &lt;span class=&quot;tag&quot;&gt;#endif&lt;/span&gt; 来防止头文件被重复包含
+</code></pre>
+<p>a.cpp</p>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt;&lt;iostream&gt;
+using namespace std;
+
+int global_var = 1;
+void global_say_hello() {
+cout &lt;&lt; &quot;hello&quot; &lt;&lt; endl;
+}
+
+void global_say_world() {
+cout &lt;&lt; &quot;world&quot; &lt;&lt; endl;
+}
+</code></pre>
+<h1>7. include</h1>
+<ul>
+<li><strong><code>&lt;&gt;</code></strong>：用于包含系统标准库头文件，编译器仅在标准库目录和内置包含路径中查找。</li>
+<li><code>&quot;&quot;</code>：用于包含用户自定义的头文件，编译器先在当前源文件所在目录查找，若未找到再去标准库目录和内置包含路径中查找。</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

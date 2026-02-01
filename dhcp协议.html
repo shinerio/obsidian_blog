@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DHCP协议 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>DHCP协议</h1>
+        <time datetime="2026-01-03T13:04:29.212Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>DHCP（Dynamic Host Configuration Protocol，动态主机配置协议），前身是BOOTP协议，是一个局域网的网络协议，使用UDP协议工作，统一使用两个IANA分配的端口：67（服务器端），68（客户端），DHCP客户端使用的源端口号为68，目的端口号为67发送请求消息到DHCP服务器，DHCP服务器使用的源端口号为67，目的端口号为68回应应答消息给DHCP客户端。</p>
+<p>DHCP通常被用于局域网环境，主要作用是集中的管理、分配IP地址，使client动态的获得IP地址、子网掩码，网关地址、DNS服务器地址等信息，并能够提升地址的使用率。</p>
+<h1>1. 报文格式</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202411272200400.png" alt="image.png"></p>
+<ul>
+<li><strong>&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;op</font></strong>：报文的操作类型。分为请求报文和响应报文。1：请求报文，2：应答报文。即client送给server的封包，设为1，反之为2。<ul>
+<li>请求报文：DHCP Discover、DHCP Request、DHCP Release、DHCP Inform和DHCP Decline。</li>
+<li>应答报文：DHCP Offer、DHCP ACK和DHCP NAK。</li>
+</ul>
+</li>
+<li><strong>htype</strong>：DHCP客户端的MAC地址类型。MAC地址类型其实是指明网络类型。htype值为1时表示为最常见的以太网MAC地址类型。</li>
+<li><strong>hlen</strong>：DHCP客户端的MAC地址长度。以太网MAC地址长度为6个字节，即以太网时hlen值为6。</li>
+<li><strong>hops</strong>：DHCP报文经过的DHCP中继的数目，默认为0。DHCP请求报文每经过一个DHCP中继，该字段就会增加1。没有经过DHCP中继时值为0。(若数据包需经过router传送，每站加1，若在同一网内，为0)</li>
+<li><strong>xid</strong>：客户端通过DHCP Discover报文发起一次IP地址请求时选择的随机数，相当于请求标识。用来标识一次IP地址请求过程。在一次请求中所有报文的Xid都是一样的。</li>
+<li><strong>secs</strong>：DHCP客户端从获取到IP地址或者续约过程开始到现在所消耗的时间，以秒为单位。在没有获得IP地址前该字段始终为0。(DHCP客户端开始DHCP请求后所经过的时间。目前尚未使用，固定为0。)</li>
+<li><strong>flags</strong>：标志位，只使用第0比特位，是广播应答标识位，用来标识DHCP服务器应答报文是采用单播还是广播发送，0表示采用单播发送方式，1表示采用广播发送方式。其余位尚未使用。(即从0-15bits，最左1bit为1时表示server将以广播方式传送封包给client。)<ul>
+<li>注意：在客户端正式分配了IP地址之前的第一次IP地址请求过程中，所有DHCP报文都是以广播方式发送的，包括客户端发送的DHCP Discover和DHCP Request报文，以及DHCP服务器发送的DHCP Offer、DHCP ACK和DHCP NAK报文。当然，如果是由DHCP中继器转的报文，则都是以单播方式发送的。另外，IP地址续约、IP地址释放的相关报文都是采用单播方式进行发送的。</li>
+</ul>
+</li>
+<li><strong>ciaddr</strong>：DHCP客户端的IP地址。仅在DHCP服务器发送的ACK报文中显示，因为在得到DHCP服务器确认前，DHCP客户端是还没有分配到IP地址的。在其他报文中均显示，只有客户端是Bound、Renew、Rebinding状态，并且能响应ARP请求时，才能被填充。</li>
+<li><strong>yiaddr</strong>：DHCP服务器分配给客户端的IP地址。仅在DHCP服务器发送的Offer和ACK报文中显示，其他报文中显示为0。</li>
+<li><strong>siaddr</strong>：为DHCP客户端分配IP地址等信息的DHCP服务器IP地址。仅在DHCP Offer、DHCP ACK报文中显示，其他报文中显示为0。(用于bootstrap过程中的IP地址)。一般来说是服务器的ip地址，当报文的源地址、siaddr、&lt;option­&gt;server_id字段不一致（有经过跨子网转发）时，通常认为&lt;option­&gt;srever_id字段为真正的服务器ip，siaddr有可能是多次路由跳转中的某一个路由的ip</li>
+<li><strong>giaddr</strong>：DHCP客户端发出请求报文后经过的第一个DHCP中继的IP地址。如果没有经过DHCP中继，则显示为0。(转发代理（网关）IP地址)</li>
+<li><strong>chaddr</strong>：DHCP客户端的MAC地址。在每个报文中都会显示对应DHCP客户端的MAC地址。</li>
+<li><strong>sname</strong>：为DHCP客户端分配IP地址的DHCP服务器名称（DNS<a href="https://dnspod.cloud.tencent.com/?from_column=20065&from=20065">域名</a>格式）。在Offer和ACK报文中显示发送报文的DHCP服务器名称，其他报文显示为0。</li>
+<li><strong>file</strong>：DHCP服务器为DHCP客户端指定的启动配置文件名称及路径信息。仅在DHCP Offer报文中显示，其他报文中显示为空。</li>
+<li><strong>options</strong>：可选项字段，长度可变，格式为”代码+长度+数据”。</li>
+</ul>
+<h2>1.1. option字段</h2>
+<p>DHCP Options 的格式由 <strong>Magic Cookie</strong>和若干个TLV组成。<br>Magic Cookie占据开头的四个字节，固定值为网络字节序十六进制数”63 82 53 63“，用于标识后续数据的解释模式。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250112215326267.png" alt="image.png"></p>
+<ul>
+<li><strong>Type（代码）</strong>：占一个字节，取值范围是 0-255，用于指定选项的类型。</li>
+<li><strong>Length（长度）</strong>：占一个字节，单位是字节，表示 Value 字段的长度。</li>
+<li><strong>Value（值）</strong>：其长度由 Length 字段指定，用于存放具体的选项信息内容。<br>举例：<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250112214915985.png" alt="image.png"></li>
+<li><strong>选项代码（Type）</strong>：第一个字节 “06”，在 DHCP 选项代码中，“06” 代表 “DNS Servers”（域名服务器）选项 。这表明该选项用于指定客户端应使用的DNS服务器地址。</li>
+<li><strong>长度（Length）</strong>：第二个字节 “08”，表示后面 “Value” 部分的长度为 8 字节。</li>
+<li><strong>值（Value）</strong>：<ul>
+<li>接下来的 8 个字节 “64 64 02 88 64 64 02 8a” 是 DNS 服务器的地址信息。这里的地址表示形式是以网络字节序（大端序）存储的 IP 地址。每 4 个字节代表一个 IP 地址，所以这里包含两个 IP 地址。</li>
+<li>将 “64 64 02 88” 转换为十进制，通过计算可得为 “100.100.2.136”。</li>
+<li>将 “64 64 02 8a” 转换为十进制，可得为 “100.100.2.138”。<br>所以，这个 DHCP Option 的含义是为客户端指定了两个 DNS 服务器地址，分别是 100.100.2.136 和 100.100.2.138 。</li>
+</ul>
+</li>
+</ul>
+<h1>2. DHCP报文种类</h1>
+<p>DHCP使用 “Message Type” 选项来明确报文类型，该选项在 DHCP 报文中作为一个可变长度选项存在，代码为53 。DHCP一共有8种报文，各种类型报文的基本功能如下：<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250112215500081.png" alt="image.png"></p>
+<table>
+<thead>
+<tr>
+<th>报文类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Discover（0x01）</td>
+<td>DHCP客户端在请求IP地址时并不知道DHCP服务器的位置，因此DHCP客户端会在本地网络内以广播方式发送Discover请求报文，以发现网络中的DHCP服务器。所有收到Discover报文的DHCP服务器都会发送应答报文，DHCP客户端据此可以知道网络中存在的DHCP服务器的位置。</td>
+</tr>
+<tr>
+<td>Offer（0x02）</td>
+<td>DHCP服务器收到Discover报文后，就会在所配置的地址池中查找一个合适的IP地址，加上相应的<strong>租约期限</strong>和其他配置信息（如网关、DNS服务器等），构造一个Offer报文，发送给DHCP客户端，告知用户本服务器可以为其提供IP地址。但这个报文只是告诉DHCP客户端可以提供IP地址，最终还需要客户端通过ARP来检测该IP地址是否重复。</td>
+</tr>
+<tr>
+<td>Request（0x03）</td>
+<td>DHCP客户端可能会收到很多Offer请求报文，所以必须在这些应答中选择一个。通常是选择第一个Offer应答报文的服务器作为自己的目标服务器，并向该服务器发送一个广播的Request请求报文，通告选择的服务器，希望获得所分配的IP地址。另外，DHCP客户端在成功获取IP地址后，在地址使用租期达到50%时，会向DHCP服务器发送单播Request请求报文请求续延租约，如果没有收到ACK报文，在租期达到87.5%时，会再次发送广播的Request请求报文以请求续延租约。</td>
+</tr>
+<tr>
+<td>ACK（0x05）</td>
+<td>DHCP服务器收到Request请求报文后，根据Request报文中携带的用户MAC来查找有没有相应的租约记录，如果有则发送ACK应答报文，通知用户可以使用分配的IP地址。</td>
+</tr>
+<tr>
+<td>NAK（0x06）</td>
+<td>如果DHCP服务器收到Request请求报文后，没有发现有相应的租约记录或者由于某些原因无法正常分配IP地址，则向DHCP客户端发送NAK应答报文，通知用户无法分配合适的IP地址。</td>
+</tr>
+<tr>
+<td>Release（0x07）</td>
+<td>当DHCP客户端不再需要使用分配IP地址时（一般出现在客户端关机、下线等状况）就会主动向DHCP服务器发送RELEASE请求报文，告知服务器用户不再需要分配IP地址，请求DHCP服务器释放对应的IP地址。</td>
+</tr>
+<tr>
+<td>Decline（0x04）</td>
+<td>DHCP客户端收到DHCP服务器ACK应答报文后，通过地址冲突检测发现服务器分配的地址冲突或者由于其他原因导致不能使用，则会向DHCP服务器发送Decline请求报文，通知服务器所分配的IP地址不可用，以期获得新的IP地址。</td>
+</tr>
+<tr>
+<td>Inform（0x08）</td>
+<td>DHCP客户端如果需要从DHCP服务器端获取更为详细的配置信息，则向DHCP服务器发送Inform请求报文；DHCP服务器在收到该报文后，将根据租约进行查找到相应的配置信息后，向DHCP客户端发送ACK应答报文。目前基本上不用了。</td>
+</tr>
+</tbody></table>
+<h1>3. DHCP Discover</h1>
+<p>只有跟DHCP客户端在同一个网段的DHCP服务器才能收到DHCP客户端广播的DHCP DISCOVER报文。当DHCP客户端与DHCP服务器不在同一个网段时，必须部署DHCP中继来转发DHCP客户端和DHCP服务器之间的DHCP报文。在DHCP客户端看来，DHCP中继就像DHCP服务器；在DHCP服务器看来，DHCP中继就像DHCP客户端。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250112210118546.png" alt="image.png"><br>第一步：发现阶段<br>首次接入网络的DHCP客户端不知道DHCP服务器的<a href="https://info.support.huawei.com/info-finder/encyclopedia/zh/IPv4.html" title="IPv4">IP地址</a>，为了学习到DHCP服务器的IP地址，DHCP客户端以广播方式发送DHCP DISCOVER报文（目的IP地址为255.255.255.255）给同一网段内的所有设备（包括DHCP服务器或中继）。DHCP DISCOVER报文中携带了客户端的MAC地址（[chaddr字段](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__c1</span>)）、需要请求的参数列表选项（[Option55](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__op55</span>)）、广播标志位（[flags字段](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__f1</span>)）等信息。</p>
+<p>第二步：提供阶段<br>与DHCP客户端位于同一网段的DHCP服务器都会接收到DHCP DISCOVER报文，DHCP服务器选择跟接收DHCP DISCOVER报文接口的IP地址处于同一网段的地址池，并且从中选择一个可用的IP地址，然后通过DHCP OFFER报文发送给DHCP客户端。</p>
+<p>通常，DHCP服务器的地址池中会指定IP地址的<a href="https://support.huawei.com/hedex/hdx.do?docid=EDOC1100087046&id=ZH-CN_CONCEPT_0176371534&lang=zh">租期</a>，如果DHCP客户端发送的DHCP DISCOVER报文中携带了期望租期，服务器会将客户端请求的期望租期与其指定的租期进行比较，选择其中时间较短的租期分配给客户端。</p>
+<p>DHCP服务器在地址池中为客户端分配IP地址的顺序如下：</p>
+<ol>
+<li>DHCP服务器上已配置的与客户端MAC地址静态绑定的IP地址。</li>
+<li>客户端发送的DHCP DISCOVER报文中[Option50](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__op50</span>)（请求IP地址选项）指定的地址。</li>
+<li>地址池内查找“Expired”状态的IP地址，即曾经分配给客户端的超过租期的IP地址。</li>
+<li>在地址池内随机查找一个“Idle”状态的IP地址。</li>
+<li>如果未找到可供分配的IP地址，则地址池依次自动回收超过租期的（“Expired”状态）和处于冲突状态（“Conflict”状态）的IP地址。回收后如果找到可用的IP地址，则进行分配；否则，DHCP客户端等待应答超时后，重新发送DHCP DISCOVER报文来申请IP地址。</li>
+</ol>
+<p>设备支持在地址池中排除某些不能通过DHCP机制进行分配的IP地址。例如，客户端所在网段已经手工配置了地址为192.168.1.100/24的DNS服务器，DHCP服务器上配置的网段为192.168.1.0/24的地址池中需要将192.168.1.100的IP地址排除，不能通过DHCP分配此地址，否则，会造成地址冲突。</p>
+<p>为了防止分配出去的IP地址跟网络中其他客户端的IP地址冲突，DHCP服务器在发送DHCP OFFER报文前通过发送源地址为DHCP服务器IP地址、目的地址为预分配出去IP地址的<a href="https://info.support.huawei.com/info-finder/encyclopedia/zh/ICMP.html" title="ICMP">ICMP</a> ECHO REQUEST报文对分配的IP地址进行地址冲突探测。如果在指定的时间内没有收到应答报文，表示网络中没有客户端使用这个IP地址，可以分配给客户端；如果指定时间内收到应答报文，表示网络中已经存在使用此IP地址的客户端，则把此地址列为冲突地址，然后等待重新接收到DHCP DISCOVER报文后按照前面介绍的选择IP地址的优先顺序重新选择可用的IP地址。</p>
+<p>此阶段DHCP服务器分配给客户端的IP地址不一定是最终确定使用的IP地址，因为DHCP OFFER报文发送给客户端等待16秒后如果没有收到客户端的响应，此地址就可以继续分配给其他客户端。通过下面的选择阶段和确认阶段后才能最终确定客户端可以使用的IP地址。</p>
+<p>第三步：选择阶段</p>
+<p>如果有多个DHCP服务器向DHCP客户端回应DHCP OFFER报文，则DHCP客户端一般只接收第一个收到的DHCP OFFER报文，然后以广播方式发送DHCP REQUEST报文，该报文中包含客户端想选择的DHCP服务器标识符（即[Option54](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__op54</span>)）和客户端IP地址（即[Option50](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__op50</span>)，填充了接收的DHCP O<br>&#39;</p>
+<p>FFER报文中yiaddr字段的IP地址）。</p>
+<p>DHCP客户端广播发送DHCP REQUEST报文通知所有的DHCP服务器，它将选择某个DHCP服务器提供的IP地址，其他DHCP服务器可以重新将曾经分配给客户端的IP地址分配给其他客户端。</p>
+<p>第四步：确认阶段</p>
+<p>当DHCP服务器收到DHCP客户端发送的DHCP REQUEST报文后，DHCP服务器回应DHCP ACK报文，表示DHCP REQUEST报文中请求的IP地址（[Option50](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__op50</span>)填充的）分配给客户端使用。</p>
+<p>DHCP客户端收到DHCP ACK报文，会广播发送<a href="https://info.support.huawei.com/info-finder/encyclopedia/zh/ARP.html" title="ARP">免费ARP</a>报文，探测本网段是否有其他终端使用服务器分配的IP地址，如果在指定时间内没有收到回应，表示客户端可以使用此地址。如果收到了回应，说明有其他终端使用了此地址，客户端会向服务器发送DHCP DECLINE报文，并重新向服务器请求IP地址，同时，服务器会将此地址列为冲突地址。当服务器没有空闲地址可分配时，再选择冲突地址进行分配，尽量减少分配出去的地址冲突。</p>
+<p>当DHCP服务器收到DHCP客户端发送的DHCP REQUEST报文后，如果DHCP服务器由于某些原因（例如协商出错或者由于发送REQUEST过慢导致服务器已经把此地址分配给其他客户端）无法分配DHCP REQUEST报文中[Option50](<a href="https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html">https://support.huawei.com/hedex/pages/EDOC1100087046AZJ0324D/10/EDOC1100087046AZJ0324D/10/resources/dc/dc_cfg_dhcp_6005.html</a><span class="tag">#ZH-CN_CONCEPT_0176371535__op50</span>)填充的IP地址，则发送DHCP NAK报文作为应答，通知DHCP客户端无法分配此IP地址。DHCP客户端需要重新发送DHCP DISCOVER报文来申请新的IP地址。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250112214318695.png" alt="image.png"><br>!<a href="dhcp-discoverpcap.html" class="internal-link">dhcp_discover.pcap</a></p>
+<h1>4. DHCP续约</h1>
+<p>时间点：当续约周期剩余一半时会尝试首次续约；续约失败，在剩余八分之一时会尝试再次续约；如果仍然失败，则到期后会释放。<br>机制：客户端发起DHCP Request，服务端发送DHCP ACK</p>
+<h1>5. 抓包分析</h1>
+<pre><code class="language-shell">tcpdump udp port 67 or udp port 68 or arp
+</code></pre>
+<p>192.168.85.100通过DHCP获取到IP后，会发送ARP探测报文检查IP是否冲突，然后发送ARP广播报文。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202411272301653.png" alt="image.png"><br>!<a href="techcloud-networkdhcppcapng.html" class="internal-link">Tech/Cloud Network/dhcp.pcapng</a></p>
+<h2>5.1. Offer报文</h2>
+<p>提供了ip地址、dns server（option 6）、租期（option 51）<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202411272310120.png" alt="image.png"></p>
+<pre><code class="language-shell">╰─$ scutil --dns
+DNS configuration
+
+resolver &lt;span class=&quot;tag&quot;&gt;#1&lt;/span&gt;
+  nameserver[0] : 202.106.46.151
+  nameserver[1] : 202.106.195.68
+  flags    : Request A records
+  reach    : 0x00000002 (Reachable)
+</code></pre>
+<h1>6. Reference</h1>
+<p><a href="https://cloud.tencent.com/developer/article/2081483">DHCP协议详解-腾讯云开发者社区-腾讯云 (tencent.com)</a><br><a href="https://info.support.huawei.com/info-finder/encyclopedia/zh/DHCP.html">https://info.support.huawei.com/info-finder/encyclopedia/zh/DHCP.html</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

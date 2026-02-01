@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>内存管理 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>内存管理</h1>
+        <time datetime="2026-01-03T13:04:29.159Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 总结</h1>
+<p>java应用的内存主要分为三块</p>
+<ol>
+<li>jvm管理的堆内存</li>
+<li>jvm管理的非堆内存</li>
+<li>非jvm管理的内存</li>
+</ol>
+<h2>1.1. JVM管理的堆内存（Heap Memory）</h2>
+<p>存储对象实例，是 Java 内存管理的核心区域，由所有线程共享。</p>
+<ul>
+<li><strong>新生代（Young Generation）</strong>：存放新创建的对象，包括 Eden 区和两个 Survivor 区（S0、S1），对象在此经历多次 GC 后若存活会晋升到老年代。</li>
+<li><strong>老年代（Old Generation）</strong>：存储生命周期较长的对象，如长期持有的缓存对象。</li>
+</ul>
+<h2>1.2. JVM管理的非堆内存（Non-Heap Memory）</h2>
+<p>存储与JVM运行时环境相关的数据，不直接存放对象实例。</p>
+<ul>
+<li><strong>元空间（Metaspace）</strong>：逻辑上仍属堆外内存，但由JVM管理，存放类结构、方法字节码、静态变量等。</li>
+<li><strong>JVM 栈（JVM Stack）</strong>：每个线程独有，存储栈帧（局部变量、方法参数、操作数栈等），栈深度过大会导致<code>StackOverflowError</code>。</li>
+<li><strong>本地方法栈（Native Method Stack）</strong>：用于调用 Native 方法（如 JVM 底层 C/C++ 代码）的栈空间。</li>
+<li><strong>程序计数器（Program Counter Register）</strong>：记录当前线程执行的字节码位置，是最小的内存区域。</li>
+</ul>
+<h2>1.3. 非JVM管理的内存（Off-Heap Memory）</h2>
+<p>由操作系统直接管理，JVM通过本地接口访问，不受JVM堆内存限制。</p>
+<ul>
+<li><strong>直接内存（Direct Memory）</strong>：通过<code>java.nio.ByteBuffer.allocateDirect()</code>创建，用于NIO操作（如文件读写、网络通信），避免堆内存与本地内存的拷贝开销。</li>
+<li><strong>JNI本地内存</strong>：通过JNI调用C/C++代码分配的内存，需手动释放（如使用malloc,free等），否则可能导致内存泄漏。</li>
+<li><strong>堆外缓存</strong>：如Redis客户端、Netty框架的内存池，直接使用系统内存提高性能。<blockquote>
+<p>[!warning]<br>非 JVM 管理的内存不受 GC 控制，若使用不当（如大量分配未释放），可能导致系统 OOM（Out of Memory）</p>
+</blockquote>
+</li>
+</ul>
+<h2>1.4. 不同内存的观测方法</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022332395.png" alt="image.png"></p>
+<blockquote>
+<p>[!note]<br>通过Unsafe方法直接管理的内存也可以通过jcmd观测到</p>
+</blockquote>
+<h1>2. 实验</h1>
+<h2>2.1. 测试应用</h2>
+<p>测试应用可以通过以下命令获取</p>
+<pre><code class="language-shell">git clone git@github.com:shinerio/java_memory_occupy_analyzer.git
+</code></pre>
+<p>可以通过以下命令启动</p>
+<pre><code class="language-shell">java -XX:NativeMemoryTracking=detail -Xms256m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=10M -jar demo-0.0.1-SNAPSHOT.jar
+</code></pre>
+<h2>2.2. heap memory</h2>
+<h3>2.2.1. 测试命令</h3>
+<pre><code class="language-shell">curl localhost:8080/heap/128
+curl localhost:8080/heap/release
+</code></pre>
+<h3>2.2.2. OOM异常</h3>
+<pre><code>java.lang.OutOfMemoryError: Java heap space
+</code></pre>
+<h3>2.2.3. arthas观测</h3>
+<p>堆内存正常使用和释放<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022307583.png" alt="image.png"></p>
+<h3>2.2.4. jcmd观测</h3>
+<pre><code>jcmd `ps -ef|grep demo|grep -v grep|awk &#39;{print $2}&#39;` VM.native_memory scale=MB
+</code></pre>
+<p>关键信息如下</p>
+<pre><code> Total: reserved=894MB, committed=190MB
+       malloc: 36MB &lt;span class=&quot;tag&quot;&gt;#122322&lt;/span&gt;
+       mmap:   reserved=858MB, committed=154MB
+
+-                 Java Heap (reserved=256MB, committed=66MB)
+                            (mmap: reserved=256MB, committed=66MB, at peak) 
+
+# curl localhost:8080/heap/128
+
+Total: reserved=879MB, committed=299MB
+       malloc: 21MB &lt;span class=&quot;tag&quot;&gt;#130291&lt;/span&gt;
+       mmap:   reserved=858MB, committed=279MB
+
+-                 Java Heap (reserved=256MB, committed=186MB)
+                            (mmap: reserved=256MB, committed=186MB, at peak) 
+
+# curl localhost:8080/heap/release
+
+Total: reserved=878MB, committed=174MB
+       malloc: 20MB &lt;span class=&quot;tag&quot;&gt;#128567&lt;/span&gt;
+       mmap:   reserved=858MB, committed=154MB
+
+-                 Java Heap (reserved=256MB, committed=64MB)
+                            (mmap: reserved=256MB, committed=64MB, peak=237MB) 
+</code></pre>
+<h3>2.2.5. rss观测</h3>
+<ul>
+<li><code>-Xms</code> 参数用于指定 JVM 启动时<strong>逻辑上分配的堆内存大小</strong>，例如 <code>-Xms256m</code> 表示初始堆大小为 256MB。</li>
+<li><strong>操作系统不会立即为这些内存分配物理页面</strong>（即 RAM 空间），而是在 JVM 需要实际使用内存时（例如对象创建）才逐步分配。<br>JVM 采用 “延迟分配” 策略：</li>
+<li>初始时，堆内存仅在逻辑上被预留（通过 <code>mmap</code> 系统调用分配地址空间），但物理内存（RSS）不会立即增长。</li>
+<li>当对象被创建并填充数据时，操作系统才会为这些内存区域分配实际的物理页面，此时 RSS 才会逐渐增加。<blockquote>
+<p>[!note]<br>一旦堆内存被使用后，即使后面JVM通过GC释放了堆内存，超过xms设定部分的内存也不会还给系统，体现在RSS值不会小于xms。</p>
+</blockquote>
+</li>
+</ul>
+<h4>2.2.5.1. xms &lt; xmx</h4>
+<pre><code>-Xms64m -Xmx256m
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022305356.png" alt="image.png"></p>
+<ul>
+<li>执行<code>curl localhost:8080/heap/128</code>分配堆内存</li>
+<li>执行<code>curl localhost:8080/heap/release</code>释放堆内存<br>GC日志</li>
+</ul>
+<pre><code>[2025-07-02T23:04:07.843+0800][89.112s][info][gc             ] GC(9) Pause Full (System.gc()) 145M-&gt;12M(64M) 26.362ms
+</code></pre>
+<h4>2.2.5.2. xms = xmx</h4>
+<pre><code>-Xms256m -Xmx256m
+</code></pre>
+<ul>
+<li>执行<code>curl localhost:8080/heap/128</code>分配堆内存</li>
+<li>执行<code>curl localhost:8080/heap/release</code>释放堆内存<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022300670.png" alt="image.png"><br>GC日志</li>
+</ul>
+<pre><code>[2025-07-02T23:01:41.604+0800][147.067s][info][gc             ] GC(7) Pause Full (System.gc()) 143M-&gt;11M(256M) 25.176ms
+</code></pre>
+<h2>2.3. unsafe</h2>
+<ol>
+<li>直接使用unsafe命令分配的内存<strong>不受</strong><code>-XX:MaxDirectMemorySize</code>控制。</li>
+<li>unsafe底层使用malloc进行内存分配，通常是<strong>虚拟内存</strong>，操作系统仅分配虚拟地址空间，而不立即分配物理内存（RAM）。</li>
+<li>只有当虚拟内存被<strong>读写</strong>时才会触发<strong>缺页中断</strong>（Page Fault）时，操作系统才会分配物理页并将其加载到RAM中，此时才会计入RSS。</li>
+</ol>
+<h3>2.3.1. OOM</h3>
+<p>连续执行<code>curl localhost:8080/unsafe/512</code>尝试分配内存，当超过系统物理内存上限后，进程会被直接kill</p>
+<pre><code>2025-07-02T23:08:27.140+08:00  INFO 2181 --- [demo] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet &#39;dispatcherServlet&#39;
+2025-07-02T23:08:27.140+08:00  INFO 2181 --- [demo] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet &#39;dispatcherServlet&#39;
+2025-07-02T23:08:27.141+08:00  INFO 2181 --- [demo] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Killed
+</code></pre>
+<p>查看系统日志，可以看到进程直接被kill了</p>
+<pre><code>Jul  2 23:09:16 shinerio-huoshan kernel: oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=/,mems_allowed=0-1,global_oom,task_memcg=/user.slice/user-0.slice/session-1.scope,task=java,pid=2181,uid=0
+Jul  2 23:09:16 shinerio-huoshan kernel: Out of memory: Killed process 2181 (java) total-vm:3353044kB, anon-rss:1445296kB, file-rss:0kB, shmem-rss:0kB, UID:0 pgtables:3164kB oom_score_adj:0
+Jul  2 23:09:16 shinerio-huoshan systemd[1]: session-1.scope: A process of this unit has been killed by the OOM killer.
+</code></pre>
+<h3>2.3.2. 测试命令</h3>
+<pre><code class="language-shell">curl localhost:8080/unsafe/128
+curl localhost:8080/unsafe/release
+</code></pre>
+<h3>2.3.3. arthas观测</h3>
+<p>unsafe命令直接分配和释放的内存无法通过arthas观察<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022320627.png" alt="image.png"></p>
+<h3>2.3.4. jcmd观测</h3>
+<p>分配前(无other)</p>
+<pre><code>-                 Java Heap (reserved=256MB, committed=256MB)
+                            (mmap: reserved=256MB, committed=256MB, at peak) 
+</code></pre>
+<p>分配后</p>
+<pre><code>-                 Java Heap (reserved=256MB, committed=256MB)
+                            (mmap: reserved=256MB, committed=256MB, at peak)
+
+-                     Other (reserved=128MB, committed=128MB)
+                            (malloc=128MB &lt;span class=&quot;tag&quot;&gt;#5&lt;/span&gt;) (at peak) 
+</code></pre>
+<p>释放后</p>
+<pre><code>-                 Java Heap (reserved=256MB, committed=256MB)
+                            (mmap: reserved=256MB, committed=256MB, at peak) 
+                            
+-                     Other (reserved=0MB, committed=0MB)
+                            (malloc=0MB &lt;span class=&quot;tag&quot;&gt;#7&lt;/span&gt;) (peak=128MB &lt;span class=&quot;tag&quot;&gt;#6&lt;/span&gt;) 
+</code></pre>
+<h3>2.3.5. rss观测</h3>
+<p>直接使用unsafe命令分配和释放的内存可以通过jcmd观测<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022325168.png" alt="image.png"></p>
+<h3>2.3.6. pmap观测</h3>
+<p>输出内存显示为<code>anon</code><br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032332888.png" alt="image.png"></p>
+<h2>2.4. ByteBuffer.allocateDirect</h2>
+<p>通过<code>ByteBuffer.allocateDirect</code>分配和释放的内存会立即体现在RSS的变化上，其内部通过<code>UNSAFE</code>分配内存后，立即调用了<code>UNSAFE.setMemory(base, size, (byte) 0);</code>方法，触发了缺页中断，实际分配了物理内存。</p>
+<h3>2.4.1. 命令</h3>
+<pre><code class="language-shell"># 分配128M直接内存
+curl localhost:8080/direct_byte_buffer/128
+# 释放
+curl localhost:8080/direct_byte_buffer/release
+</code></pre>
+<h3>2.4.2. OOM</h3>
+<p>直接内存的大小默认与<code>-xmx</code>设定相当，可通过以下命令显示指定</p>
+<pre><code class="language-bash">-XX:MaxDirectMemorySize=128m
+</code></pre>
+<p>超过上限后会oom</p>
+<pre><code>java.lang.OutOfMemoryError: Cannot reserve 134217728 bytes of direct buffer memory (allocated: 134252544, limit: 268435456)
+</code></pre>
+<h3>2.4.3. arthas观测</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022238405.png" alt="image.png"></p>
+<h3>2.4.4. jcmd观测</h3>
+<p>分配前</p>
+<pre><code>-                 Java Heap (reserved=256MB, committed=64MB)
+                            (mmap: reserved=256MB, committed=64MB, peak=66MB) 
+                            
+-                  Compiler (reserved=0MB, committed=0MB)
+                            (arena=0MB &lt;span class=&quot;tag&quot;&gt;#4&lt;/span&gt;) (peak=24MB &lt;span class=&quot;tag&quot;&gt;#11&lt;/span&gt;)
+ 
+-                  Internal (reserved=2MB, committed=2MB)
+                            (malloc=2MB &lt;span class=&quot;tag&quot;&gt;#6615&lt;/span&gt;) (at peak) 
+</code></pre>
+<p>分配后</p>
+<pre><code>-                 Java Heap (reserved=256MB, committed=64MB)
+                            (mmap: reserved=256MB, committed=64MB, peak=66MB) 
+                            
+-                  Internal (reserved=2MB, committed=2MB)
+                            (malloc=2MB &lt;span class=&quot;tag&quot;&gt;#6627&lt;/span&gt;) (peak=2MB &lt;span class=&quot;tag&quot;&gt;#6615&lt;/span&gt;) 
+ 
+-                     Other (reserved=132MB, committed=132MB)
+                            (malloc=132MB &lt;span class=&quot;tag&quot;&gt;#24&lt;/span&gt;) (at peak) 
+</code></pre>
+<p>释放后</p>
+<pre><code>-                 Java Heap (reserved=256MB, committed=64MB)
+                            (mmap: reserved=256MB, committed=64MB, peak=66MB) 
+ 
+-                  Internal (reserved=3MB, committed=3MB)
+                            (malloc=3MB &lt;span class=&quot;tag&quot;&gt;#6812&lt;/span&gt;) (peak=3MB &lt;span class=&quot;tag&quot;&gt;#6804&lt;/span&gt;) 
+ 
+-                     Other (reserved=4MB, committed=4MB)
+                            (malloc=4MB &lt;span class=&quot;tag&quot;&gt;#26&lt;/span&gt;) (peak=132MB &lt;span class=&quot;tag&quot;&gt;#26&lt;/span&gt;) 
+</code></pre>
+<h3>2.4.5. rss观测</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022243125.png" alt="image.png"></p>
+<h2>2.5. netty(PooledByteBufAllocator)</h2>
+<h3>2.5.1. 命令</h3>
+<pre><code class="language-shell">curl localhost:8080/netty/128
+curl localhost:8080/netty/release
+</code></pre>
+<h3>2.5.2. oom</h3>
+<p>netty使用的也是直接内存，也受<code>-XX:MaxDirectMemorySize</code>参数控制，超过后会oom。<code>-[Dio.netty.maxDirectMemory](Dio.netty.maxDirectMemory)Dio.netty.maxDirectMemoryDio.netty.maxDirectMemory</code>并不会限制用例中PooledByteBufAllocator的内存分配。</p>
+<pre><code>java.lang.OutOfMemoryError: Cannot reserve 536870912 bytes of direct buffer memory (allocated: 4237314, limit: 268435456)
+</code></pre>
+<h3>2.5.3. arthas观测</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032250775.png" alt="image.png"></p>
+<h3>2.5.4. jcmd观测</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032253844.png" alt="image.png"></p>
+<h3>2.5.5. rss观测</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032255387.png" alt="image.png"></p>
+<h2>2.6. JNI</h2>
+<h3>2.6.1. 启动</h3>
+<pre><code class="language-shell">java -XX:NativeMemoryTracking=detail -Xms256m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=10M -Djava.library.path=$PROJECT_ROOT/src/main/native -jar demo-0.0.1-SNAPSHOT.jar
+</code></pre>
+<h3>2.6.2. 测试命令</h3>
+<pre><code class="language-shell">curl localhost:8080/jni/128
+curl localhost:8080/jni/release
+</code></pre>
+<h3>2.6.3. oom</h3>
+<p>执行<code>curl localhost:8080/jni/1280</code>分配超大内存</p>
+<pre><code># 应用被系统自动kill
+2025-07-03T22:18:00.323+08:00  INFO 23454 --- [demo] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Killed
+
+# 系统日志显示oom并自动kill进程
+Jul  3 22:18:12 shinerio-huoshan kernel: oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=tuned.service,mems_allowed=0-1,global_oom,task_memcg=/user.slice/user-0.slice/session-7.scope,task=java,pid=23454,uid=0
+Jul  3 22:18:12 shinerio-huoshan kernel: Out of memory: Killed process 23454 (java) total-vm:3615188kB, anon-rss:1458780kB, file-rss:0kB, shmem-rss:0kB, UID:0 pgtables:3180kB oom_score_adj:0
+Jul  3 22:18:12 shinerio-huoshan systemd[1]: session-7.scope: A process of this unit has been killed by the OOM killer.
+</code></pre>
+<h3>2.6.4. arthas观测</h3>
+<p>jarthas无法观察到通过<code>jni</code>直接调用<code>malloc</code>分配的内存，其绕过了jvm内部的分配器。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032232844.png" alt="image.png"></p>
+<h3>2.6.5. jcmd观测</h3>
+<p>arthas无法观察到通过<code>jni</code>直接调用<code>malloc</code>分配的内存<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032242304.png" alt="image.png"></p>
+<h3>2.6.6. rss观测</h3>
+<p>通过<code>jni</code>直接调用<code>malloc</code>分配和释放的内存会体现在系统rss指标上<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032243038.png" alt="image.png"></p>
+<h3>2.6.7. pmap观测</h3>
+<pre><code class="language-shell">pmap -x `ps -ef|grep demo|grep -v grep|awk &#39;{print $2}&#39;` | sort -nrk3
+</code></pre>
+<ol>
+<li>Linux将进程内存虚拟为伪文件/proc/$pid/mem，通过它即可查看进程内存中的数据。</li>
+<li>tail用于偏移到指定内存段的起始地址，即pmap的第一列，head用于读取指定大小，即pmap的第二列。</li>
+<li>strings用于找出内存中的字符串数据，less用于查看strings输出的字符串。如果内存中不是字符串，也可以不加strings原样输出</li>
+</ol>
+<pre><code class="language-shell">tail -c +$((0x00007face0000000+1)) /proc/`ps -ef|grep demo|grep -v grep|awk &#39;{print $2}&#39;`/mem|head -c $((11616*1024))|strings|less -S
+</code></pre>
+<p>通过jni分配的内存显示为<code>anno</code><br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507032314044.png" alt="image.png"></p>
+<h2>2.7. 综合实验</h2>
+<p>启动命令</p>
+<pre><code class="language-shell">java -XX:NativeMemoryTracking=detail -Xms256m -Xmx256m -XX:MetaspaceSize=64m -XX:MaxMetaspaceSize=256m -XX:+UseG1GC -Xlog:gc*:file=gc.log:time,uptime,level,tags:filecount=5,filesize=10M -Djava.library.path=$PROJECT_ROOT/src/main/native -jar demo-0.0.1-SNAPSHOT.jar
+</code></pre>
+<p>内存占用测试命令</p>
+<pre><code class="language-shell">curl localhost:8080/heap/128
+curl localhost:8080/heap/64
+curl localhost:8080/heap/32
+curl localhost:8080/heap/16
+curl localhost:8080/heap/8
+curl localhost:8080/heap/4
+curl localhost:8080/heap/2
+curl localhost:8080/heap/1
+curl localhost:8080/heap/1
+curl localhost:8080/netty/128
+curl localhost:8080/unsafe/128
+curl localhost:8080/jni/128
+</code></pre>
+<h3>2.7.1. jcmd详细统计报表</h3>
+<table>
+<thead>
+<tr>
+<th>分类</th>
+<th>Reserved</th>
+<th>Committed</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Java Heap</strong></td>
+<td>256</td>
+<td>256</td>
+<td>Java 堆内存，由JVM控制，通常通过 <code>mmap</code> 分配，这里堆内存几乎占满</td>
+</tr>
+<tr>
+<td><strong>Class</strong></td>
+<td>209</td>
+<td>5</td>
+<td>包括类元数据（Metadata）和类空间（Class space），用于加载类结构信息。</td>
+</tr>
+<tr>
+<td>├─ Metadata</td>
+<td>64</td>
+<td>28</td>
+<td>类的结构定义，如字段、方法、注解信息等。</td>
+</tr>
+<tr>
+<td>└─ Class space</td>
+<td>208</td>
+<td>4</td>
+<td>用于存储类的静态信息等；Java 8+中取代永久代的一部分。</td>
+</tr>
+<tr>
+<td><strong>Thread</strong></td>
+<td>35</td>
+<td>3</td>
+<td>每个线程的本地栈空间，默认每线程约 1MB。</td>
+</tr>
+<tr>
+<td><strong>Code</strong></td>
+<td>243</td>
+<td>12</td>
+<td>JIT编译后的代码缓存区，如 CodeCache。</td>
+</tr>
+<tr>
+<td><strong>GC</strong></td>
+<td>42</td>
+<td>42</td>
+<td>垃圾回收器的工作内存，如标记、扫描、复制等临时结构。</td>
+</tr>
+<tr>
+<td><strong>Compiler</strong></td>
+<td>0</td>
+<td>0</td>
+<td>JIT 编译器本身使用的内存（如优化数据结构），当前无占用。</td>
+</tr>
+<tr>
+<td><strong>Other</strong></td>
+<td>256</td>
+<td>256</td>
+<td>非堆内内存，如DirectByteBuffer和Unsafe分配的本地内存。</td>
+</tr>
+<tr>
+<td><strong>Symbol</strong></td>
+<td>11</td>
+<td>11</td>
+<td>常量池中的符号表、方法名、字段名等字符串。</td>
+</tr>
+<tr>
+<td><strong>NMT Tracking</strong></td>
+<td>2</td>
+<td>2</td>
+<td>Native Memory Tracking 自身运行时记录用的空间。</td>
+</tr>
+<tr>
+<td><strong>Shared class space</strong></td>
+<td>16</td>
+<td>13</td>
+<td>类数据共享（CDS）机制使用的共享空间。</td>
+</tr>
+<tr>
+<td><strong>Arena Chunk</strong></td>
+<td>0</td>
+<td>0</td>
+<td>本地内存 arena 分配器使用的临时分配区，当前为空。</td>
+</tr>
+<tr>
+<td><strong>Metaspace</strong></td>
+<td>64</td>
+<td>28</td>
+<td>JVM 8+ 用于存储类定义元数据，支持动态扩展。</td>
+</tr>
+<tr>
+<td><strong>合计</strong></td>
+<td><strong>1135</strong></td>
+<td><strong>629</strong></td>
+<td><code>malloc</code> 总共占用 277MB，<code>mmap</code> 保留 858MB，提交 352MB（虚拟保留与实际提交）</td>
+</tr>
+</tbody></table>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507042258770.png" alt="image.png"></p>
+<h3>2.7.2. 总内存分析</h3>
+<p>RSS占用为797472 KB ≈ 779MB<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507042311823.png" alt="image.png"><br><code>JVM管理内存629 + JNI分配内存128 = 757MB</code>，剩余22MB可能来自于Linux 分配的线程栈、page tables、管理结构等。</p>
+<h2>2.8. Bits类</h2>
+<p><code>Bits.reserveMemory</code>和<code>Bits.unreserveMemory</code>会更新JVM内部的直接内存计数器，Arthas可以通过读取这些计数器来显示直接内存使用情况。<br>使用Unsafe方法直接分配和释放的内存，没有经过Bits管理，因此arthas无法观测到。</p>
+<pre><code class="language-java">Bits.reserveMemory(size, cap);
+Bits.unreserveMemory(size, cap);
+</code></pre>
+<h2>2.9. DirectByteBuffer</h2>
+<p>非jvm管理的内存典型代表为<code>DirectByteBuffer</code>，jvm gc只能回收<code>DirectByteBuffer</code>对象本身，而无法管理其内部通过Unsafe申请的内存。当<code>DirectByteBuffer</code>对象被GC回收时，JVM会通过<code>Cleaner</code>机制调用本地方法。</p>
+<p>具体来说，Cleaner类继承自<code>PhantomReference</code>，实现了clean方法。JVM启动时会创建一个名为<code>Reference Handler</code>的守护线程，其优先级为<code>MAX_PRIORITY</code>（10），该线程不断从<code>ReferenceQueue</code>中取出引用对象，并调用其clean方法。</p>
+<pre><code class="language-java">public class Cleaner extends PhantomReference&lt;Object&gt;
+</code></pre>
+<blockquote>
+<p>[!note]<br>JVM垃圾回收没有直接回收DBB对象通过Unsafe方法分配的内存，而是通过其Cleaner机制实现了间接释放。内存的分配和释放都是由系统malloc()和free()函数实现的。</p>
+</blockquote>
+<h2>2.10. metaspace和class space</h2>
+<p>Metaspace区域位于堆外，最大内存大小取决于系统内存，而不是堆大小，可以通过指定 <code>MaxMetaspaceSize</code>参数来限制最大内存。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022031191.png" alt="image.png"><br>虽然每个Java类都关联了一个<code>java.lang.Class</code>的实例，而且它是一个贮存在堆中的 Java 对象。但是类的class metadata不是一个Java对象，它不在堆中，而是在 Metaspace 中。</p>
+<p>有两个核心配置参数：</p>
+<ul>
+<li><code>-XX:MaxMetaspaceSize</code>：Metaspace 总空间的最大允许使用内存，默认是不限制。</li>
+<li><code>-XX:CompressedClassSpaceSize</code>：Metaspace中的Compressed Class Space的最大允许内存，默认值是1G，这部分会在JVM启动的时候向操作系统申请1G的<strong>虚拟地址映射</strong>，但不是真的就用了操作系统的1G内存。</li>
+</ul>
+<h3>2.10.1. 分配</h3>
+<p>当一个类被加载时，它的类加载器会负责在Metaspace中分配空间用于存放这个类的元数据。如下图，可以看到在<code>Id</code>这个类加载器第一次加载类<code>X</code> 和 <code>Y</code> 的时候，在 Metaspace 中为它们开辟空间存放元信息。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022018605.png" alt="image.png"></p>
+<h3>2.10.2. 回收</h3>
+<p>分配给一个类的空间，是归属于这个类的类加载器的，只有当这个类加载器卸载的时候，这个空间才会被释放。所以，只有当这个类加载器加载的所有类都没有存活的对象，并且没有到达这些类和类加载器的引用时，相应的Metaspace空间才会被GC释放。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507022019804.png" alt="image.png"></p>
+<h3>2.10.3. 系统内存回收</h3>
+<p>释放Metaspace的空间，并不意味着将这部分空间还给系统内存，这部分空间通常会被JVM保留下来。</p>
+<p>这部分被保留的空间有多大，取决于Metaspace的碎片化程度。另外，Metaspace中有一部分区域Compressed Class Space是一定不会还给操作系统的。</p>
+<h1>3. ref</h1>
+<ol>
+<li><a href="https://www.javadoop.com/post/metaspace">深入理解堆外内存 Metaspace</a></li>
+<li><a href="https://poonamparhar.github.io/understanding-metaspace-gc-logs/">Understanding Metaspace and Class Space GC Log Entries</a></li>
+<li><a href="https://www.cnblogs.com/codelogs/p/17659370.html" title="发布于 2023-08-26 19:46">一次Java内存占用高的排查案例，解释了我对内存问题的所有疑问</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

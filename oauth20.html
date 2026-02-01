@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oauth2.0 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Oauth2.0</h1>
+        <time datetime="2026-01-18T16:04:30.138Z">2026年1月19日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><strong>OAuth 2.0</strong>是一个关于授权（Authorization）的开放标准。它允许用户让第三方应用访问该用户在特定服务上存储的私有资源（如照片、联系人等），而无需将用户名和密码提供给第三方应用。最常见的例子就是：你使用“微信登录”或“GitHub登录”来注册一个新的网站，而不需要在该网站重新设置密码。</p>
+<h1>1. 四个核心角色</h1>
+<ol>
+<li><strong>资源所有者 (Resource Owner)</strong>：即“用户”（你）。</li>
+<li><strong>客户端 (Client)</strong>：想要访问用户资源的“第三方应用”（例如某个新网站或App）。</li>
+<li><strong>授权服务器 (Authorization Server)</strong>：验证用户身份并颁发令牌的服务器（例如微信、Google、GitHub的认证系统）。</li>
+<li><strong>资源服务器 (Resource Server)</strong>：存放用户实际数据的服务器（例如微信的用户信息接口、你的云盘文件）。</li>
+</ol>
+<h1>2. 授权码模式通信过程</h1>
+<ul>
+<li><strong>第一步：用户点击“登录”</strong> 用户在第三方应用（Client）上点击“用 GitHub 登录”，应用将用户重定向到 GitHub 的授权页面。</li>
+<li><strong>第二步：用户同意授权</strong>用户在 GitHub 的页面输入账号密码，确认授权该应用访问自己的基本信息。</li>
+<li><strong>第三步：返回授权码 (Authorization Code)</strong> GitHub 验证通过后，将用户重定向回第三方应用，并在 URL 参数中带上一个临时的“授权码”。</li>
+<li><strong>第四步：换取令牌 (Access Token)</strong> 第三方应用在<strong>后台</strong>（服务器对服务器）拿着这个授权码和自己的App Secret，向GitHub 的授权服务器请求正式的“访问令牌”。</li>
+<li><strong>第五步：访问资源</strong> 第三方应用拿到令牌后，就可以拿着令牌去 GitHub 的资源服务器请求你的头像、昵称等数据了。</li>
+</ul>
+<h1>3. 使用过程</h1>
+<ol>
+<li>通过在Authorization Server中注册Application，获取Application（Oauth2.0中的client）关联的client id和secret</li>
+<li>通过Oauth2.0获取Authorization Server上任意授权用户（Oauth2.0中的Resource owner）的access_token</li>
+<li>代替token去访问Resource Server</li>
+</ol>
+<h1>4. 安全性</h1>
+<h2>4.1. 令牌（Token） vs 密码</h2>
+<ul>
+<li><strong>密码是长期有效的</strong>，一旦泄露，攻击者可以控制你的整个账号。</li>
+<li><strong>令牌是短期且有限的</strong>。它可以被设置为“只能读取头像，有效期 2 小时”。即使令牌被盗，损失也受控，且用户可以随时在后台撤回某个应用的授权。</li>
+</ul>
+<h2>4.2. 授权码的必要性（安全性）</h2>
+<p>为什么要先发授权码，再换令牌？</p>
+<ul>
+<li>因为第一步重定向是在浏览器中进行的，URL 记录、浏览器历史或插件都可能窃取到参数。</li>
+<li>如果直接发送令牌（Token），安全性较低。</li>
+<li><strong>授权码模式</strong>确保了令牌的传输发生在“第三方应用服务器”和“授权服务器”之间，不经过用户的浏览器，极大地降低了泄露风险。</li>
+</ul>
+<h2>4.3. client id&amp;client secret</h2>
+<p>在 OAuth 2.0 的体系中，<strong>Client ID</strong>和 <strong>Client Secret</strong> 就像是<strong>第三方应用</strong>的“身份证号”和“密码”。它们成对出现，用于授权服务器识别并验证“到底是哪个应用在请求数据”。</p>
+<h3>4.3.1. 核心定义与类比</h3>
+<table>
+<thead>
+<tr>
+<th><strong>概念</strong></th>
+<th><strong>类比</strong></th>
+<th><strong>属性</strong></th>
+<th><strong>作用</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Client ID</strong></td>
+<td><strong>用户名 / 身份证号</strong></td>
+<td>公开的 (Public)</td>
+<td>标识应用的身份，告诉授权服务器“我是谁”。</td>
+</tr>
+<tr>
+<td><strong>Client Secret</strong></td>
+<td><strong>登录密码 / 密钥</strong></td>
+<td>私有的 (Confidential)</td>
+<td>证明应用的身份，告诉授权服务器“我真的是我”。</td>
+</tr>
+</tbody></table>
+<h3>4.3.2. Client ID 的作用</h3>
+<p>Client ID 是一个公开的唯一标识符。当你创建一个 OAuth 应用（比如在 GitHub 开发者平台注册）时，系统会自动生成它。</p>
+<ul>
+<li><strong>标识身份</strong>：当用户被重定向到授权页面时，URL中会包含 <code>client_id</code>。授权服务器通过它来向用户展示：“应用 <strong>ABC</strong> 想要申请访问您的权限”。</li>
+<li><strong>配置校验</strong>：授权服务器会检查该 <code>client_id</code>对应的回调地址（<strong>Redirect URI</strong>）是否与请求中的地址匹配，防止钓鱼攻击。</li>
+</ul>
+<h3>4.3.3. Client Secret 的作用</h3>
+<p>Client Secret 是绝对不能公开的密钥，必须安全地保存在服务器后端。</p>
+<ul>
+<li><strong>身份认证</strong>：在“授权码模式”的最后一步，第三方应用需要用“授权码 + Client Secret”去换取 Access Token。授权服务器会验证 Secret 是否正确。</li>
+<li><strong>防止冒充</strong>：即便黑客在浏览器端截获了你的 <code>client_id</code> 和授权码（Code），但因为他们没有你的 <code>client_secret</code>，依然无法换取真正的访问令牌。</li>
+</ul>
+<h3>4.3.4. 通信过程</h3>
+<p>以“授权码模式”为例，看看这两个参数在什么时候出场：</p>
+<ol>
+<li>前端请求（公开）：<br> 应用跳转到 GitHub 登录页：github.com/auth?client_id=12345&amp;redirect_uri=...<br> 此时只需要 Client ID，因为它是在浏览器地址栏公开显示的。</li>
+<li>后端交换（加密）：<br> 应用服务器拿到授权码后，在后台发送 POST 请求：</li>
+</ol>
+<pre><code>    HTTP
+    POST /token
+    Host: github.com
+    Content-Type: application/x-www-form-urlencoded
+    
+    grant_type=authorization_code
+    &amp;code=AUTH_CODE_HERE
+    &amp;client_id=12345
+    &amp;client_secret=MY_CONFIDENTIAL_SECRET
+</code></pre>
+<blockquote>
+<p>此时必须带上 Client Secret。这是在服务器之间进行的，用户和黑客都看不到。</p>
+</blockquote>
+<h2>4.4. Homepage URL</h2>
+<p>在 GitHub 的 OAuth 2.0 配置中，<strong>Homepage URL（主页 URL）</strong> 的作用主要体现在以下几个方面：</p>
+<h3>4.4.1. 标识应用来源</h3>
+<p>它是你应用的<strong>官方网站地址</strong>。当用户被重定向到 GitHub 的授权页面时，GitHub 会向用户展示这个链接。</p>
+<ul>
+<li><strong>作用</strong>：让用户知道是哪个网站在申请权限，增加信任感。用户可以点击这个链接跳转到你的主页，确认应用的真实性。</li>
+</ul>
+<h3>4.4.2. 安全校验与应用归属</h3>
+<p>虽然它不像 <code>Authorization callback URL</code>（回调地址）那样直接参与技术层面的 Token 交换校验，但它是应用定义的必要组成部分。</p>
+<ul>
+<li><strong>规范要求</strong>：GitHub 要求每个 OAuth App 必须有一个主页，以符合其平台的合规性要求。</li>
+</ul>
+<h3>4.4.3. 用户管理权限</h3>
+<p>如果用户以后想要撤销对你应用的授权，他们会在 GitHub 个人设置的“Authorized OAuth Apps”列表中看到你的应用，点击应用名称通常会跳转到你设置的这个 <strong>Homepage URL</strong>。</p>
+<h1>5. apifox访问github示例</h1>
+<p><a href="https://apifox.com/apiskills/how-to-use-github-oauth2/">https://apifox.com/apiskills/how-to-use-github-oauth2/</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

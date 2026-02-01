@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Claude Code</h1>
+        <time datetime="2026-01-25T03:45:27.269Z">2026年1月25日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 安装claude code</h1>
+<pre><code class="language-shell">npm install -g @anthropic-ai/claude-code
+</code></pre>
+<p>环境变量方式启动或直接修改<code>~/.claude/settings.json</code>文件</p>
+<pre><code>export ANTHROPIC_BASE_URL=https://ark.cn-beijing.volces.com/api/compatible 
+export ANTHROPIC_AUTH_TOKEN=&lt;ARK-API-KEY&gt; 
+export ANTHROPIC_MODEL=doubao-seed-code-preview-latest
+</code></pre>
+<p>使用claude code</p>
+<pre><code># 将claude code路由至其他大模型提供商
+npm install -g @musistudio/claude-code-router
+&lt;span class=&quot;tag&quot;&gt;#安装阿里云百炼的config&lt;/span&gt;
+npm install -g @dashscope-js/claude-code-config
+# power shell开启执行命令权限
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+# 配置ali key
+ccr-dashscope
+# 启动，启动命令执行的路径要和vscode准备打开的项目路径一致
+ccr code
+</code></pre>
+<p>在vscode中安装claude code插件，然后在claude code命令行界面使用<code>/idea</code>即可连接到vscode。claude code就可以和vscode进行交付，感知你在vscode中选中的代码、文件，claude code的修改也会在vscode中以diff形式呈现。</p>
+<h1>2. 常用命令</h1>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>功能</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>claude</code></td>
+<td>启动交互模式</td>
+<td><code>claude</code></td>
+</tr>
+<tr>
+<td><code>claude &quot;task&quot;</code></td>
+<td>运行一次性任务</td>
+<td><code>claude &quot;fix the build error&quot;</code></td>
+</tr>
+<tr>
+<td><code>claude -p &quot;query&quot;</code></td>
+<td>运行一次性查询，然后退出</td>
+<td><code>claude -p &quot;explain this function&quot;</code></td>
+</tr>
+<tr>
+<td><code>claude -c</code></td>
+<td>继续最近的对话</td>
+<td><code>claude -c</code></td>
+</tr>
+<tr>
+<td><code>claude -r</code></td>
+<td>恢复之前的对话</td>
+<td><code>claude -r</code></td>
+</tr>
+<tr>
+<td><code>claude commit</code></td>
+<td>创建 Git 提交</td>
+<td><code>claude commit</code></td>
+</tr>
+<tr>
+<td><code>/clear</code></td>
+<td>清除对话历史</td>
+<td><code>&gt; /clear</code></td>
+</tr>
+<tr>
+<td><code>/help</code></td>
+<td>显示可用命令</td>
+<td><code>&gt; /help</code></td>
+</tr>
+<tr>
+<td><code>exit</code> 或 Ctrl+C</td>
+<td>退出 Claude Code</td>
+<td><code>&gt; exit</code></td>
+</tr>
+<tr>
+<td><code>/export</code></td>
+<td>把<strong>当次对话</strong>复制到剪贴板，便于<strong>归档</strong>或<strong>交叉验证</strong>（例如贴给 GPT 审核推理链）。</td>
+<td></td>
+</tr>
+</tbody></table>
+<p><a href="https://code.claude.com/docs/zh-CN/cli-reference">更多命令行参考</a></p>
+<h1>3. 使用技巧</h1>
+<p><code>/init</code> claude code会分析当前文件夹，把它学到的关于项目的知识记录在根目录下CLAUDE.md里。当然，我们也可以手动修改这个文件，把我们认为的一些重要信息（提示、约束等）放到里面。</p>
+<p><code>/commpact</code> 压缩</p>
+<p><code>/clear</code> 清楚会话记录，开启一个新工程的应该使用</p>
+<p><code>think  &lt; think hard &lt; think harder &lt; ultrathink</code><br>思考等级逐级递增，ultrathink可以用来思考一些比较难的问题</p>
+<p><code>!</code>可以临时执行命令行，并将执行结果作为后续上下文</p>
+<p>输入<code>#</code>号进入记忆模式，</p>
+<pre><code>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# Add to memory. Try &quot;Always use descriptive variable names&quot;
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  # to memorize
+</code></pre>
+<p>可以选择存放位置</p>
+<ul>
+<li>用户级别：所有项目都会生效</li>
+<li>项目</li>
+</ul>
+<pre><code>────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+# 所有代码都需要经过严格测试
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                                      │
+│ Select memory file to edit:                                                                                          │
+│                                                                                                                      │
+│  ❯ 1. User memory      Saved in ~/.claude/CLAUDE.md                                                                  │
+│    2. Project memory   Saved in ./CLAUDE.md                                                                          │
+│                                                                                                                      │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+</code></pre>
+<p><code>/permissions</code> 添加工具或者命令，允许自动执行</p>
+<p><code>claude --dangerously-skip-permissions</code> 赋予claude code最高权限，可以自动执行任何命令</p>
+<p>[hooks(<a href="https://code.claude.com/docs/en/hooks-guide">https://code.claude.com/docs/en/hooks-guide</a>)</p>
+<p>subagent可以让claude在后台开启多个子任务，并行执行。<code>/agents</code></p>
+<h1>4. claudia</h1>
+<p>可视化界面</p>
+<h1>5. mcp安装</h1>
+<p>本地安装<br><code>claude mcp add [alias] -- npx @upstash/context7-mcp</code><br>remote http<br><code>claude mcp add --transport http</code><br>sse transport<br><code>claude mcp add --transport sse</code></p>
+<pre><code class="language-shell"># 卸载
+claude mcp remove context7
+</code></pre>
+<p>项目级别，仅在当前项目下生效<br><code>claude mcp add context7 -- npx @upstash/context7-mcp</code><br>用户级别的，所有项目生效<br><code>claude mcp add context7 --scope user -- npx @upstash/context7-mcp</code><br>使用<code>/mcp</code>命令可以进行mcp管理</p>
+<pre><code>╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ Manage MCP servers                                                                                                   │
+│                                                                                                                      │
+│ ❯ 1. context7            ✔ connected · Enter to view details                                                         │
+│                                                                                                                      │
+│ MCP Config locations (by scope):                                                                                     │
+│  • User config (available in all your projects):                                                                     │
+│    • C:\Users\jstxz\.claude.json                                                                                     │
+│  • Project config (shared via .mcp.json):                                                                            │
+│    • D:\workspace\proj\blog\.mcp.json (file does not exist)                                                          │
+│  • Local config (private to you in this project):                                                                    │
+│    • C:\Users\jstxz\.claude.json [project: D:\workspace\proj\blog]                                                   │
+│                                                                                                                      │
+│ Tip: Use /mcp enable or /mcp disable to quickly toggle all servers                                                   │
+│                                                                                                                      │
+│ For help configuring MCP servers, see: https://code.claude.com/docs/en/mcp                                           │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+</code></pre>
+<p>使用示例</p>
+<pre><code>&gt; java中如何创建虚拟线程 使用context7
+
+● 我将帮您了解如何在Java中创建虚拟线程。首先，让我使用Context7来获取相关的文档信息。
+
+● context7 - resolve-library-id (MCP)(libraryName: &quot;Java virtual threads&quot;)
+
+────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+ Tool use
+
+   context7 - resolve-library-id(libraryName: &quot;Java virtual threads&quot;) (MCP)
+   Resolves a package/product name to a Context7-compatible library ID and returns a list of matching libraries.
+
+   You MUST call this function before &#39;get-library-docs&#39; to obtain a valid Context7-compatible library ID UNLESS the
+   user explicitly provides a library ID in the format &#39;/org/project&#39; or &#39;/org/project/version&#39; in their query.
+
+   Selection Process:
+   1. Analyze the query to understand what library/package the user is looking for
+   2. Return the most relevant match based on:
+   - Name similarity to the query (exact matches prioritized)
+   - Description relevance to the query&#39;s intent
+   - Documentation coverage (prioritize libraries with higher Code Snippet counts)
+   - Source reputation (consider libraries with High or Medium reputation more authoritative)
+   - Benchmark Score: Quality indicator (100 is the highest score)
+
+   Response Format:
+   - Return the selected library ID in a clearly marked section
+   - Provide a brief explanation for why this library was chosen
+   - If multiple good matches exist, acknowledge this but proceed with the most relevant one
+   - If no good matches exist, clearly state this and suggest query refinements
+
+   For ambiguous queries, request clarification before proceeding with a best-guess match.
+
+ Do you want to proceed?
+ ❯ 1. Yes
+   2. Yes, and don&#39;t ask again for context7 - resolve-library-id commands in D:\workspace\proj\blog
+   3. No, and tell Claude what to do differently (esc)
+</code></pre>
+<h1>6. claude code状态</h1>
+<ul>
+<li><strong>deliberating</strong>: 深思熟虑；仔细考虑；商议；审议</li>
+<li><strong>effecting</strong>: 生效</li>
+<li><strong>puzzling</strong>: 令人费解</li>
+<li><strong>concating</strong>: 连接</li>
+<li><strong>elucidating</strong>: 阐明</li>
+<li><strong>churning</strong>: 搅拌</li>
+<li><strong>crafting</strong>: 手工制作</li>
+<li><strong>Reticulating</strong>: 网状</li>
+<li><strong>scheming</strong></li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

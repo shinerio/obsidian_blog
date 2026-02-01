@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pprof - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Pprof</h1>
+        <time datetime="2026-01-03T13:04:29.153Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 使用方式</h1>
+<p><code>pprof</code>必须在代码里引入才能使用，不像Java里jdk工具包中的 <code>jps</code>、<code>jstat</code>、<code>jinfo</code>、<code>jstack</code>、<code>jmap</code> 工具可以单独使用。<code>pprof</code>可以从以下两个包中引入</p>
+<pre><code class="language-go">import &quot;net/http/pprof&quot;
+import &quot;github.com/pkg/profile&quot;
+</code></pre>
+<p>Golang pprof的使用方式主要有两种</p>
+<ol>
+<li>在程序中通过http接口的方式暴露相应的pprof的采集控制界面，需要依赖<code>net/http/pprof</code>，<code>net/http/pprof</code> 使用 <code>runtime/pprof</code> 包来进行封装。</li>
+<li><code>github.com/pkg/profile</code> 可以用来产生dump文件，程序中通过代码开启对应指标的采集样本功能，采集一段时间的样本后生成二进制文件，最后通过 <code>go tool pprof</code> 命令去对样本的数据进行分析。</li>
+</ol>
+<h2>1.1. http接口的方式暴露采集控制界面</h2>
+<pre><code class="language-go">import (
+    &quot;net/http&quot;
+    // 代码里引入 pprof
+    _ &quot;net/http/pprof&quot;
+)
+
+func main() {
+    // 代码里引入http server 
+    go func() {
+        if err := http.ListenAndServe(&quot;:6060&quot;, nil); err != nil {
+            log.Fatal(err)
+        }
+        os.Exit(0)
+    }()
+
+   // 省略业务代码
+}
+</code></pre>
+<p>可以通过 <code>http://127.0.0.1:6060 /debug/pprof/</code>来访问 pprof</p>
+<h2>1.2. 通过代码开启</h2>
+<pre><code class="language-go">import (
+    &quot;github.com/pkg/profile&quot;
+    &quot;time&quot;
+)
+
+func main() {
+    // 同时启用CPU和内存分析
+    p := profile.Start(
+        profile.ProfilePath(&quot;./profiles&quot;),  // 指定输出目录
+        profile.CPUProfile,                 // 启用CPU分析
+        //profile.MemProfile,                 // 启用内存分析
+        //profile.MemProfileRate(4096),       // 设置内存分析的采样率
+        //profile.BlockProfile,               // 启用阻塞分析
+        //profile.MutexProfile,               // 启用互斥锁分析
+        profile.NoShutdownHook,             // 禁用自动关闭钩子
+    )
+    
+    // 您的程序代码...
+    
+    // 在适当的时机停止分析
+    defer p.Stop()
+}
+</code></pre>
+<p>使用标准的pkg/profile包时，一次只能激活一种主要的分析类型（CPU或内存或阻塞等）。如果需要同时收集多种类型，需要直接使用底层的runtime/pprof包。t<br><code>profile.Start</code>函数签名如下</p>
+<pre><code class="language-go">func Start(options ...func(*Profile)) interface {
+    Stop()
+}
+</code></pre>
+<ul>
+<li>函数名Start</li>
+<li>函数参数为可变长数组，每个元素是一个函数<code>func(*Profile)</code>，入参是<code>*Profile</code> 指针，返回值为void</li>
+<li>函数的返回值为内联定义的接口类型，这个接口只有一个方法要求: <code>Stop()</code>，无入参且不返回值<blockquote>
+<p>[!note]<br>可以将Start和Stop方法封装成函数，通过api或信号量的触发的方式调用，实现程序运行的任意时刻触发dump分析</p>
+</blockquote>
+</li>
+</ul>
+<h1>2. 监控指标</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250408223126.png" alt="image.png"></p>
+<h2>2.1. allocs</h2>
+<p>作用：内存分配分析，包含哪些函数分配了内存以及分配了多少内存。<br>使用场景：优化内存分配，分析内存泄露</p>
+<h2>2.2. blcok</h2>
+<p>作用：显示导致goroutingz阻塞的操作，如互斥锁、通道操作等<br>使用场景：发现并解决程序中的并发瓶颈，特别是因锁竞争导致的性能问题</p>
+<h2>2.3. cmdline</h2>
+<p>作用：显示启动程序时使用的命令行参数<br>使用场景：确认程序是以什么参数启动的，对调试特定配置下的问题很有用</p>
+<h2>2.4. gorouting</h2>
+<p>作用：显示当前所有gorouting的堆栈<br>使用场景：查看程序中的所有gorouting的状态，诊断死锁、泄露或其他并发问题</p>
+<h2>2.5. heap</h2>
+<p>作用：显示当前堆内存的使用情况，包括哪些对象占用内存及大小<br>使用场景：查找内存泄露，分析程序中内存占用过高的对象</p>
+<h2>2.6. mutex</h2>
+<p>作用：显示互斥锁的竞争情况，包括哪些锁被长时间持有或频繁竞争<br>使用场景：发现并解决因互斥锁导致的性能瓶颈</p>
+<h2>2.7. profile</h2>
+<p>作用：记录cpu使用情况，显示哪些函数占用了最多的cpu时间<br>使用场景：识别程序中的cpu热点，优化计算密集型函数</p>
+<p>当它被激活时，应用程序默认通过SIGPROF信号要求操作系统每10毫秒中断一次。当应用程序收到 SIGPROF 时，它会暂停当前活动并将执行转移到分析器。分析器收集诸如当前 goroutine活动之类的数据，并汇总可以检索的执行统计信息；然后停止分析并继续执行直到下一次的 SIGPROF。默认情况下，访问<code>/debug/pprof/profile</code>地址会执行30秒的 CPU分析。在 30 秒内，我们的应用程序每10毫秒中断一次。使用seconds参数将分析应该持续多长时间传递给路由（例如 /debug/pprof/profile?seconds=15），也可以更改中断率（甚至小于10毫秒）。但多数情况下，10 毫秒应该足够了，再减小这个值（意味着增加频率）时，可能会对性能产生较大影响。30 秒后，就可以下载 CPU 分析器的结果。</p>
+<blockquote>
+<p>[!note]<br>在运行benchmark的时候，可以通过命令行增加-cpuprofile参数的方式激活</p>
+</blockquote>
+<h3>2.7.1. 结果分析</h3>
+<p>可以通过<code>go tool  pprof cpuprofile/cpu.pprof</code>生成一个交互终端来进行分析。</p>
+<pre><code class="language-shell">(base) ➜  cpu go tool  pprof cpuprofile/cpu.pprof
+Type: cpu
+Time: Mar 4, 2024 at 3:14pm (CST)
+Duration: 4.35s, Total samples = 200ms ( 4.60%)
+Entering interactive mode (type &quot;help&quot; for commands, &quot;o&quot; for options)
+(pprof) top
+Showing nodes accounting for 200ms, 100% of 200ms total
+Showing top 10 nodes out of 16
+      flat  flat%   sum%        cum   cum%
+     190ms 95.00% 95.00%      190ms 95.00%  syscall.syscall
+      10ms  5.00%   100%       10ms  5.00%  runtime.pthread_cond_signal
+         0     0%   100%      190ms 95.00%  internal/poll.(*FD).Write
+         0     0%   100%      190ms 95.00%  internal/poll.ignoringEINTRIO (inline)
+         0     0%   100%      190ms 95.00%  log.(*Logger).output
+         0     0%   100%      190ms 95.00%  log.Println (inline)
+         0     0%   100%      190ms 95.00%  main.busyCpu
+         0     0%   100%      190ms 95.00%  os.(*File).Write
+         0     0%   100%      190ms 95.00%  os.(*File).write (inline)
+         0     0%   100%       10ms  5.00%  runtime.exitsyscallfast.func1。
+</code></pre>
+<p>每个列的含义如下:<br><code>flat</code>：函数自身的运行耗时（排除了子函数的调用耗时）<br><code>flat%</code>：flat运行耗时占用总的采集样本的时间和的比例，这里所有节点运行的flat时间和为200ms。<br><code>sum%</code>：函数自身和其之上的函数运行的flat时间占所有采集样本时间总和的比例。<br><code>cum</code>：当前函数和其子函数的调用总的运行时间<br><code>cum%</code>：cum耗时占总的采集样本的时间和的比例。</p>
+<p>也可以通过<code>go tool pprof -http=:8082  cpuprofile/cpu.pprof </code>的方式启动一个webserver进行分析。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250408224203.png" alt="image.png"></p>
+<p>当然，也可以选择火焰图的方式进行展示并分析<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250408224414.png" alt="image.png"><br>在web界面还可以通过source视图去查看函数节点的耗时以及它的子调用函数中耗时的地方，第一栏时间是flat耗时，第二栏时间是cum耗时。 耗时百分比是cum耗时占样本总和的百分比。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250408224356.png" alt="image.png"></p>
+<h2>2.8. threadtrace</h2>
+<p>作用：显示导致创建操作系统线程的堆栈跟踪<br>使用场景：分析程序中操作系统线程的创建情况，优化系统资源使用</p>
+<h2>2.9. trace</h2>
+<p>作用：记录程序执行过程中的详细事件序列<br>使用场景：全面分析程序行为，包括gorouting的创建、调度和阻塞等细节问题</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

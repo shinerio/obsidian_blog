@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开源模型汇总 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>开源模型汇总</h1>
+        <time datetime="2026-01-11T15:54:30.956Z">2026年1月11日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. <a href="https://github.com/deepseek-ai/DeepSeek-V3">deepseek</a></h1>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>Model</strong></th>
+<th align="center"><strong><span class="tag">#Total</span> Params</strong></th>
+<th align="center"><strong><span class="tag">#Activated</span> Params</strong></th>
+<th align="center"><strong>Context Length</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">DeepSeek-V3-Base</td>
+<td align="center">671B</td>
+<td align="center">37B</td>
+<td align="center">128K</td>
+</tr>
+<tr>
+<td align="center">DeepSeek-V3</td>
+<td align="center">671B</td>
+<td align="center">37B</td>
+<td align="center">128K</td>
+</tr>
+</tbody></table>
+<p>采用MOE(Mixture-of-Experts，混合专家)架构，大模型有671B参数，但是实际每次推理只使用37B的参数</p>
+<p>DeepSeek-R1 Model</p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>Model</strong></th>
+<th align="center"><strong><span class="tag">#Total</span> Params</strong></th>
+<th align="center"><strong><span class="tag">#Activated</span> Params</strong></th>
+<th align="center"><strong>Context Length</strong></th>
+<th align="center"><strong>Download</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">DeepSeek-R1-Zero</td>
+<td align="center">671B</td>
+<td align="center">37B</td>
+<td align="center">128K</td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Zero">🤗 HuggingFace</a></td>
+</tr>
+<tr>
+<td align="center">DeepSeek-R1</td>
+<td align="center">671B</td>
+<td align="center">37B</td>
+<td align="center">128K</td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1">🤗 HuggingFace</a></td>
+</tr>
+</tbody></table>
+<p>DeepSeek-R1-Distill Models</p>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>Model</strong></th>
+<th align="center"><strong>Base Model</strong></th>
+<th align="center"><strong>Download</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">DeepSeek-R1-Distill-Qwen-1.5B</td>
+<td align="center"><a href="https://huggingface.co/Qwen/Qwen2.5-Math-1.5B">Qwen2.5-Math-1.5B</a></td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B">🤗 HuggingFace</a></td>
+</tr>
+<tr>
+<td align="center">DeepSeek-R1-Distill-Qwen-7B</td>
+<td align="center"><a href="https://huggingface.co/Qwen/Qwen2.5-Math-7B">Qwen2.5-Math-7B</a></td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B">🤗 HuggingFace</a></td>
+</tr>
+<tr>
+<td align="center">DeepSeek-R1-Distill-Llama-8B</td>
+<td align="center"><a href="https://huggingface.co/meta-llama/Llama-3.1-8B">Llama-3.1-8B</a></td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-8B">🤗 HuggingFace</a></td>
+</tr>
+<tr>
+<td align="center">DeepSeek-R1-Distill-Qwen-14B</td>
+<td align="center"><a href="https://huggingface.co/Qwen/Qwen2.5-14B">Qwen2.5-14B</a></td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B">🤗 HuggingFace</a></td>
+</tr>
+<tr>
+<td align="center">DeepSeek-R1-Distill-Qwen-32B</td>
+<td align="center"><a href="https://huggingface.co/Qwen/Qwen2.5-32B">Qwen2.5-32B</a></td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B">🤗 HuggingFace</a></td>
+</tr>
+<tr>
+<td align="center">DeepSeek-R1-Distill-Llama-70B</td>
+<td align="center"><a href="https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct">Llama-3.3-70B-Instruct</a></td>
+<td align="center"><a href="https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Llama-70B">🤗 HuggingFace</a></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>商业友好，允许免费商用</p>
+</blockquote>
+<h1>2. Google Gemma</h1>
+<h1>3. Mistral &amp; Mixtral</h1>
+<h1>4. <a href="https://github.com/MoonshotAI/Kimi-K2?tab=readme-ov-file">kimi-k2</a></h1>
+<table>
+<thead>
+<tr>
+<th><strong>Architecture</strong></th>
+<th>Mixture-of-Experts (MoE)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Total Parameters</strong></td>
+<td>1T</td>
+</tr>
+<tr>
+<td><strong>Activated Parameters</strong></td>
+<td>32B</td>
+</tr>
+<tr>
+<td><strong>Number of Layers</strong> (Dense layer included)</td>
+<td>61</td>
+</tr>
+<tr>
+<td><strong>Number of Dense Layers</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Attention Hidden Dimension</strong></td>
+<td>7168</td>
+</tr>
+<tr>
+<td><strong>MoE Hidden Dimension</strong> (per Expert)</td>
+<td>2048</td>
+</tr>
+<tr>
+<td><strong>Number of Attention Heads</strong></td>
+<td>64</td>
+</tr>
+<tr>
+<td><strong>Number of Experts</strong></td>
+<td>384</td>
+</tr>
+<tr>
+<td><strong>Selected Experts per Token</strong></td>
+<td>8</td>
+</tr>
+<tr>
+<td><strong>Number of Shared Experts</strong></td>
+<td>1</td>
+</tr>
+<tr>
+<td><strong>Vocabulary Size</strong></td>
+<td>160K</td>
+</tr>
+<tr>
+<td><strong>Context Length</strong></td>
+<td>128K</td>
+</tr>
+<tr>
+<td><strong>Attention Mechanism</strong></td>
+<td>MLA</td>
+</tr>
+<tr>
+<td><strong>Activation Function</strong></td>
+<td>SwiGLU</td>
+</tr>
+<tr>
+<td>遵循宽松的MIT协议，做了如下修改</td>
+<td></td>
+</tr>
+</tbody></table>
+<ul>
+<li><strong>触发条件（满足其一即可）</strong>：<ol>
+<li>你的商业产品或服务月活跃用户（MAU）超过 <strong>1 亿</strong>；   </li>
+<li>或者你的商业产品或服务月收入超过 <strong>2000 万美元</strong>（或等值货币）。</li>
+</ol>
+</li>
+<li><strong>强制义务</strong>： 如果达到上述规模，你必须在产品或服务的用户界面（UI）显著位置展示 <strong>“Kimi K2”</strong> 字样。</li>
+</ul>
+<h1>5. Qwen</h1>
+<table>
+<thead>
+<tr>
+<th align="left">Model</th>
+<th align="center">Release Date</th>
+<th align="center">Max Length</th>
+<th align="center">System Prompt Enhancement</th>
+<th align="center"># of Pretrained Tokens</th>
+<th align="center">Minimum GPU Memory Usage of Finetuning (Q-Lora)</th>
+<th align="center">Minimum GPU Usage of Generating 2048 Tokens (Int4)</th>
+<th align="center">Tool Usage</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Qwen-1.8B</td>
+<td align="center">23.11.30</td>
+<td align="center">32K</td>
+<td align="center">✅</td>
+<td align="center">2.2T</td>
+<td align="center">5.8GB</td>
+<td align="center">2.9GB</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left">Qwen-7B</td>
+<td align="center">23.08.03</td>
+<td align="center">32K</td>
+<td align="center">❎</td>
+<td align="center">2.4T</td>
+<td align="center">11.5GB</td>
+<td align="center">8.2GB</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left">Qwen-14B</td>
+<td align="center">23.09.25</td>
+<td align="center">8K</td>
+<td align="center">❎</td>
+<td align="center">3.0T</td>
+<td align="center">18.7GB</td>
+<td align="center">13.0GB</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td align="left">Qwen-72B</td>
+<td align="center">23.11.30</td>
+<td align="center">32K</td>
+<td align="center">✅</td>
+<td align="center">3.0T</td>
+<td align="center">61.4GB</td>
+<td align="center">48.9GB</td>
+<td align="center">✅</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>商用友好</p>
+</blockquote>
+<h1>6. Meta Llama</h1>
+<table>
+<thead>
+<tr>
+<th align="center"><strong>Model</strong></th>
+<th align="center"><strong>Launch date</strong></th>
+<th align="center"><strong>Model sizes</strong></th>
+<th align="center"><strong>Context Length</strong></th>
+<th align="center"><strong>Tokenizer</strong></th>
+<th align="center"><strong>Acceptable use policy</strong></th>
+<th align="center"><strong>License</strong></th>
+<th align="center"><strong>Model Card</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Llama 2</td>
+<td align="center">7/18/2023</td>
+<td align="center">7B, 13B, 70B</td>
+<td align="center">4K</td>
+<td align="center">Sentencepiece</td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama2/USE_POLICY.md">Use Policy</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama2/LICENSE">License</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama2/MODEL_CARD.md">Model Card</a></td>
+</tr>
+<tr>
+<td align="center">Llama 3</td>
+<td align="center">4/18/2024</td>
+<td align="center">8B, 70B</td>
+<td align="center">8K</td>
+<td align="center">TikToken-based</td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3/USE_POLICY.md">Use Policy</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3/LICENSE">License</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3/MODEL_CARD.md">Model Card</a></td>
+</tr>
+<tr>
+<td align="center">Llama 3.1</td>
+<td align="center">7/23/2024</td>
+<td align="center">8B, 70B, 405B</td>
+<td align="center">128K</td>
+<td align="center">TikToken-based</td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/USE_POLICY.md">Use Policy</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/LICENSE">License</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md">Model Card</a></td>
+</tr>
+<tr>
+<td align="center">Llama 3.2</td>
+<td align="center">9/25/2024</td>
+<td align="center">1B, 3B</td>
+<td align="center">128K</td>
+<td align="center">TikToken-based</td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md">Use Policy</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE">License</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md">Model Card</a></td>
+</tr>
+<tr>
+<td align="center">Llama 3.2-Vision</td>
+<td align="center">9/25/2024</td>
+<td align="center">11B, 90B</td>
+<td align="center">128K</td>
+<td align="center">TikToken-based</td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md">Use Policy</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE">License</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD_VISION.md">Model Card</a></td>
+</tr>
+<tr>
+<td align="center">Llama 3.3</td>
+<td align="center">12/04/2024</td>
+<td align="center">70B</td>
+<td align="center">128K</td>
+<td align="center">TikToken-based</td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/USE_POLICY.md">Use Policy</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/LICENSE">License</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/MODEL_CARD.md">Model Card</a></td>
+</tr>
+<tr>
+<td align="center">Llama 4</td>
+<td align="center">4/5/2025</td>
+<td align="center">Scout-17B-16E, Maverick-17B-128E</td>
+<td align="center">10M, 1M</td>
+<td align="center">TikToken-based</td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama4/USE_POLICY.md">Use Policy</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama4/LICENSE">License</a></td>
+<td align="center"><a href="https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md">Model Card</a></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>license受限，月活用户超过7亿不允许使用。Additional Commercial Terms. If, on the Llama 4 version release date, the monthly active users of the products or services made available by or for Licensee, or Licensee’s affiliates, is greater than 700 million monthly active users in the preceding calendar month, you must request a license from Meta, which Meta may grant to you in its sole discretion, and you are not authorized to exercise any of the rights under this Agreement unless or until Meta otherwise expressly grants you such rights</p>
+</blockquote>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

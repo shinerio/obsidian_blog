@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设计原则与典型架构设计模型 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>设计原则与典型架构设计模型</h1>
+        <time datetime="2026-01-03T13:04:29.291Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>架构的设计本质都是为了高内聚、低耦合</p>
+<h1>1. SOLID原则</h1>
+<h2>1.1. S单一职责原则（single responsibility）</h2>
+<p>一个class应该只做一件事，一个class应该只有一个变化的原因，核心是&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;功能特性解耦</font>和&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;高内聚性</font>。避免一个类承担两个特性，修改A特性的时候导致B特性引入BUG。避免修复A问题，导致B问题修改的引入。</p>
+<h2>1.2. O开闭原则（open-close)</h2>
+<p>class 应该对扩展开放对修改关闭。&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;避免增加新功能导致修改引入</font>。</p>
+<h2>1.3. L里氏替换原则（Liskov Substitution Principle，LSP）</h2>
+<p>If S is a subtype of T, then objects of type T may be replaced with objects of type S, without breaking the program。 如果S是T的子类，则T的对象可以替换为S的对象，而不会破坏程序。</p>
+<p>Functions that use pointers of references to base classes must be able to use objects of derived classes without knowing it。 所有引用其父类对象方法的地方，都可以透明的替换为其子类对象。</p>
+<h2>1.4. I接口隔离原则(interface Segregation)</h2>
+<p>隔离意味着保持独立，接口隔离原则是关于接口的独立。将一个万能的接口拆分成多个独立的接口，&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;让子类可以选择性实现其中的部分接口</font>。它反映了基类与子类之间的关系，是对开闭原则的补充，是对实现抽象化的具体步骤的规范。</p>
+<blockquote>
+<p>[!note]<br>   接口隔离原则（Interface Segregation Principle，ISP）的定义是客户端不应该依赖它不需要的接口，类间的依赖关系应该建立在最小的接口上。简单来说就是建立单一的接口，不要建立臃肿庞大的接口。也就是接口尽量细化，同时接口中的方法尽量少。使用接口隔离原则前首先需要满足单一职责原则。</p>
+</blockquote>
+<h2>1.5. D依赖倒置原则(Dependence Inversion)</h2>
+<p>我们的class应该&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;依赖接口和抽象类</font>，而不是具体的类和函数。实现可以变，接口不能变。</p>
+<h1>2. 设计原则</h1>
+<p>设计模式和SOLID原则大部分是</p>
+<h2>2.1. 迪米特法则</h2>
+<p>迪米特法则(Law of Demeter )又叫做<strong>最少知识原则</strong>，也就是说，一个对象应当对其他对象尽可能少的了解。</p>
+<p>迪米特法则的目的在于<strong>降低类之间的耦合</strong>。由于每个类尽量减少对其他类的依赖，因此，很容易使得系统的功能模块功能独立，相互之间不存在（或很少有）依赖关系。</p>
+<p>迪米特法则不希望类之间建立直接的联系。如果真的有需要建立联系，也希望能通过它的友元类来转达。因此，应用迪米特法则有可能造成的一个后果就是：系统中存在<strong>大量的中介类</strong>，这些类之所以存在完全是为了传递类之间的相互调用关系——这在&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;一定程度上增加了系统的复杂度</span>。</p>
+<h1>3. DDD分层架构实现</h1>
+<p>分层依赖原则，<strong>每层只能与位于其下方的层发生耦合</strong>，上层可以依赖下层，下层不能依赖上层。 </p>
+<blockquote>
+<p>[!note]<br>TCP/IP协议栈的设计也是基于这种分层设计的思想</p>
+</blockquote>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250309194919779.png" alt="image.png"></p>
+<h2>3.1. 用户接口层</h2>
+<p>用户接口层负责向用户显示信息和解释用户指令。这里的用户可能是：用户、程序、自动化测试和批处理脚本等等。</p>
+<h2>3.2. 应用层</h2>
+<p>应用层是很薄的一层，理论上<strong>不应该有业务规则或逻辑</strong>，主要面向用例和流程相关的操作。但应用层又位于领域层之上，因为领域层包含多个聚合，所以它可以协调多个聚合的服务和领域对象完成服务编排和组合，协作完成业务操作。此外，应用层也是微服务之间交互的通道，它可以调用其它微服务的应用服务，完成微服务之间的服务&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;组合和编排</font>。</p>
+<ul>
+<li>负责服务的组合、编排和转发</li>
+<li>负责处理业务用例的执行顺序以及结果的拼装</li>
+<li>以粗粒度的服务通过API网关向前端发布</li>
+<li>进行安全认证、权限校验、事务控制、发送或订阅领域事件等</li>
+</ul>
+<p>在设计和开发时，不要将本该放在领域层的业务逻辑放到应用层中实现。因为<strong>庞大的应用层会使领域模型失焦</strong>，时间一长你的微服务就会<strong>演化为传统的三层架构</strong>，业务逻辑会变得混乱。</p>
+<h2>3.3. 领域层</h2>
+<p>领域层的作用是实现企业核心业务逻辑，通过各种校验手段保证业务的正确性。领域层主要体现领域模型的业务能力，它用来表达业务概念、业务状态和业务规则。领域层包含聚合根、实体、值对象、领域服务等领域模型中的领域对象。</p>
+<p>领域层中的实体会采用&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;充血模型</font>来实现所有与之相关的业务功能。当领域中的某些功能，单一实体（或者值对象）不能实现时，&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;领域服务</font>就会出马，它可以&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;组合聚合</font>内的多个实体（或者值对象），实现复杂的业务逻辑。</p>
+<h2>3.4. 基础层</h2>
+<p>基础层是贯穿所有层的，它的作用就是为其它各层提供通用的技术和基础服务，包括第三方工具、驱动、消息中间件、网关、文件、缓存以及数据库等。比较常见的功能还是提供数据库持久化。</p>
+<p>基础层包含基础服务，它采用&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;依赖倒置设计</font>，封装基础资源服务，实现应用层、领域层与基础层的解耦，<strong>降低外部资源变化对应用的影响</strong>。</p>
+<blockquote>
+<p>[!note]<br>在传统架构设计中，由于上层应用对数据库的强耦合，很多公司在架构演进中最担忧的可能就是换数据库了，因为一旦更换数据库，就可能需要重写大部分的代码，这对应用来说是致命的。那采用依赖倒置的设计以后，应用层就可以通过解耦来保持独立的核心业务逻辑。当数据库变更时，我们只需要更换数据库基础服务就可以了，这样就将资源变更对应用的影响降到了最低。</p>
+</blockquote>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250309194808555.png" alt="image.png"></p>
+<h1>4. CQRS（Query Command Responsibility Segregation）</h1>
+<p>对与业务查询场景比较多、比较复杂的情况下，采用Command和Query模型分离的设计，可以使业务上进行一些解耦。命令和查询模型某种程度上比较相似，CQRS的设计可能会导致系统过于复杂。</p>
+<ul>
+<li>Query模型一般可以&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;只包括两层</span>，DB视图和用户视图，将数据查询结果对象映射为接口响应模型。专用于查询的模型可以<u>与领域模型解耦</u>，<u>与数据查询方式和业务展示结果挂钩</u></li>
+<li>业务的复杂性导致我们查看的数据结构和存储的数据结构并不一致，如将多条记录合并为一条或通过联表查询组合成新记录。</li>
+<li>可以通过从OLTP数据库同步数据到OLAP数据，以实现Command和Query的分离。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250309222314123.png" alt="image.png"><br>优势：</li>
+</ul>
+<ol>
+<li>提供吞吐和时延 =&gt; 查询分离，OLAP数据库（HBASE大宽表）</li>
+<li>提供多个查询视图，避免业务间互相影响<br>缺点：</li>
+<li>数据同步时延、一致性的复杂性</li>
+<li>代码编写的额外成本和复杂性增加</li>
+</ol>
+<h1>5. 整洁架构(洋葱架构)</h1>
+<p>整洁架构的层就像洋葱片一样，它体现了分层的设计思想。在整洁架构里，同心圆代表应用软件的不同部分，从里到外依次是领域模型、领域服务、应用服务和最外围的容易变化的内容，比如用户界面和基础设施。</p>
+<ol>
+<li>整洁架构最主要的原则是&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;依赖原则</font>，它定义了各层的依赖关系，<strong>越往里依赖越低，代码级别越高，越是核心能力</strong> 。外圆代码依赖只能指向内圆，内圆不需要知道外圆的任何情况。</li>
+<li>每一层对&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;外暴露接口，隐藏内部使用细节</font>。<u>在较深的层定义抽象接口，在最外层提供具体实现</u>。可以保证我们专注于领域模型，而不必过多地担心实现细节。可以通过类似于Spring之类的&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;依赖注入</span>框架在运行时将接口和实现连接起来。</li>
+<li>&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;关注点分离</font>。应用被分为若干层，每一层都有不同的职责和关注点。</li>
+<li>代码的&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;可测性提高</font>，可以单独每每一层构建测试用例<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250309200146466.png" alt="image.png"></li>
+</ol>
+<ul>
+<li><strong>领域模型</strong>：实现领域内核心业务逻辑，它封装了企业级的业务规则。领域模型的主体是实体，一个实体可以是一个带方法的对象，也可以是一个数据结构和方法集合。</li>
+<li><strong>领域服务</strong>：实现涉及&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;多个实体</font>的复杂业务逻辑。</li>
+<li><strong>应用服务</strong>：实现与用户操作相关的服务组合与编排，它包含了应用特有的业务流程规则，封装和实现了系统所有用例。</li>
+<li><strong>基础层</strong>：最外层主要提供适配的能力，适配能力分为主动适配和被动适配。<ol>
+<li>主动适配主要实现外部用户、网页、批处理和自动化测试等对内层业务逻辑访问适配。</li>
+<li>被动适配主要是实现核心业务逻辑对基础资源访问的适配，比如数据库、缓存、文件系统和消息中间件等。</li>
+</ol>
+</li>
+</ul>
+<h1>6. 六边形架构（端口适配器架构）</h1>
+<p>六边形架构的核心理念是：<strong>应用是通过端口与外部进行交互的</strong> 。我想这也是微服务架构下API网关盛行的主要原因吧。也就是说，在下图的六边形架构中，红圈内的核心业务逻辑（应用程序和领域模型）与外部资源（包括 APP、Web 应用以及数据库资源等）完全隔离，&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;仅通过适配器进行交互</font>。它解决了业务逻辑与用户界面的代码交错问题，很好地实现了前后端分离。六边形架构各层的依赖关系与整洁架构一样，都是由外向内依赖。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250309200511191.png" alt="image.png"><br>六边形架构将系统分为内六边形和外六边形两层，这两层的职能划分如下：</p>
+<ul>
+<li>红圈内的六边形实现应用的核心业务逻辑；</li>
+<li>外六边形完成外部应用、驱动和基础资源等的交互和访问，对前端应用以 API 主动适配的方式提供服务，对基础资源以依赖倒置被动适配的方式实现资源访问。<br> 六边形架构的一个端口可能对应多个外部系统，不同的外部系统也可能会使用不同的适配器，由适配器负责协议转换。这就使得应用程序能够以一致的方式被用户、程序、自动化测试和批处理脚本使用</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

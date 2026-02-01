@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDD理论与实践 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>DDD理论与实践</h1>
+        <time datetime="2026-01-03T13:04:29.284Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 什么是DDD</h1>
+<p>DDD是一种处理高度复杂领域的&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;设计思想</font>，它试图分离技术实现的复杂性，并围绕业务概念构建领域模型来控制业务的复杂性，以解决软件难以理解，难以演进的问题。DDD不是架构，而是一种架构&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;设计方法论</font>，它通过边界划分将复杂业务领域简单化，帮我们设计出清晰的领域和应用边界，可以很容易地实现架构演进。懂DDD模型设计的并不需要是一个专业的开发人员，而是需要一个领域专家，这个领域专家可以是产品、可以是资深的销售等等。</p>
+<h1>2. 为什么要DDD</h1>
+<p>可以利用DDD设计方法来建立领域模型，划分领域边界，再根据这些&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;领域边界从业务视角来划分微服务边界</span>。而按照DDD方法设计出的微服务的业务和应用边界都非常合理，可以很好地实现微服务内部和外部的「高内聚、低耦合」</p>
+<ol>
+<li>统一团队成员术语，无论你是开发、测试、产品、解决方案等，避免沟通障碍。让文档更容易被理解，让代码的可读性更强。 =&gt; 输出件：名词解释表</li>
+<li>抽象领域模型，聚焦核心业务，保护好业务的核心资产。让后期的代码改动尽可能远离核心领域。</li>
+<li>指导我们更加合理地拆分微服务，划分软件实现边界——限界上下文</li>
+</ol>
+<h1>3. 战略设计和战术设计</h1>
+<ul>
+<li><strong>战略设计主要从业务视角出发</strong> ，建立业务&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;领域模型</span>，划分&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;领域边界</span>，建立通用语言的&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;限界上下文</span>，限界上下文可以作为微服务设计的参考边界。</li>
+<li><strong>战术设计则从技术视角出发</strong> ，侧重于领域模型的技术实现，完成软件开发和落地，包括：&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;聚合根</span>、&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;实体</span>、&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;值对象</span>、&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;领域服务</span>、&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;应用服务</span>和&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;资源库</span>等代码逻辑的设计和实现。</li>
+</ul>
+<h2>3.1. 战略设计</h2>
+<h3>3.1.1. 主要方法——事件风暴</h3>
+<p>它是一个从发散到收敛的过程。<br><strong>发散过程</strong>： 它通常采用<u>用例分析</u>、<u>场景分析</u>和<u>用户旅程分析</u>，尽可能全面不遗漏地分解业务领域，并梳理领域对象之间的关系。<br><strong>收敛的过程</strong>：事件风暴过程会产生很多的<strong>实体</strong>、<strong>命令</strong>、<strong>事件</strong>等领域对象，我们将这些领域对象从不同的维度进行聚类，形成如<strong>聚合</strong>、<strong>限界上下文等边界</strong>，建立领域模型。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250309184449304.png" alt="image.png"></p>
+<h3>3.1.2. 达成效果——微服务的边界</h3>
+<ol>
+<li>在事件风暴中梳理业务过程中的用户操作、事件以及外部依赖关系等，根据这些要素&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;梳理出领域实体等领域对象</span>。</li>
+<li>根据领域实体之间的业务关联性，将业务紧密相关的实体进行组合形成&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;聚合</span>，同时确定聚合中的&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;聚合根、值对象和实体</span>。在这个图里，聚合之间的边界是第一层边界，它们在同一个微服务实例中运行，&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;这个边界是逻辑边界，所以用虚线表示</span>。</li>
+<li>根据业务及语义边界等因素，&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;将一个或者多个聚合划定在一个限界上下文内</span>，形成领域模型。在这个图里，限界上下文之间的边界是第二层边界，&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;这一层边界可能就是未来微服务的边界</span>，不同限界上下文内的领域逻辑被隔离在不同的微服务实例中运行，物理上相互隔离，所以是&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;物理边界，边界之间用实线来表示</span>。</li>
+</ol>
+<h1>4. DDD与微服务</h1>
+<p>DDD是一种架构设计方法，微服务是一种架构风格。DDD通过事件风暴梳理出来限界上下文，会指导形成微服务的边界。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

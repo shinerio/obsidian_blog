@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent综述（Chatbot + Workflow + AI Agent + Function Call + MCP） - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>AI Agent综述（Chatbot + Workflow + AI Agent + Function Call + MCP）</h1>
+        <time datetime="2026-01-25T14:22:42.905Z">2026年1月25日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. LLM</h1>
+<p>E.G. Chat GPT, Google Gemini and claude.</p>
+<h2>1.1. Work Mechanism</h2>
+<p>Human provide an input and the LLM responds with an output.</p>
+<blockquote>
+<p>input(prompt) -&gt; LLM -&gt; output(email)</p>
+</blockquote>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072203701.png" alt="image.png"></p>
+<h2>1.2. Key Traits</h2>
+<ul>
+<li>LLM是被动式工作模式， <code>wait prompt and then reponse</code>，<strong>prompt</strong>的好坏决定了模型输出的准确性</li>
+<li>虽然大语言模型是通过大量的数据训练得到的，但是LLM对个人信息、内部商业数据等了解有限</li>
+<li>LLM是基于过去的数据进行训练的，无法提供最新的数据或消息<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072206372.png" alt="image.png"></li>
+</ul>
+<blockquote>
+<p>[!note] LLM与搜索引擎的使用区别<br>当我们想知道如何使用 Python 编写斐波那契数列的时候。</p>
+<ul>
+<li>python fibonacci  -------&gt; 适合传统搜索引擎，倒排索引</li>
+<li>编写一个用python函数来高效地计算fibonacci数列。评论每一行代码以解释每一部分的作用以及为什么这样写  -------&gt; 适合LLM，上下文清晰，目的明确</li>
+</ul>
+</blockquote>
+<h1>2. AI Workflows</h1>
+<h2>2.1. Control Logic</h2>
+<p>Human provide an input and tell the LLM to follow <strong>a predefined path</strong> that may involve in retrieving information from external tools.<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072209789.png" alt="image.png"><br>The predefined path is technically called control logic.<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072212776.png" alt="image.png"><br>当我们问天气怎么样的时候，由于ai workflow只能根据预设的路径工作，因此LLM也只能去查看日历<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072210780.png" alt="image.png"><br>当然，一个AI workflow可以变得更复杂一点（即使有上百个步骤），但是其始终是ai workflow，而不是ai agent。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072213277.png" alt="image.png"></p>
+<h2>2.2. Key Traist</h2>
+<p>The key trait is that <strong>the human programs a path</strong> for LLM to follow.</p>
+<h1>3. AI Agent</h1>
+<p>AI Agent可以通过<a href="rag.html" class="internal-link">RAG</a>和配套的工具获取额外的信息输入到LLM中作为上下文。工具可能包括一些确定性功能，如任何代码函数或外部API，甚至是其他智能体。</p>
+<p><a href="https://lilianweng.github.io/posts/2023-06-23-agent/">LLM Powered Autonomous Agents</a>一文叙述了基于大语言模型的Agent的整体架构，其中包含以下核心组件：</p>
+<ul>
+<li><strong>Planning</strong><ul>
+<li><strong>分而治之</strong>(Subgoal and decomposition): 和人类思考和解决问题的方式类似，Agent会将大型任务分解为更小的且可管理的子任务，从而可以高效的处理复杂任务。</li>
+<li><strong>反思与优化</strong>(Reflection and refinement): 智能体能够对过去的行为进行自我批判和反思，从错误中学习并为未来的步骤进行优化，进而提高最终结果的质量。</li>
+</ul>
+</li>
+<li><strong>Memory</strong><ul>
+<li><a href="记忆1-短期记忆short-term-memory.html" class="internal-link">记忆<span class="tag">#1</span>. 短期记忆|Short-term memory:</a> 对话上下文信息，包括prompt、对话历史、前序步骤的大语言模型推理结果和工具执行结果等</li>
+<li>Long-term memory: 为智能体提供了在较长时间知识回忆的能力，通常通过利用外部向量存储（vector store）和快速检索来实现，目前比较流行的技术是RAG。</li>
+</ul>
+</li>
+<li><strong>Tool Use</strong><ul>
+<li>如果没有Tool Use的能力，那LLM的作用会大大受限。AI Agent可以学习调用外部API以获取在训练阶段缺失的额外信息，包括最新的消息、代码执行能力、对私有知识库的访问等<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202508062144794.png" alt="image.png"><blockquote>
+<p>[!note]<br>业界主流观点中，AI agent定义的主张是自主化、自动化，即AI agent可以实现plan + action的能力，能够决定需要调用哪些工具，以及什么时候调用工具。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<h2>3.1. ReAct Framework</h2>
+<p>ReAct Framework = Reasoning + Act<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072227077.png" alt="image.png"><br>在ai workflows中，如果我们对输出结果不满意，我们需要人工修改LLM输入的prompt。但是利用AI agent，我们可以让LLM实现自主迭代。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072231348.png" alt="image.png"><br>得到最终结果<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507072231223.png" alt="image.png"></p>
+<p>!<a href="设计模型work-flow-agent21-react.html" class="internal-link">设计模型(work flow &amp; Agent)<span class="tag">#2</span>.1. ReAct</a></p>
+<h2>3.2. Key Traist</h2>
+<p>The key traist here is that the LLM is <strong>a decision maker</strong> in the workflow.</p>
+<h2>3.3. Execution Process</h2>
+<p>!<a href="ai-agent-service-selection-2html.html" class="internal-link">ai_agent_service_selection 2.html</a></p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507092300437.png" alt="image.png"></p>
+<h3>3.3.1. Service Discover</h3>
+<ul>
+<li>从用户输入中提取关键词</li>
+<li>与工具描述中的关键词进行匹配</li>
+<li>计算匹配度得分，选择合适工具<br>服务可以通过mcp协议提供工具的发现能力，实现工具的热插拔</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;method&quot;: &quot;tools/list&quot;,
+  &quot;result&quot;: {
+    &quot;tools&quot;: [
+      {
+        &quot;name&quot;: &quot;file_search&quot;,
+        &quot;description&quot;: &quot;Search for files in the filesystem&quot;,
+        &quot;inputSchema&quot;: {
+          &quot;type&quot;: &quot;object&quot;,
+          &quot;properties&quot;: {
+            &quot;query&quot;: {&quot;type&quot;: &quot;string&quot;},
+            &quot;path&quot;: {&quot;type&quot;: &quot;string&quot;}
+          }
+        }
+      }
+    ]
+  }
+}
+</code></pre>
+<h2>3.4. AI Agent-LLM-(Tools|Resource|Prompt)</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202508151924129.png" alt="image.png"></p>
+<blockquote>
+<p>[!note]<br>function calling解决的是AI Agent如何和LLM通信的问题<br>mcp解决的是AI Agent和tools之间通信的问题</p>
+</blockquote>
+<h3>3.4.1. system prompt</h3>
+<ol>
+<li>将函数以及函数的功能描述、使用方法等注册到AI Agent</li>
+<li>AI Agent根据注册的信息生成<a href="概念system-prompt.html" class="internal-link">概念|system prompt</a>，包括tools如何使用，包括功能描述、入参、出参等。</li>
+<li>AI Agent将system prompt连同user prompt一起发送给LLM</li>
+<li>LLM按照函数要求格式返回调用请求</li>
+<li>AI Agent解析响应，并进行实际工具调用</li>
+<li>AI Agent将调用结果追加到上下文中，返回给LLM </li>
+<li>LLM根据工具调用结果，决定下一步动作：输出最终结果或重复调用工具</li>
+</ol>
+<h3>3.4.2. function calling</h3>
+<p>不同的工具的system prompt写的不一样，标准格式也不规范，不利于LLM针对性学习。function calling则是通过json-rpc的方式对工具的调用进行了标准化。tools的定义也从system prompt中剥离出来，放到单独的请求字段<code>tools</code>中。</p>
+<ul>
+<li>function calling调用和响应格式标准化，利于LLM针对性学习和纠错</li>
+<li>部分开源模型不支持function calling，不同大厂的function calling定义标准可能不相同。</li>
+<li>目前，system prompt和function calling并存</li>
+</ul>
+<h3>3.4.3. mcp</h3>
+<p>AI Agent和Tools通信最简单的方式是直接把这两者写在同一程序中，直接本地函数调用。但是有些函数比较通用，为了避免在每个AI Agent里面拷贝一份代码，可以通过mcp把工具抽出来单独发布为一个服务。</p>
+<h1>4. Function calling</h1>
+<p>智能体需要大语言模型能够针对问题从多个候选工具中选择合适的工具进行调用，并给出调用工具所传递的参数，因此<strong>大语言模型的输入中既需要包括问题，也需要包括每个候选工具的功能、参数说明，还需要包括让大模型以何种格式输出需要调用工具的名称和参数值。</strong></p>
+<p>为了对候选工具的功能、参数的输入以及待调用工具的名称和参数值的输出进行<strong>规范化</strong>，OpenAI于2023年6月推出Function Call，首次将工具调用能力标准化，其采用JSON格式描述工具的名称、参数。后续不少厂商提供的大语言模型服务也支持Function Call形式的工具调用，并兼容OpenAI的API协议，可以按照OpenAI的API协议或直接使用OpenAI提供的SDK（仅需指定其他厂商提供的兼容OpenAI协议的API地址），访问其他厂商提供的大语言模型服务，并实现Function Call形式的工具调用。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202508152058143.png" alt="image.png"></p>
+<p>按照OpenAI的API协议或直接使用OpenAI提供的SDK访问。用户提问和已有天气预报工具，若按照OpenAI的API协议访问大语言模型服务，则请求体如下所示：</p>
+<pre><code class="language-json">{
+  &quot;model&quot;: &quot;Claude Sonnet4&quot;,
+  &quot;temperature&quot;: 0.8,
+  &quot;messages&quot;: [
+    {
+      &quot;role&quot;: &quot;system&quot;,
+      &quot;content&quot;: &quot;你是一个智能助手。今天的日期是：2025-05-16。&quot;
+    },
+    {
+      &quot;role&quot;: &quot;user&quot;,
+      &quot;content&quot;: &quot;明天北京的天气适合跑步吗？&quot;
+    }
+  ],
+  &quot;tools&quot;: [
+    {
+      &quot;type&quot;: &quot;function&quot;,
+      &quot;function&quot;: 
+      {
+        &quot;name&quot;: &quot;getDailyWeather&quot;,
+        &quot;description&quot;: &quot;获取所传入城市今天、明天和后天的天气&quot;,
+        &quot;parameters&quot;: {
+          &quot;type&quot;: &quot;object&quot;,
+          &quot;properties&quot;: {
+            &quot;location&quot;: {
+              &quot;type&quot;: &quot;string&quot;,
+              &quot;description&quot;: &quot;城市名称&quot;
+            }
+          },
+          &quot;required&quot;: [&quot;location&quot;]
+        }
+      }
+    }
+  ]
+}
+</code></pre>
+<p>大模型通过返回对象的<code>tool_calls</code>参数，指定需要使用的工具函数名称为：<code>getDailyWeather</code>，并指定函数的入参为：<code>&quot;{\&quot;location\&quot;: \&quot;上海\&quot;}&quot;</code>。</p>
+<pre><code class="language-json">{
+    &quot;content&quot;: &quot;&quot;,
+    &quot;refusal&quot;: null,
+    &quot;role&quot;: &quot;assistant&quot;,
+    &quot;audio&quot;: null,
+    &quot;function_call&quot;: null,
+    &quot;tool_calls&quot;: [
+        {
+            &quot;id&quot;: &quot;call_6596dafa2a6a46f7a217da&quot;,
+            &quot;function&quot;: {
+                &quot;arguments&quot;: &quot;{\&quot;location\&quot;: \&quot;上海\&quot;}&quot;,
+                &quot;name&quot;: &quot;getDailyWeather&quot;
+            },
+            &quot;type&quot;: &quot;function&quot;,
+            &quot;index&quot;: 0
+        }
+    ]
+}
+</code></pre>
+<blockquote>
+<p>如果提问的问题被大模型判断为无需使用工具，则不会返回<code>tool_calls</code>参数，并会通过<code>content</code>参数直接进行回复。</p>
+</blockquote>
+<h1>5. MCP</h1>
+<p>Function Calling将工具调用能力标准化。智能体按照协议将结构化的工具信息传递给大语言模型，大语言模型也按照协议将结构化的待调用工具和参数值返回给智能体。通过Function Calling提升了智能体和大语言模型交互、由大语言模型决定使用哪种工具的效率，并且避免了若智能体自行设计工具调用的提示、与大语言模型工具调用的微调语料格式不一致、进而影响大语言模型在工具调用上的指令跟随效果的问题。</p>
+<p>虽然Function Calling解决了大语言模型如何高效、便捷地<strong>为智能体选择哪个工具调用的问题</strong>，但是Function Calling并没有解决如何高效、便捷<strong>地为智能体实现和管理工具的问题</strong>。在FunctionCall这一节的示例中，智能体需要事先设计名称为“getDailyWeather”的获取城市天气预报的工具，描述其信息，实现其功能。若该智能体还计划引入其他工具能力，则需要进一步设计和实现其他工具。而若希望已有的工具能被其他智能体复用，虽然可以通过API的方式对外提供调用接口，但缺乏标准化的工具描述和调用协议，即使是以API方式对接已有工具、非完全重新实现工具功能，对于智能体来说，引入已有工具、实现工具调用也有一定的开发成本。</p>
+<p><a href="mcp概念理解mcp.html" class="internal-link">MCP概念理解|MCP</a>解决了<strong>如何高效、便捷地为智能体实现和管理工具</strong>的问题。当然，MCP并不仅限于工具调用，它还包括对资源和提示的管理。但本篇主要聚焦在工具调用方面的介绍。</p>
+<h1>6. conclusion</h1>
+<ol>
+<li>LLM应用应该面向问题场景提供最简单的解决办法，chatbot + 工具化增强的模块化系统（如rag)可能足够解决问题</li>
+<li>面向复杂任务场景、任务流程比较确定时，可以使用工作流，结果具备可预测性和一致性</li>
+<li>对于更复杂或者不确定性的任务，ai agent会是一个比较好的选择。</li>
+</ol>
+<h1>7. ref</h1>
+<ol>
+<li><a href="https://www.youtube.com/watch?v=FwOTs4UxQS4">https://www.youtube.com/watch?v=FwOTs4UxQS4</a></li>
+<li><a href="http://va.landing.ai/agent">http://va.landing.ai/agent</a></li>
+</ol>
+<h1>8. Mind Map</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202601072154804.png" alt="AI Agent综述"></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

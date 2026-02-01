@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iptables - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>iptables</h1>
+        <time datetime="2021-10-16T16:00:00.000Z">2021年10月17日</time>
+        <div class="tags">
+            
+            <span class="tag">计算机网络</span>
+            
+            <span class="tag">network</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>iptables 是 Linux 防火墙工作在用户空间的管理工具，是 netfilter/iptablesIP 数据包过滤系统是一部分，用来设置、维护和检查 Linux 内核的 IP 数据包过滤规则。</p>
+<!--more-->
+
+<h1>1. 四表五链</h1>
+<p>数据包在经过每个的时候会按照每个链对应的表依次进行查询匹配执行的操作，如PREROUTING链对应的就是(raw-&gt;mangle-&gt;nat)，每个表按照优先级顺序进行连接，每个表中还可能有多个规则，最终形成一条处理链。iptables的表中存储的就是对应的规则和需要执行的操作。</p>
+<p><img src="https://raw.githubusercontent.com/shinerio/shinerio.github.io/blog-images/%E5%B0%8F%E4%B9%A6%E5%8C%A0/1634463829447.png" alt="iptables diagram"></p>
+<h2>1.1. 四表</h2>
+<h3>1.1.1. raw</h3>
+<p>主要用来决定是否对数据包进行状态跟踪，对应的内核模块为iptable_raw。raw表只使用在PREROUTING链和OUTPUT链上，因为优先级最高，从而可以对收到的数据包在系统进行ip_conntrack（连接跟踪）前进行处理。一旦用户使用了raw表，在某个链上，raw表处理完后，将跳过NAT表和ip_conntrack处理，即不再做地址转换和数据包的链接跟踪处理了。RAW表可以应用在那些不需要做nat的情况下，以提高性能。</p>
+<h3>1.1.2. mangle</h3>
+<p>主要用来修改数据包的服务类型，生存周期，为数据包设置标记，实现流量整形、策略路由等，对应内核模块miptable_mangle</p>
+<h3>1.1.3. nat</h3>
+<p>主要用来进行网络地址转换，修改数据包的 IP 地址、端口号信息，对应内核模块iptable_nat。</p>
+<h3>1.1.4. filter</h3>
+<p>用来对数据包进行过滤，具体的规则要求决定如何处理一个数据包，对应内核模块iptable_filter</p>
+<blockquote>
+<p>[!note]<br>表的处理优先级：raw&gt;mangle&gt;nat&gt;filter</p>
+</blockquote>
+<h2>1.2. 五链</h2>
+<h3>1.2.1. PREROUTING</h3>
+<p>在对数据包做路由选择之前，将应用此链中的规则</p>
+<h3>1.2.2. INPUT</h3>
+<p>当收目的地址为本机的数据包时，将应用此链中的规则；</p>
+<h3>1.2.3. FORWARD</h3>
+<p>当收到目的地址非本机的数据包时，将应用此链中的规则。Forward转发需要开启Linux内核中的ip_forward功能。</p>
+<h3>1.2.4. OUTPUT</h3>
+<p>当本机向外发送数据包时，将应用此链中的规则</p>
+<h3>1.2.5. POSTROUTING</h3>
+<p>在对数据包做路由选择之后，将应用此链中的规则</p>
+<blockquote>
+<p>[!note]<br>cat /proc/sys/net/ipv4/ip_forward查看是否开启ip_forward功能。0表示没有启动，1表示已经启动</p>
+</blockquote>
+<h1>2. iptables使用</h1>
+<h2>2.1. 命令</h2>
+<p>iptables的基本语法如下：</p>
+<pre><code class="language-shell">iptables [-t 表名] 管理选项 [链名] [匹配条件] [-j 控制类型]
+</code></pre>
+<h3>2.1.1. 表名</h3>
+<p>raw/mangle/nat/filter，默认为filter</p>
+<h3>2.1.2. 管理选项</h3>
+<ul>
+<li>-A:在指定链的末尾添加一条新的规则</li>
+<li>-D:删除指定链中的某一条规则，可删除指定序号或具体内容</li>
+<li>-I:在指定链中插入一条新规则，未指定序号时默认作为第一条规则</li>
+<li>-R:修改、替换指定链中的某一条规则，可指定规则序号或具体内容</li>
+<li>-L:列出指定链中所有的规则，未指定链名，则列出表中的所有链</li>
+<li>-F:清空指定链中所有的规则，未指定链名，则清空表中的所有链</li>
+<li>-P:设置指定链的默认策略</li>
+<li>-n:使用数字形式显示输出结果</li>
+<li>-v:查看规则列表时显示详细的信息</li>
+<li>-h:查看命令帮助信息</li>
+<li>--line-numbers:查看规则列表时，同时显示规则在链中的顺序号</li>
+</ul>
+<h3>2.1.3. 链名</h3>
+<p>  RREROUTING/INPUT/FORWARD/OUTPUT/POSTROUTING</p>
+<h3>2.1.4. 匹配条件</h3>
+<ul>
+<li>-s 指定源地址或网段，逗号隔开</li>
+<li>-d 指定目的地址或网段，逗号隔开</li>
+<li>! 取反，如! -s 192.168.0.200，表示源地址不是192.168.0.200的都匹配。取反操作是-s和-d选项不能同时指定多个</li>
+<li>-p协议。tcp, udp, udplite, icmp, icmpv6,esp, ah, sctp, mh或all</li>
+<li>-i，指定流入数据包网卡，-i eth0，匹配从eth0流入的数据包，只能用于PREROUTING/INPUT/FORWARD</li>
+<li>-o，指定流出数据包网卡，-i eth0，匹配从eth0流出的数据包，只能用于FORWARD/OUTPUT/POSTROUTING</li>
+<li>--sport，指定源端口，支持范围。如--sport 10000:20000</li>
+<li>--dport，指定目的端口，支持范围。如--port 10000:20000</li>
+<li>-m，选项用于指定要使用的匹配模块（match module），基于不同的标准（如数据包的状态、协议类型、端口范围等）来筛选数据包</li>
+</ul>
+<h4>2.1.4.1. -m模块示例</h4>
+<h5>2.1.4.1.1. multiport模块</h5>
+<p>支持指定多个端口。如<code>-m multiport --sports 22,10000:20000</code></p>
+<h5>2.1.4.1.2. state模块</h5>
+<p>可依据数据包的连接状态<br>来匹配，常见的连接状态有 <code>NEW</code>（新连接）、<code>ESTABLISHED</code>（已建立的连接）、<code>RELATED</code>（相关连接）和 <code>INVALID</code>（无效连接）。</p>
+<pre><code class="language-shell">iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+</code></pre>
+<p>只允许已建立和相关的连接进入</p>
+<h5>2.1.4.1.3. iprange</h5>
+<p>模块可用于匹配指定范围内的 IP 地址。</p>
+<pre><code class="language-shell">iptables -A INPUT -m iprange --src-range 192.168.1.100-192.168.1.200 -j ACCEPT
+</code></pre>
+<p>允许来自特定 IP 范围（如 192.168.1.100 - 192.168.1.200）的数据包进入</p>
+<h5>2.1.4.1.4. limit匹配模块</h5>
+<pre><code class="language-shell">iptables -A INPUT -p tcp --dport 22 -m state --state NEW -m limit --limit 10/min -j ACCEPT
+</code></pre>
+<p>限制每分钟最多 10 个新的 SSH 连接请求</p>
+<h3>2.1.5. 控制类型</h3>
+<ul>
+<li>接收ACCEPT</li>
+<li>拒绝REJECT</li>
+<li>丢弃DROP</li>
+<li>日志LOG<blockquote>
+<p>[!note]<br>REJECT和DROP的区别。<br>REJECT动作会返回一个拒绝(终止)数据包(TCP FIN或UDP-ICMP-PORT-UNREACHABLE)，明确的拒绝对方的连接动作。连接马上断开，Client会认为访问的主机不存在。<br>DROP动作只是简单的直接丢弃数据，并不反馈任何回应。需要Client等待超时，Client容易发现自己被防火墙所阻挡。</p>
+</blockquote>
+</li>
+</ul>
+<h2>2.2. 示例</h2>
+<h3>2.2.1. 丢且来自x.x.x.x的数据包</h3>
+<pre><code class="language-shell">BLOCK_THIS_IP=&quot;x.x.x.x&quot;
+iptables -A INPUT -s &quot;$BLOCK_THIS_IP&quot; -j DROP
+</code></pre>
+<h3>2.2.2. 阻止来自IP地址x.x.x.x 且入接口为eth0，协议为tcp的包</h3>
+<pre><code class="language-shell">BLOCK_THIS_IP=&quot;x.x.x.x&quot;
+iptables -A INPUT -i eth0 -p tcp -s &quot;$BLOCK_THIS_IP&quot; -j DROP
+</code></pre>
+<h3>2.2.3. 丢弃已建链的数据包</h3>
+<pre><code class="language-shell">iptables -A OUTPUT -d 192.168.1.100 -p tcp --dport 5432 -m state --state ESTABLISHED -j DROP
+iptables -A INPUT -s 192.168.1.100 -p tcp --sport 5432 -m state --state ESTABLISHED -j DROP
+</code></pre>
+<h3>2.2.4. 允许来自eth0的所有SSH的连接请求，目标端口为22的数据包</h3>
+<pre><code class="language-shell">iptables -A INPUT -i eth0 -p tcp --dport 22 -m state --state NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -o eth0 -p tcp --sport 22 -m state --state ESTABLISHED -j ACCEPT
+</code></pre>
+<h3>2.2.5. 不允许外部主机ping内部主机</h3>
+<pre><code class="language-shell">iptables -A INPUT -p icmp --icmp-type echo-request -j DROP
+iptables -A OUTPUT -p icmp --icmp-type echo-reply -j DROP
+</code></pre>
+<h3>2.2.6. 允许内部主机ping外部主机</h3>
+<pre><code class="language-shell">iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
+iptables -A INPUT -p icmp --icmp-type echo-reply -j ACCEPT
+</code></pre>
+<h3>2.2.7. 日志</h3>
+<p>对于INPUT链中的所有操作都记录到日志中，添加日志前缀“*** INPUT *** ”并设定日志级别为debug</p>
+<pre><code class="language-shell">iptables -A INPUT -j LOG --log-prefix &quot;*** INPUT ***&quot; --log-level debug
+</code></pre>
+<h3>2.2.8. 自定义链</h3>
+<p>通过-N参数创建自定义链，将BLOCK链作为控制目标，如：</p>
+<pre><code class="language-shell">iptables -N BLOCK
+iptables -A BLOCK -p tcp -s 10.1.1.92/32 --dport 80 -j DROP
+iptables -I INPUT 1 -p tcp --dport 80 -j BLOCK
+</code></pre>
+<p>INPUT链中匹配规则1的包都会转入BLOCK链中，若到达了BLOCK链的结尾（即未被链中的规则匹配），则会回到INPUT链的下一条规则。如果在子链中匹配了，则就相当于在父链中匹配了，那么它不会再经过父链中的其他规则。</p>
+<blockquote>
+<p>[!note]<br> iptables -X BLOCK，删除自定义链，iptable -E BLOCK BLOCK_NEW重命名</p>
+</blockquote>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

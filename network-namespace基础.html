@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Namespace基础 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Network Namespace基础</h1>
+        <time datetime="2026-01-03T13:04:29.257Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<pre><code class="language-shell">ip netns add net0
+</code></pre>
+<p>可以创建<strong>一个完全隔离的新网络环境</strong>，这个环境包括一个独立的网卡空间，路由表，ARP表，ip地址表，iptables，ebtables等等。总之，与网络有关的组件都是独立的。</p>
+<pre><code class="language-shell">ip netns list
+</code></pre>
+<p>可以看到我们刚才创建的网络环境</p>
+<p>进入虚拟网络环境，使用命令</p>
+<pre><code class="language-shell">ip netns exec net0 [command]
+</code></pre>
+<p>只能看到lo口</p>
+<pre><code class="language-text">[10.1.0.63_ ~]&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; netns exec net0 ip a
+1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+[10.1.0.63_ ~]&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; a
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether fa:16:3e:c9:c8:07 brd ff:ff:ff:ff:ff:ff
+    inet 10.1.0.63/24 brd 10.1.0.255 scope global noprefixroute dynamic eth0
+       valid_lft 104615901sec preferred_lft 104615901sec
+    inet6 fe80::38b7:34f8:3bde:5f99/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+</code></pre>
+<p><code>ip netns exec net0 bash</code>这样我们可以在新的网络环境中打开一个shell。</p>
+<p>连接两个网络环境</p>
+<p>新的网络环境里面没有任何网络设备，并且也无法和外部通讯，就是一个孤岛，通过下面介绍的这个方法可以把两个网络环境连起来，简单的说，就是在两个网络环境之间拉一根网线</p>
+<p><code>ip netns add net1</code>，先创建另一个网络环境net1，我们的目标是把net0与net1连起来<code>ip link add type veth</code></p>
+<pre><code class="language-shell">[10.1.0.63_ ~]&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; a
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether fa:16:3e:c9:c8:07 brd ff:ff:ff:ff:ff:ff
+    inet 10.1.0.63/24 brd 10.1.0.255 scope global noprefixroute dynamic eth0
+       valid_lft 104615556sec preferred_lft 104615556sec
+    inet6 fe80::38b7:34f8:3bde:5f99/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+3: veth0@veth1: &lt;BROADCAST,MULTICAST,M-DOWN&gt; mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether 3a:42:ef:dc:66:05 brd ff:ff:ff:ff:ff:ff
+4: veth1@veth0: &lt;BROADCAST,MULTICAST,M-DOWN&gt; mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether f6:25:ff:bf:8f:26 brd ff:ff:ff:ff:ff:ff
+</code></pre>
+<p>这里创建连一对veth虚拟网卡，类似pipe，发给veth0的数据包veth1那边会收到，发给veth1的数据包veth0会收到。就相当于给机器安装了两个网卡，并且之间用网线连接起来了</p>
+<p>设置veth的两端分别连接net0和net1</p>
+<pre><code class="language-shell">ip link set veth0 netns net0
+ip link set veth1 netns net1
+</code></pre>
+<p>这两条命令的意思就是把veth0移动到net0环境里面，把veth1移动到net1环境里面，我们看看结果</p>
+<pre><code class="language-shell">[10.1.0.63_ ~]&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; a
+1: lo: &lt;LOOPBACK,UP,LOWER_UP&gt; mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: &lt;BROADCAST,MULTICAST,UP,LOWER_UP&gt; mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether fa:16:3e:c9:c8:07 brd ff:ff:ff:ff:ff:ff
+    inet 10.1.0.63/24 brd 10.1.0.255 scope global noprefixroute dynamic eth0
+       valid_lft 104615332sec preferred_lft 104615332sec
+    inet6 fe80::38b7:34f8:3bde:5f99/64 scope link noprefixroute 
+       valid_lft forever preferred_lft forever
+</code></pre>
+<p>veth0 veth1已经在我们的环境里面消失了，并且分别出现在net0与net1里面。</p>
+<pre><code class="language-shell">[10.1.0.63_ ~]&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; netns exec net0 ip a
+1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+3: veth0@if4: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether 3a:42:ef:dc:66:05 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+[10.1.0.63_ ~]&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; netns exec net1 ip a
+1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+4: veth1@if3: &lt;BROADCAST,MULTICAST&gt; mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether f6:25:ff:bf:8f:26 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+</code></pre>
+<p>下面我们简单测试一下net0与net1的联通性</p>
+<pre><code class="language-shell">ip netns exec net0 ip link set veth0 up
+ip netns exec net0 ip address add 10.0.1.1/24 dev veth0
+ip netns exec net1 ip link set veth1 up
+ip netns exec net1 ip address add 10.0.1.2/24 dev veth1
+</code></pre>
+<p>分别配置好两个设备，然后用ping测试一下联通性：</p>
+<pre><code class="language-text">[10.1.0.63_ ~]&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; netns exec net0 ping -c 3 10.0.1.2
+PING 10.0.1.2 (10.0.1.2) 56(84) bytes of data.
+64 bytes from 10.0.1.2: icmp_seq=1 ttl=64 time=0.024 ms
+64 bytes from 10.0.1.2: icmp_seq=2 ttl=64 time=0.020 ms
+64 bytes from 10.0.1.2: icmp_seq=3 ttl=64 time=0.021 ms
+
+--- 10.0.1.2 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 1999ms
+rtt min/avg/max/mdev = 0.020/0.021/0.024/0.005 ms
+</code></pre>
+<p><strong>一个稍微复杂的网络环境</strong></p>
+<p>创建虚拟网络环境并且连接网线<br>ip netns add net0  <br>ip netns add net1  <br>ip netns add bridge  <br>ip link add <strong>type</strong> veth  <br>ip link <strong>set</strong> dev veth0 name net0-bridge netns net0  <br>ip link <strong>set</strong> dev veth1 name bridge-net0 netns bridge  <br>ip link add <strong>type</strong> veth  <br>ip link <strong>set</strong> dev veth0 name net1-bridge netns net1  <br>ip link <strong>set</strong> dev veth1 name bridge-net1 netns bridge</p>
+<p>在bridge中创建并且设置br设备<br>ip netns <strong>exec</strong> bridge brctl addbr br  <br>ip netns <strong>exec</strong> bridge ip link <strong>set</strong> dev br up  <br>ip netns <strong>exec</strong> bridge ip link <strong>set</strong> dev bridge-net0 up  <br>ip netns <strong>exec</strong> bridge ip link <strong>set</strong> dev bridge-net1 up  <br>ip netns <strong>exec</strong> bridge brctl addif br bridge-net0<br>ip netns <strong>exec</strong> bridge brctl addif br bridge-net1<br><br>先在bridge的命名空间新建一个网桥，名字叫br，然后在bridge的空间新建两个dev：<strong>bridge-net0</strong>和<strong>bridge-net1</strong>，然后将两个dev添加到网桥br中。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250114221924595.png" alt="image.png"></p>
+<p>然后配置两个虚拟环境的网卡<br>ip netns <strong>exec</strong> net0 ip link <strong>set</strong> dev net0-bridge up  <br>ip netns <strong>exec</strong> net0 ip address add 10.0.1.1/24 dev net0-bridge<br>ip netns <strong>exec</strong> net1 ip link <strong>set</strong> dev net1-bridge up  <br>ip netns <strong>exec</strong> net1 ip address add 10.0.1.2/24 dev net1-bridge|</p>
+<p>测试<br>ip netns <strong>exec</strong> net0 ping -c 3 10.0.1.2PING 10.0.1.2 (10.0.1.2) 56(84) bytes of data.  <br>64 bytes from 10.0.1.2: icmp_req=1 ttl=64 time=0.121 ms64 bytes from 10.0.1.2: icmp_req=2 ttl=64 time=0.072 ms64 bytes from 10.0.1.2: icmp_req=3 ttl=64 time=0.069 ms <br>--- 10.0.1.2 ping statistics ---3 packets transmitted, 3 received, 0% packet loss, time 1999ms  <br>rtt min/avg/max/mdev = 0.069/0.087/0.121/0.025 ms|</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

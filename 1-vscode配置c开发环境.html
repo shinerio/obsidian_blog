@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1. Vscode配置C++开发环境 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>1. Vscode配置C++开发环境</h1>
+        <time datetime="2026-01-03T13:04:29.122Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 插件安装</h1>
+<p>C/C++</p>
+<h1>2. 安装gcc</h1>
+<pre><code class="language-shell">sudo apt install libc6-dev
+sudo apt install build-essential gdb
+</code></pre>
+<h1>3. 配置C++环境</h1>
+<p>C++环境需要.vscode 文件夹下的以下三个文件共同定义</p>
+<ul>
+<li><strong>c_cpp_properties.json</strong> ：对C/C++扩展的设置。</li>
+<li><strong>tasks.json</strong> ：定义如何生成可执行文件。</li>
+<li><strong>launch.json</strong> ：定义如何调试可执行文件。</li>
+</ul>
+<h2>3.1. tasks.json</h2>
+<p>tasks.json用于指导vscode如何进行编译。首先选择一个文件夹，右键用vscode 打开，这个文件夹就作为之后写c++的文件夹。如果你这时候在目录下新建一个 <code>helloworld.cpp</code> 文件，写好了 <code>helloworld</code> </p>
+<pre><code>&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt;&lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;limits&gt;
+using namespace std;
+int main()
+{
+cout &lt;&lt; &quot;helloworld&quot; &lt;&lt; endl;
+return 0;
+}
+</code></pre>
+<p>按下 <code>Ctrl+F5</code> ，这时会让你选择这个<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241230230650758.png" alt="image.png"><br>选择clang++，会在当前文件夹的 .vscode 文件夹下生成一个<code>tasks.json</code>文件</p>
+<pre><code class="language-json">{
+    &quot;tasks&quot;: [  // 这是一个数组，可以用于定义多个task
+        {
+            &quot;type&quot;: &quot;cppbuild&quot;, // 指定任务的类型为cppbuild，这表明该任务用于 C++构建相关操作。
+            &quot;label&quot;: &quot;C/C++: clang++ 生成活动文件&quot;, // 任务的标签，在VS Code的任务列表中显示为C/C++: clang++ 生成活动文件，用于标识该任务。
+            &quot;command&quot;: &quot;/usr/bin/clang++&quot;, // 指定要执行的命令，这里是/usr/bin/clang++，即clang++编译器的路径。这表明该任务将使用clang++来编译 C++ 代码
+            &quot;args&quot;: [  // 传递给clang++命令的参数数组
+                &quot;-fcolor-diagnostics&quot;, // 使编译器在输出诊断信息（如错误和警告）时使用颜色编码，使信息更易读。
+                &quot;-fansi-escape-codes&quot;, // 启用 ANSI 转义码，以便在支持的终端中正确显示颜色编码的诊断信息。
+                &quot;-g&quot;, // 生成调试信息，这对于在调试器中调试代码非常重要，它允许调试器将机器代码映射回原始的 C++ 源代码。
+                &quot;${file}&quot;, // 这是一个 VS Code 的变量，代表当前活动的文件，即要编译的 C++ 源文件。
+                &quot;-o&quot;, // 指定输出文件的选项，其后跟着输出文件的路径。
+                &quot;${fileDirname}/${fileBasenameNoExtension}&quot; // 这也是 VS Code的变量组合，${fileDirname}表示当前文件所在的目录，${fileBasenameNoExtension}表示当前文件的文件名（不包含扩展名）。因此，这个组合表示在当前文件所在目录下，生成一个与当前文件名相同但无扩展名的可执行文件。
+            ],
+            &quot;options&quot;: { // 用于设置任务执行时的一些选项
+                &quot;cwd&quot;: &quot;${fileDirname}&quot; // 指定任务的工作目录，${fileDirname}表示当前文件所在的目录。这意味着编译任务将在当前C++源文件所在的目录中执行
+            },
+            &quot;problemMatcher&quot;: [ // 用于匹配编译器输出中的错误和警告信息，并将其显示在 VS Code 的 “问题” 面板中。`$gcc`是一个预定义的问题匹配器，它适用于 GCC 和 Clang系列编译器的输出格式，能够准确地提取错误信息、位置等。
+                &quot;$gcc&quot;
+            ],
+            &quot;group&quot;: { // 定义任务所属的组
+                &quot;kind&quot;: &quot;build&quot;, // 设置为build，表示这是一个构建类型的任务。
+                &quot;isDefault&quot;: true // 设置为true`，意味着该任务是默认的构建任务。当你在VS Code中触发默认的构建操作（如使用快捷键Ctrl + Shift + B，在 Windows 和 Linux 上；或Cmd + Shift + B，在 macOS 上）时，将执行此任务。
+            },
+            &quot;detail&quot;: &quot;调试器生成的任务。&quot; // 对任务的详细描述，这里是`调试器生成的任务`，表明这个任务配置可能是由 VS Code 的调试器相关功能生成的。
+        }
+    ],
+    &quot;version&quot;: &quot;2.0.0&quot; // 指定`tasks.json`文件的版本，这里是`2.0.0`，它有助于 VS Code 理解和正确解析配置文件的结构。
+}
+</code></pre>
+<p>这段代码定义了 vscode 以怎样的方式调用 gcc 编译器将代码编译成可执行文件。</p>
+<pre><code class="language-shell">/usr/bin/clang++ -std=gnu++14 -fcolor-diagnostics -fansi-escape-codes -g /Users/shinerio/WorkSpace/c_learn/helloworld.cpp -o /Users/shinerio/WorkSpace/c_learn/helloworld
+</code></pre>
+<p>如果一切顺利，你应该可以看到文件夹下生成了一个<code>helloworld</code>文件。打开终端，输入<code>./helloworld</code>，可以发现确实输出了helloworld。</p>
+<h3>3.1.1. 多文件如何进行编译</h3>
+<p>注意：如果参与编译的cpp文件中存在多个main函数入口，则编译会报错</p>
+<pre><code class="language-shell">/usr/bin/clang++ -fcolor-diagnostics -fansi-escape-codes -g /Users/shinerio/WorkSpace/c_learn/*ns*.cpp -o /Users/shinerio/WorkSpace/c_learn/ns_test
+duplicate symbol &#39;_main&#39; in:
+    /var/folders/28/4qh3rxdn34x9xtqkj8p6l1vw0000gp/T/m_ns2-96e6ed.o
+    /var/folders/28/4qh3rxdn34x9xtqkj8p6l1vw0000gp/T/ns_test-708141.o
+ld: 1 duplicate symbol for architecture x86_64
+</code></pre>
+<p>!<a href="3-命名空间5-跨多文件.html" class="internal-link">3. 命名空间<span class="tag">#5</span>. 跨多文件</a></p>
+<h2>3.2. launch.json</h2>
+<p>在 VS Code 中，<code>launch.json</code> 文件用于配置调试会话的启动设置。它允许你定义如何启动程序进行调试，包括调试器的类型、要调试的程序路径、传递给程序的参数等重要信息。以下是其具体作用和常见配置项的详细解释。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241230232939792.png" alt="image.png"></p>
+<pre><code class="language-json">{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    &quot;version&quot;: &quot;0.2.0&quot;, // 表示`launch.json`文件的版本号，这里是`0.2.0`。VS Code 通过版本号来理解和解析配置文件的结构，不同版本可能支持不同的配置选项或语法。
+    &quot;configurations&quot;: [ // 是一个数组，包含了一个或多个调试配置。每个配置对象定义了一种特定的调试设置，例如使用不同的调试器、调试不同的程序等。在这个例子中，数组里只有一个调试配置。
+        {
+            &quot;name&quot;: &quot;(lldb) 启动&quot;, // 调试配置的名称，在VS Code的调试配置下拉菜单中显示，这里是`(lldb) 启动`。这个名称有助于用户识别和选择特定的调试配置。
+            &quot;type&quot;: &quot;cppdbg&quot;, // 指定调试器的类型，`cppdbg`表示这是用于 C/C++ 调试的调试器。虽然实际使用的调试器是`lldb`，但`cppdbg`是 VS Code 中用于 C/C++ 调试的通用接口类型。
+            &quot;request&quot;: &quot;launch&quot;, // 定义调试会话的类型，`launch`表示该配置用于启动一个新的进程进行调试。与之相对的是`attach`，用于将调试器附加到一个已经在运行的进程
+            &quot;program&quot;: &quot;${workspaceFolder}/helloworld&quot;, // 指定要调试的程序的路径。实际使用时需要将其替换为真实的可执行文件路径。{workspaceFolder}`是VS Code的变量，表示当前工作区的根目录。例如，如果你的可执行文件在工作区的`build`目录下，名为`myApp`，则应将其设置为`${workspaceFolder}/build/myApp`。
+            &quot;args&quot;: [], // 这是一个数组，用于指定传递给要调试程序的命令行参数。当前配置中数组为空，即不传递任何参数。如果需要传递参数，例如`arg1`和`arg2`，则应写成`[&quot;arg1&quot;, &quot;arg2&quot;]`。
+            &quot;stopAtEntry&quot;: false, // 是一个布尔值，决定调试器是否在程序入口处（通常是`main`函数的第一行代码）停止。`false`表示调试器不会在程序入口处自动停止，程序会正常启动，直到遇到设置的断点。如果设置为`true`，程序启动后会立即在入口处暂停，方便你检查初始状态。
+            &quot;cwd&quot;: &quot;${fileDirname}&quot;, // 代表 “current working directory”，即当前工作目录。`${fileDirname}`表示当前打开文件所在的目录。这意味着调试时，程序将以当前打开文件所在的目录作为工作目录。如果你的程序依赖于相对路径来读取文件或加载资源，这个设置会影响程序的行为。
+            &quot;environment&quot;: [], // 是一个数组，用于设置调试时程序运行的环境变量。当前数组为空，即不额外设置任何环境变量。如果需要设置环境变量，例如设置`PATH`环境变量为`/custom/path:$PATH`，可以写成`[{&quot;name&quot;: &quot;PATH&quot;, &quot;value&quot;: &quot;/custom/path:$PATH&quot;}]`。
+            &quot;externalConsole&quot;: false, // 是一个布尔值，决定是否在外部控制台中运行调试的程序。`false`表示程序的输入输出将在 VS Code 的集成终端中进行，这样方便在 VS Code 界面内查看程序输出和与程序进行交互。如果设置为`true`，程序将在外部独立的控制台窗口中运行。
+            &quot;MIMode&quot;: &quot;lldb&quot; // 指定使用的调试器的底层通信协议，`lldb`表示使用 LLDB 调试器。LLDB 是一个高性能的调试器，常用于调试 C、C++ 等语言编写的程序。
+        }
+    ]
+}
+</code></pre>
+<h3>3.2.1. 启动和附加的区别</h3>
+<h4>3.2.1.1. 调试时机与目标程序状态</h4>
+<ul>
+<li><strong>启动（Launch）</strong>：<ul>
+<li><strong>时机</strong>：在程序尚未运行时使用。它会启动一个新的进程来运行你的 C++ 程序，并同时启动调试器对这个新进程进行调试。</li>
+<li><strong>程序状态</strong>：目标程序从初始状态开始执行，就处于调试器的监控之下。例如，你可以在程序的入口点（<code>main</code> 函数）设置断点，程序启动后会在断点处暂停，让你可以检查初始状态下的变量、内存等信息。</li>
+</ul>
+</li>
+<li><strong>附加（Attach）</strong>：<ul>
+<li><strong>时机</strong>：用于调试已经在运行的进程。当你希望调试一个正在运行的 C++ 程序，而不是重新启动它时，就可以使用附加调试。</li>
+<li><strong>程序状态</strong>：目标程序已经在运行中，可能已经执行了部分代码，处于某个中间状态。例如，一个长时间运行的服务器程序，你发现它在某个特定条件下出现问题，此时不需要重启服务器，而是直接将调试器附加到该运行的进程上进行调试。</li>
+</ul>
+</li>
+</ul>
+<h4>3.2.1.2. 应用场景</h4>
+<ul>
+<li><strong>启动（Launch）</strong>：<ul>
+<li><strong>开发与单步调试</strong>：在开发新功能或调试代码逻辑时非常常用。你可以从程序的开始逐步执行代码，观察变量的变化、函数的调用过程等，以便发现逻辑错误、内存问题等。例如，在实现一个复杂的算法模块时，通过启动调试，在关键代码行设置断点，逐步检查算法的执行是否符合预期。</li>
+<li><strong>初始化相关问题调试</strong>：当程序的初始化过程出现问题，如配置文件读取错误、全局变量初始化异常等，使用启动调试可以方便地在初始化阶段就捕获问题。因为程序从启动开始就被调试器监控，能够清晰地看到初始化的每一步。</li>
+</ul>
+</li>
+<li><strong>附加（Attach）</strong>：<ul>
+<li><strong>生产环境或长时间运行程序调试</strong>：在生产环境中，一些服务程序不能随意重启，因为重启可能会影响业务的连续性。此时，如果发现程序出现问题，如内存泄漏、性能瓶颈等，可以将调试器附加到正在运行的服务进程上进行调试。例如，一个在线游戏服务器，不能因为调试问题而随意重启影响玩家体验，这时就可以使用附加调试。</li>
+<li><strong>多进程或多线程程序特定进程调试</strong>：对于多进程或多线程的应用程序，当你只想调试其中一个已经启动的特定进程或线程时，附加调试很有用。比如，一个多进程的分布式系统，你关注其中一个负责数据处理的进程，就可以将调试器附加到该进程，而不影响其他进程的运行。</li>
+</ul>
+</li>
+</ul>
+<h2>3.3. c_cpp_properties.json</h2>
+<p>在 VS Code 中，<code>c_cpp_properties.json</code> 文件主要用于配置 C 和 C++ 扩展的相关属性，它对代码智能感知、语法检查以及与编译器相关的配置等方面起着关键作用。以下是对其作用的详细阐述：</p>
+<h3>3.3.1. 编译器路径配置</h3>
+<ul>
+<li>通过 <code>compilerPath</code> 属性，你可以指定项目所使用的 C 或 C++ 编译器的路径。这对于在系统中安装了多个编译器版本，或者编译器不在默认路径的情况非常有用。例如：</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Mac&quot;,
+            &quot;compilerPath&quot;: &quot;/usr/bin/clang++&quot;,
+            // 其他配置项...
+        }
+    ],
+    &quot;version&quot;: 4
+}
+</code></pre>
+<p>在上述配置中，指定了使用位于<code>/usr/bin</code>路径下的<code>clang++</code>编译器，这确保了 VS Code 的 C/C++ 扩展能够正确调用该编译器来提供相关服务。</p>
+<h3>3.3.2. 包含目录设置</h3>
+<ul>
+<li><code>includePath</code> 属性用于指定项目的头文件包含目录。当你在代码中使用<code>&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt;</code>指令时，VS Code 的智能感知功能会依据这些目录来查找头文件。例如，如果你有一个自定义的库，其头文件位于<code>${workspaceFolder}/include</code>目录下，你可以这样配置：</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Mac&quot;,
+            &quot;includePath&quot;: [
+                &quot;${workspaceFolder}/include&quot;,
+                &quot;/usr/local/include&quot;,
+                // 其他系统或自定义的包含目录
+            ],
+            // 其他配置项...
+        }
+    ],
+    &quot;version&quot;: 4
+}
+</code></pre>
+<p>这样，智能感知就能在指定目录中找到所需的头文件，提供准确的代码补全和语法检查。</p>
+<h3>3.3.3. 宏定义设置</h3>
+<ul>
+<li><code>defines</code> 属性允许你定义项目中使用的宏。宏定义在预处理阶段发挥作用，影响代码的编译过程。例如，如果你在代码中使用了条件编译，依赖于某个宏是否定义，你可以在<code>c_cpp_properties.json</code>中进行定义：</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Mac&quot;,
+            &quot;defines&quot;: [
+                &quot;DEBUG_MODE&quot;,
+                &quot;PLATFORM_MAC&quot;
+            ],
+            // 其他配置项...
+        }
+    ],
+    &quot;version&quot;: 4
+}
+</code></pre>
+<p>上述配置定义了<code>DEBUG_MODE</code>和<code>PLATFORM_MAC</code>两个宏，在代码中就可以使用<code>&lt;span class=&quot;tag&quot;&gt;#ifdef&lt;/span&gt;</code>等预处理指令来根据这些宏进行条件编译。</p>
+<h3>3.3.4. 编译器标准指定</h3>
+<ul>
+<li>通过 <code>cStandard</code> 和 <code>cppStandard</code> 属性，你可以指定代码遵循的 C 或 C++ 语言标准。例如，如果你希望项目遵循 C++17 标准，可以这样配置：</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Mac&quot;,
+            &quot;cppStandard&quot;: &quot;c++17&quot;,
+            // 其他配置项...
+        }
+    ],
+    &quot;version&quot;: 4
+}
+</code></pre>
+<p>这有助于 VS Code 的智能感知和语法检查功能依据指定的标准提供更准确的提示和错误检测。</p>
+<h3>3.3.5. 环境变量设置</h3>
+<ul>
+<li>部分情况下，编译器可能依赖特定的环境变量。你可以在 <code>c_cpp_properties.json</code> 中通过 <code>env</code> 属性设置环境变量。例如，如果你的编译器需要特定的库路径环境变量，可以这样配置：</li>
+</ul>
+<pre><code class="language-json">{
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Mac&quot;,
+            &quot;env&quot;: {
+                &quot;LIBRARY_PATH&quot;: &quot;/usr/local/lib&quot;
+            },
+            // 其他配置项...
+        }
+    ],
+    &quot;version&quot;: 4
+}
+</code></pre>
+<p>这样设置后，在与编译器相关的操作（如智能感知分析等）中，会考虑这些环境变量。</p>
+<h3>3.3.6. 针对不同环境的配置</h3>
+<p><code>c_cpp_properties.json</code> 支持为不同的环境或构建配置创建多个配置项。例如，你可能在开发过程中有调试和发布两种配置，或者在不同操作系统上有不同的设置。可以通过在 <code>configurations</code> 数组中添加多个对象来实现：</p>
+<pre><code class="language-json">{
+    &quot;configurations&quot;: [
+        {
+            &quot;name&quot;: &quot;Debug&quot;,
+            &quot;compilerPath&quot;: &quot;/usr/bin/g++&quot;,
+            &quot;defines&quot;: [
+                &quot;DEBUG&quot;
+            ],
+            // 其他调试配置相关项...
+        },
+        {
+            &quot;name&quot;: &quot;Release&quot;,
+            &quot;compilerPath&quot;: &quot;/usr/bin/g++&quot;,
+            &quot;defines&quot;: [
+                &quot;NDEBUG&quot;
+            ],
+            // 其他发布配置相关项...
+        }
+    ],
+    &quot;version&quot;: 4
+}
+</code></pre>
+<p>通过这种方式，可以方便地针对不同的开发场景进行灵活配置。</p>
+<h3>3.3.7. 配置方法</h3>
+<ol>
+<li>打开命令面板：在 VS Code 中，按下 Ctrl + Shift + P（Windows/Linux）或 Cmd + Shift + P（Mac）组合键，打开命令面板。</li>
+<li>输入并选择命令：在命令面板中输入 “C/C++: Edit Configurations (UI)”，然后从列表中选择该命令。这将打开一个图形化界面用于配置 C/C++ 扩展的属性。<br> <img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241230234937187.png" alt="image.png"></li>
+<li>生成并编辑配置：在图形化配置界面中，你可以根据需要设置各种属性，如编译器路径、包含目录、宏定义等。完成设置后，点击 “保存” 按钮，VS Code 会在工作区的 .vscode 文件夹中生成 c_cpp_properties.json 文件，并将你在图形界面中的设置保存到该文件中。</li>
+</ol>
+<h2>3.4. 结语</h2>
+<p>最终.vscode下会有如下三个文件<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241230235052988.png" alt="image.png"></p>
+<h1>4. g++/clang/clang++区别</h1>
+<p><code>g++</code>、<code>clang</code> 和 <code>clang++</code> 都是用于编译程序的工具，它们有以下区别：</p>
+<h2>4.1. 所属项目及背景</h2>
+<ul>
+<li><strong><code>g++</code></strong>：是 GNU 编译器集合（GCC）中的 C++ 编译器。GCC 是 GNU 计划的重要组成部分，具有悠久的历史和广泛的应用。它支持多种编程语言，包括 C、C++、Objective - C、Fortran、Ada 等，并且在开源社区和各种 Linux 发行版中被广泛使用。</li>
+<li><strong><code>clang</code> 和 <code>clang++</code></strong>：属于 LLVM 项目。LLVM 是一个模块化、可重用的编译器基础架构，以其编译速度快、占用内存少以及优秀的错误提示信息而受到关注。<code>clang</code> 主要用于编译C语言程序，<code>clang++</code> 则专门用于编译C++程序。</li>
+</ul>
+<h2>4.2. 编译速度</h2>
+<ul>
+<li><strong><code>g++</code></strong>：在编译大型项目时，由于其采用传统的 GCC 编译架构，编译过程相对较慢，尤其是在处理复杂的模板实例化时，编译时间可能较长。</li>
+<li><strong><code>clang</code> 和 <code>clang++</code></strong>：基于 LLVM 架构，在编译速度上通常具有优势。LLVM 的设计理念强调编译过程的高效性和并行性，使得 <code>clang</code> 和 <code>clang++</code> 在编译小型到中型项目时，速度明显快于 <code>g++</code>。不过，对于超大型项目，随着优化级别的提高，两者的速度差距可能会缩小。</li>
+</ul>
+<h2>4.3. 内存占用</h2>
+<ul>
+<li><strong><code>g++</code></strong>：在编译过程中，特别是对于复杂项目，内存占用相对较高。这是因为 GCC 在编译时会构建较为复杂的数据结构来处理语法分析、语义分析等阶段的信息。</li>
+<li><strong><code>clang</code> 和 <code>clang++</code></strong>：LLVM 的架构设计使得 <code>clang</code> 和 <code>clang++</code> 在编译过程中的内存占用相对较低。它们采用更轻量级的数据结构和优化的算法来处理编译任务，在内存使用效率方面表现较好。</li>
+</ul>
+<h2>4.4. 错误提示</h2>
+<ul>
+<li><strong><code>g++</code></strong>：错误提示信息相对较为简洁，但有时可能不够直观，对于新手来说，理解和定位错误原因可能有一定难度。例如，在处理复杂的模板错误时，错误信息可能会非常冗长且难以理解。</li>
+<li><strong><code>clang</code> 和 <code>clang++</code></strong>：以其友好、详细且易于理解的错误提示信息著称。它们能够更准确地指出错误发生的位置和原因，甚至会提供一些修复建议，这对于开发者，尤其是初学者来说，大大提高了调试效率。</li>
+</ul>
+<h2>4.5. 语言标准支持</h2>
+<ul>
+<li><strong><code>g++</code></strong>：对 C++ 标准的支持较为全面，随着版本的不断更新，逐渐完善对新 C++ 标准（如 C++11、C++14、C++17、C++20 等）的支持。不过，在某些新特性的支持时间上可能会稍晚于 <code>clang++</code>。</li>
+<li><strong><code>clang</code> 和 <code>clang++</code></strong>：通常能较快地支持新的 C++ 标准特性。由于 LLVM 项目的开发模式和社区活跃度，<code>clang++</code> 在对新 C++ 标准的跟进上往往比较及时，能够为开发者提供对最新语言特性的早期支持。</li>
+</ul>
+<h2>4.6. 平台支持</h2>
+<ul>
+<li><strong><code>g++</code></strong>：广泛支持多种操作系统平台，包括 Linux、Windows（通过 MinGW 等工具）、macOS 等。在 Linux 系统中，它是默认的编译器之一，具有良好的兼容性和稳定性。</li>
+<li><strong><code>clang</code> 和 <code>clang++</code></strong>：同样支持多种主流操作系统，如 Linux、macOS 和 Windows。在 macOS 系统中，<code>clang</code> 和 <code>clang++</code> 是默认的编译器，与苹果的开发环境结合紧密。在 Linux 系统上，也逐渐得到广泛应用，尤其在一些追求编译效率的项目中。</li>
+</ul>
+<h1>5. ref</h1>
+<p><a href="https://code.visualstudio.com/docs/cpp/config-linux">Using C++ on Linux in VS Code</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

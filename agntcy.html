@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agntcy - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Agntcy</h1>
+        <time datetime="2026-01-07T14:50:56.938Z">2026年1月7日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. OASF</h1>
+<p>Open Agentic Schema Framework一个基于OCI(Open Container Initiative)的可扩展数据模型，用于描述agent的属性并确保agent的唯一标识。OASF支持描述A2A代理和MCP服务器，并且可以扩展以支持其他常用格式，例如Copilot代理清单等等。</p>
+<p>OASF 的核心是“智能体记录”（<a href="https://github.com/agntcy/oasf/blob/main/schema/objects/record.json">Agent Record</a>），这是一个标准化的JSON对象，作为智能体在网络中的数字化身。一个典型的 OASF 记录包含以下关键字段</p>
+<table>
+<thead>
+<tr>
+<th><strong>字段 (Field)</strong></th>
+<th><strong>类型</strong></th>
+<th><strong>描述与作用</strong></th>
+<th><strong>洞察</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>metadata</code></td>
+<td>Object</td>
+<td>包含名称、版本、作者、描述等基本信息。</td>
+<td>用于人类可读的展示和基本的版本管理。</td>
+</tr>
+<tr>
+<td><a href="https://schema.oasf.outshift.com/0.8.0/skill_categories">skills</a></td>
+<td>Array</td>
+<td>代理能够执行的具体能力或功能，如 <code>images_computer_vision/image_segmentation</code></td>
+<td><strong>核心路由依据</strong>。发现机制基于此字段将抽象需求映射到具体记录。</td>
+</tr>
+<tr>
+<td><a href="https://schema.oasf.outshift.com/0.8.0/domain_categories">domains</a></td>
+<td>Array</td>
+<td>用于描述 AI 代理所擅长的领域(domains)，如<code>technology/network_operations</code></td>
+<td></td>
+</tr>
+<tr>
+<td><code>locators</code></td>
+<td>Array</td>
+<td>定义智能体的访问入口（如 Docker镜像地址、API URL、源码库）。</td>
+<td>将元数据链接到实体的物理存在。支持多种协议（HTTP, SLIM, Docker）。</td>
+</tr>
+<tr>
+<td><code>modules</code></td>
+<td>Array</td>
+<td>扩展字段，用于定义输入/输出 Schema、定价模型、合规性声明等。</td>
+<td>提供了极强的扩展性，允许在不破坏标准结构的前提下增加业务特定逻辑。</td>
+</tr>
+</tbody></table>
+<h2>1.1. [skills &amp; domains](<a href="https://docs.agntcy.org/oasf/agent-record-guide/">https://docs.agntcy.org/oasf/agent-record-guide/</a><span class="tag">#basic-information</span>)</h2>
+<p>两者都使用分层命名(如 <code>category/subcategory/specific</code>)，但:</p>
+<ul>
+<li><strong>Skill</strong>: 按<strong>能力类型</strong>分类 (如 <code>自然语言处理 → 生成 → 文本补全</code>)</li>
+<li><strong>Domain</strong>: 按<strong>行业领域</strong>分类 (如 <code>技术 → 网络运维</code>)<br>客户端可以通过综合skills、domains进行多维度查询以实现精确选择。</li>
+<li><strong>Skill</strong>回答: 这个代理能执行什么功能?</li>
+<li><strong>Domain</strong>回答: 这个代理在哪个行业/场景下最有效?</li>
+<li><strong>组合查询</strong>: &quot;找一个具有临床总结能力(skill)并专注于医疗合规(domain)的代理&quot;<br>假设查询:<strong>&quot;找一个能生成报告且懂网络安全的代理&quot;</strong>，这样既确保代理有<strong>生成报告的能力</strong>(skill),又确保它<strong>理解网络安全领域的专业知识</strong>(domain)。</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;skills&quot;: [&quot;natural_language_generation/report_generation&quot;],
+  &quot;domains&quot;: [&quot;cybersecurity/threat_analysis&quot;]
+}
+</code></pre>
+<h2>1.2. directory server</h2>
+<p>skill和domain这种分层命名的数据非常适合使用目录服务器存储</p>
+<pre><code>natural_language_generation
+├── report_generation
+├── analyze_video
+</code></pre>
+<h1>2. Agent Directory</h1>
+<p>允许发布和发现使用OASF描述的代理或多代理应用程序。任何组织都可以运行自己的目录并与其他组织保持同步，从而形成代理互联网清单。代理目录支持A2A agent cards和MCP server描述等数据模型。</p>
+<ul>
+<li><strong>Records</strong>: ADS中的基本单元和基本信息，表示独立的agents和它们的能力。每一个record都是唯一的，包含描述agent skills,attributes和constrainsts的元数据</li>
+<li><strong>Distributed Hash Table (DHT)</strong>: 一个可以高效查找和提取record目录的分布式存储系统，该分布式哈希表（DHT）将agent skill与record identifier建立映射，可基于agent的能力实现快速发现相关agent</li>
+<li><strong>Content Routing Protocol</strong>: 一套用于在Agent与目录服务器之间路由请求和响应的规则与机制。该协议确保对Agent能力的查询能被高效地定向到托管相关记录的对应服务器。</li>
+<li><strong>Agent Directory Servers</strong>: ADS 网络中负责存储和管理目录记录的节点。这些服务器参与分布式哈希表（DHT）并实现内容路由协议，以助力代理发现。</li>
+<li><strong>Clients</strong>: 允许开发人员与ADS交互、发布Agent record以及基于特定条件搜索Agent的工具。</li>
+<li><strong>Security and Trust Mechanisms</strong>: 用于确保目录记录与节点的完整性及真实性的功能特性，包括密码学签名、声明验证、安全通信协议以及访问控制。</li>
+</ul>
+<p>AGNTCY的Agent Directory Service (ADS) 重用成熟的OCI/ORAS基础设施来进行工件分发 <a href="https://arxiv.org/pdf/2509.18787">arXiv</a>,这样做的好处包括:</p>
+<ol>
+<li><strong>持久性和互操作性</strong> - OCI 注册表语义提供了经过验证的存储和索引基础</li>
+<li><strong>内容寻址</strong> - 支持加密完整性和可验证性</li>
+<li><strong>标准化</strong> - 利用容器生态系统中广泛采用的成熟标准</li>
+<li><strong>分布式存储</strong> - 代理记录和相关引用作为 OCI 工件存储在一个或多个注册表中</li>
+</ol>
+<p><a href="https://claude.ai/share/0cc4cb76-c63d-44de-ac65-4ac5326921e3">https://claude.ai/share/0cc4cb76-c63d-44de-ac65-4ac5326921e3</a></p>
+<h1>3. messaging SDK</h1>
+<ul>
+<li><strong>SLIM</strong>（ecure Low-latency Interactive Messaging）：一种协议，它定义了Ai Agent之间安全高效的网络级通信的标准和指南。SLIM通过指定消息格式、传输机制和交互模式，确保互操作性和无缝的数据交换。</li>
+<li><strong>SLIM Node and SDK</strong>：通过SDK/库为一组Agent（通常是给定多Agent的应用程序）提供便捷、安全（MLS 和量子安全）的网络级通信服务。它扩展了gRPC，除了请求/响应、流式传输、即发即弃等功能外，还支持发布/订阅等。</li>
+</ul>
+<p>简单来说,Agntcy 借用了容器技术中的 OCI 标准来存储和分发 AI 代理的元数据和配置信息,这使得代理的发现、验证和分发更加标准化和可靠。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

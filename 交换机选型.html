@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交换机选型要点 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>交换机选型要点</h1>
+        <time datetime="2025-02-20T00:00:00.000Z">2025年2月20日</time>
+        <div class="tags">
+            
+            <span class="tag">交换机</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><strong>交换机选型要点:</strong><br><strong>（1）制式 （盒式交换机/框式交换机）</strong><br><strong>（2）功能（二层交换机/三层交换机）</strong><br><strong>（3）端口数量</strong><br><strong>（4）端口带宽</strong><br><strong>（5）交换容量</strong><br><strong>（6）包转发率</strong></p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/03551acec6e3dd48599995b0cb100ae9.png" alt=""></p>
+<h1>1. 制式</h1>
+<p>当前的交换机主要分为盒式和框式。</p>
+<p>盒式交换机样例图：<br><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/8a0e733c195bb1c85e4e2eb516380777.png" alt=""></p>
+<p>框式交换机样例图：</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/6c42bd86fc196025f16202502351916a.png" alt=""></p>
+<h2>1.1. 盒式交换机</h2>
+<p>盒式交换机皆可以理解成一个铁盒子，一般情况下盒式交换机是固定配置，固定端口数量，固定电源模块、风扇等；因此盒式交换机不具备扩展性。为了提高扩展性，盒式交换机可以支持堆叠技术，可以将多台盒式交换机逻辑上组成一台交换机。正常情况下，盒式交换机应用在一个网络的接入层或者汇聚层。利用clos架构，最新的DCN组网在核心上也可以使用盒式交换机。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/7328262ceb19e3205f821dd4c3c876f2.png" alt=""></p>
+<h2>1.2. 框式交换机</h2>
+<p>框式交换机基于机框，接口板卡、交换板卡、电源模块等都可以按照需求独立配置，框式交换机的扩展性一般基于槽位数量。框式交换机一般应用在一个网络的核心位置。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/defd5c784904b6d922c43cf26d0725bc.png" alt=""></p>
+<p>如上图组网所示：数据中心网络中，CE5800、CE6800、CE8800都是盒式设备，一般作为接入层使用；CE128是框式设备，一般作为核心层使用。</p>
+<p>因此，在设备选型的时候可以根据实际交换机的使用层级判断选择盒式交换机还是框式交换机。</p>
+<h1>2. 功能</h1>
+<h2>2.1. 交换机按照工作协议层分类</h2>
+<p>交换机可以分为二层交换机和三层交换机。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/227da6d646a9e0cbba71e04e7fc66844.png" alt=""></p>
+<h2>2.2. 二层交换机、三层交换机区别</h2>
+<h3>2.2.1. 二层交换机</h3>
+<p>工作在OSI参考模型的第二层数据链路层上交换机，主要功能包括物理编址、错误校验、帧序列以及流控。（如下图所示，二层交换机工作在数据链路层，可以处理数据帧）</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/18c0e0990ad85aaf42d28a4458f55461.png" alt=""></p>
+<h2>2.3. 三层交换机</h2>
+<p>一个具有三层交换功能的设备，即带有第三层路由功能的第二层交换机，但它是二者的有机结合，并不是简单地把路由器设备的硬件及软件叠加在局域网交换机上。（如下图三层交换机工作在网络层，可以处理数据包）</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/e77efb287fc64bdbe0eeef451dc0b114.png" alt=""></p>
+<h1>3. 端口数量</h1>
+<h2>3.1. 盒式交换机</h2>
+<p>一台交换机可以提供的端口数量，对于盒式交换机每一种型号基本是固定的，一般提供24个或48个接入口，2-4个上连接口。这里以华为CE5850-48T4S2Q-EI为例（如下如所示），一共有48个1000M接入口，4个10G上行口，2个40G上行口；</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/88901306b01e65460aa76087d420ed1c.png" alt=""></p>
+<h2>3.2. 框式交换机</h2>
+<p>框式交换机则跟配置的单板数量有关，一般指配置最高密度的接口板的时候每个机框能够支持的最大端口数量。<br>这里以华为的CE12804为例，支持4块业务板LPU，端口和具体的单板型号相关，我们以36端口100G单板为例，那么插满单板一共有144个100G端口。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/8b448e1ea85249a6640d98ec5023cd04.png" alt=""></p>
+<h2>3.3. 如何根据端口数量选择一款交换机</h2>
+<p>在选择交换机时需要基于当前的业务情况，和未来的可扩展性，交换机端口数量代表你需要接入的终端数量。以一个48个接入口的交换机为例，那么如果1个终端占用一个端口，那么一台交换机就可以接48个终端，如果是一个200人的公司，那么就需要这样的交换机5台。</p>
+<blockquote>
+<p>[!note]<br>框式交换机时延比较高</p>
+</blockquote>
+<h1>4. 端口速率</h1>
+<p>当前交换机提供的端口速率有100Mbps/1000Mbps/10Gbps/25Gbps等。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/7fc2e8d5f7c3e832daf046929dacaade.png" alt=""></p>
+<h2>4.1. 交换机端口速率单位</h2>
+<p>交换机的端口速率的单位是bps（bit per second），即<strong>每秒多少比特。</strong></p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/47fca0fc3bdadf7f388eefac83f7f802.png" alt=""></p>
+<h1>5. 交换容量</h1>
+<p>交换机交换容量：也称为背板带宽或交换带宽。交换容量是交换机接口处理器（或接口卡）和数据总线之间所能吞吐的最<a href="https://cloud.tencent.com/product/bigdata-class?from_column=20065&from=20065">大数据</a>量。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/41fa4db635e1a651cbc3d8ec7d8200f0.png" alt=""></p>
+<p>背板带宽标志了交换机总的数据交换能力，单位为Gbit/s。一台交换机的交换容量越高，所能处理数据的能力就越强，但同时设计成本也会越高。所有端口容量端口数量之和的两倍应该小于交换容量，从而实现全双工无阻塞交换</p>
+<p>交换容量跟交换机的制式有关，对于总线式交换机来说，交换容量指的是背板总线的带宽;</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/daee3a548965479288d8dacd3a5ba6c5.png" alt=""></p>
+<p>对于交换矩阵式交换机来说，交换容量是指交换矩阵的接口总带宽。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/1a0a563aba09ba972cea3363cb1864a4.png" alt=""></p>
+<p>这个交换容量是一个理论计算值，但是它代表了交换机可能达到的最大交换能力。当前交换机的设计保证了该参数不会成为整台交换机的瓶颈。</p>
+<h1>6. 包转发率</h1>
+<p>包转发率也称为接口吞吐量，是指通信设备某接口上的数据包转发能力，单位通常为pps（packet per second）。交换机的包转发率一般是实测的结果，代表交换机实际的转发性能。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/12ad6986362d1b65dcb928cc9a952b78.png" alt=""></p>
+<h2>6.1. 计算方式</h2>
+<p>包转发率的衡量标准是以单位时间内发送64字节的数据包（最小包）的个数作为计算基准的。当计算包转发率时，需考虑前导码和帧间隙的固定开销。</p>
+<p>缺省情况下，帧间隙为最大值12字节，建议用户使用缺省配置。如果用户修改接口的帧间隙为较小值，则接收端在接收一个数据帧以后，可能会没有充足的时间接收下一帧，导致无法及时处理转发报文而出现丢包现象。</p>
+<p><img src="https://ask.qcloudimg.com/http-save/yehe-8611941/f64a36d1de19609e363e9bff0ed4c587.png" alt=""></p>
+<p>我们知道以太帧的长度是可变的，但是交换机处理每一个以太帧所用的处理能力跟以太帧的长度无关。所以，在交换机的接口带宽一定的情况下，以太帧长度越短，交换机需要处理的帧数量就越多，需要耗费的处理能力也越多。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

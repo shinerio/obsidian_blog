@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis命令 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Redis命令</h1>
+        <time datetime="2026-01-03T13:04:29.193Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. redis支持数据类型</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250524173043.png" alt="image.png"></p>
+<ul>
+<li>字符串</li>
+<li>hash(key-value)</li>
+<li>list(有序列表)</li>
+<li>set(无序唯一集合)</li>
+<li>zset(有序唯一优先级队列，每个元素关联一个分数，按从小到大排列)</li>
+<li>Bitmap</li>
+<li>HyperLogLog，占用内存很小（12kb）的情况，可以用于<strong>估算</strong>接近$2^{64}-1$个元素的基数（集合去重后的数量）</li>
+<li>SUBSCRIBE与PUBLISH，发布订阅模型</li>
+<li>stream   消息队列</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>数据结构</th>
+<th>特点</th>
+<th>典型应用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>String</strong></td>
+<td>单值存储</td>
+<td>缓存、计数器、分布式锁</td>
+</tr>
+<tr>
+<td><strong>List</strong></td>
+<td>有序队列</td>
+<td>消息队列、任务调度</td>
+</tr>
+<tr>
+<td><strong>Set</strong></td>
+<td>无序不重复</td>
+<td>用户标签、去重、共同好友</td>
+</tr>
+<tr>
+<td><strong>Sorted Set</strong></td>
+<td>有序集合</td>
+<td>排行榜、延时任务</td>
+</tr>
+<tr>
+<td><strong>Hash</strong></td>
+<td>字典结构</td>
+<td>存储用户信息、购物车</td>
+</tr>
+<tr>
+<td><strong>Bitmap</strong></td>
+<td>位操作</td>
+<td>签到、活跃用户统计</td>
+</tr>
+<tr>
+<td><strong>HyperLogLog</strong></td>
+<td>近似去重</td>
+<td>UV 统计、大规模去重</td>
+</tr>
+<tr>
+<td><strong>Geo</strong></td>
+<td>地理位置存储</td>
+<td>LBS、附近的人</td>
+</tr>
+<tr>
+<td><strong>Stream</strong></td>
+<td>日志队列</td>
+<td>日志存储、消息队列</td>
+</tr>
+</tbody></table>
+<h1>2. 数据库</h1>
+<p>Redis本身支持16个数据库(0~15)，通过 数据库id 设置，默认为0</p>
+<h2>2.1. 切换DB</h2>
+<pre><code class="language-shell">select 0;
+select 10;
+</code></pre>
+<h2>2.2. 清空当前DB数据</h2>
+<pre><code class="language-shell">flushdb
+# flushdb async
+</code></pre>
+<h2>2.3. 清空当DB数据</h2>
+<pre><code class="language-shell">flushall
+flushall async
+</code></pre>
+<h1>3. bitmap</h1>
+<p>Redis Bitmap（位图） 是一种特殊的<strong>String 类型</strong>数据结构，它的本质是一个二进制数组，支持按位（bit）操作，非常适合用于高效存储和查询二进制状态，例如用户签到、活跃用户统计、设备在线状态等。</p>
+<p>在Bitmap中，每个<strong>bit 位</strong>只能是 <code>0</code> 或 <code>1</code>，可以用来表示 &quot;是/否&quot;、&quot;开/关&quot; 等布尔状态，且 <strong>存储效率极高</strong>（1 字节可以存储 8 位，1MB可以存储 <strong>8,388,608（约 800 万）个用户状态</strong>）。</p>
+<h2>3.1. SETBIT</h2>
+<p>设置某一位的值，<code>SETBIT key offset value</code></p>
+<ul>
+<li><code>key</code>：Bitmap 的键</li>
+<li><code>offset</code>：要设置的位偏移（索引），从 0 开始</li>
+<li><code>value</code>：<code>0</code> 或 <code>1</code></li>
+</ul>
+<pre><code class="language-shell">SETBIT user:1001:sign 0 1  
+# 设置第0位为 1 
+SETBIT user:1001:sign 1 1  
+# 设置第 1 位为 1 
+SETBIT user:1001:sign 2 0  
+# 设置第 2 位为 0
+</code></pre>
+<p>这表示 <code>user:1001</code> 在 <strong>第 0 天和第 1 天签到</strong>，第 2 天未签到。</p>
+<h2>3.2. GETBIT</h2>
+<p>获取某一位的值，<code>GETBIT key offset</code></p>
+<ul>
+<li><code>key</code>：Bitmap 的键</li>
+<li><code>offset</code>：要获取的位偏移（索引）</li>
+</ul>
+<pre><code class="language-shell">GETBIT user:1001:sign 0  
+# 返回 1，表示第 0 天已签到 
+GETBIT user:1001:sign 2  
+# 返回 0，表示第 2 天未签到`
+</code></pre>
+<h2>3.3. BITCOUNT</h2>
+<p>统计 Bitmap 中值为1的位，<code>BITCOUNT key [start end]</code>，左闭右闭区间</p>
+<ul>
+<li><code>key</code>：Bitmap 的键</li>
+<li><code>start</code>、<code>end</code>（可选）：字节范围（单位是字节，不是 bit），如果不提供，则统计整个 Bitmap</li>
+</ul>
+<pre><code class="language-shell">BITCOUNT user:1001:sign  
+# 统计该 Bitmap中1的个数
+BITCOUNT user:1001:sign 0 1  
+# 统计前两个字节的1的个数
+</code></pre>
+<p>假设 <code>user:1001:sign</code> 的前 7 位是 <code>1101010</code>，<code>BITCOUNT</code> 返回 <code>4</code>，表示用户这一周签到4天</p>
+<h2>3.4. BITOP</h2>
+<p>按位运算（AND、OR、XOR、NOT），<code>BITOP</code> 允许对多个 Bitmap 进行按位操作，并将结果存储到一个新的键中。<code>BITOP operation destkey key1 key2 ...</code></p>
+<ul>
+<li><code>operation</code>：支持 <code>AND</code>（与）、<code>OR</code>（或）、<code>XOR</code>（异或）、<code>NOT</code>（非）</li>
+<li><code>destkey</code>：存储计算结果的 Bitmap</li>
+<li><code>key1 key2 ...</code>：参与计算的 Bitmap</li>
+</ul>
+<pre><code class="language-shell"># 计算 user1 和 user2 的交集（即两个人都签到的天数） 
+BITOP AND both_signed user:1001:sign user:1002:sign
+# 统计共有多少天都签到
+BITCOUNT both_signed  
+</code></pre>
+<ul>
+<li><code>AND</code>（交集）：计算 <strong>多个用户都签到的天数</strong></li>
+<li><code>OR</code>（并集）：计算 <strong>至少有一个用户签到的天数</strong></li>
+<li><code>XOR</code>（异或）：计算 <strong>只签到了一方的天数</strong></li>
+<li><code>NOT</code>（取反）：计算 <strong>未签到的天数</strong></li>
+</ul>
+<h2>3.5. BITPOS</h2>
+<p>查找第一个1或0出现的位置，<code>BITPOS key bit [start end]</code></p>
+<ul>
+<li><code>bit</code>：要查找的值（<code>0</code> 或 <code>1</code>）</li>
+<li><code>start end</code>（可选）：字节范围</li>
+</ul>
+<pre><code class="language-shell"># 找到第一个 1 出现的位置 
+BITPOS user:1001:sign 1
+</code></pre>
+<p>如果 <code>user:1001:sign</code> 是 <code>0001001</code>，那么 <code>BITPOS</code> 返回 <code>3</code>（因为第3位是第一个 <code>1</code>）。</p>
+<h1>4. stream、发布订阅</h1>
+<p>✅ 消费者组共享的是整体的消费进度（last-delivered-id），但不同消费者不会共享具体的消费状态。<br>✅ 一个消息ID只能被组内一个消费者消费，除非未被 <code>XACK</code>确认。<br>✅ 如果消费者崩溃或超时，其他消费者可以通过 <code>XCLAIM</code> 夺取消息<br>✅ redis stream不提供类似kafka的多partition机制，多个消费者可以并行消费。如消费者1消费1-100，消费者2消费101-200</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Redis Stream</th>
+<th>发布/订阅（Pub/Sub）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>消息存储</strong></td>
+<td>持久化存储（可以读取历史消息）</td>
+<td>不存储消息（消息发布后不会被保留）</td>
+</tr>
+<tr>
+<td><strong>消息消费</strong></td>
+<td>多个消费者可以各自独立消费，支持消费组</td>
+<td>订阅的客户端实时接收消息，消息不会重复投递</td>
+</tr>
+<tr>
+<td><strong>历史数据</strong></td>
+<td>消费者可以读取之前的消息</td>
+<td>只能接收发布后的新消息</td>
+</tr>
+<tr>
+<td><strong>消息确认</strong></td>
+<td>消费者需要手动确认消费</td>
+<td>没有消息确认机制</td>
+</tr>
+<tr>
+<td><strong>消费模式</strong></td>
+<td>支持点对点（多个消费者不同分配消息）和广播</td>
+<td>纯粹的广播模式</td>
+</tr>
+<tr>
+<td><strong>持久化</strong></td>
+<td>支持持久化（基于 AOF 或 RDB 机制）</td>
+<td>不支持持久化</td>
+</tr>
+<tr>
+<td><strong>典型应用场景</strong></td>
+<td>日志收集、事件溯源、任务队列</td>
+<td>实时通知、事件广播</td>
+</tr>
+</tbody></table>
+<h2>4.1. redis id递增</h2>
+<p>reids id的设计考虑了时间回拨的情况，为了保证消息是有序的，因此Redis生成的ID是单调递增有序的。由于ID中包含时间戳部分，为了避免服务器时间错误而带来的问题（例如服务器时间延后了），Redis的每个Stream类型数据都维护一个latest_generated_id属性，用于记录最后一个消息的ID。<strong>若发现当前时间戳退后（小于latest_generated_id所记录的），则采用时间戳不变而序号递增的方案来作为新消息ID</strong>（这也是序号为什么使用int64的原因，保证有足够多的的序号），从而保证ID的单调递增性质。</p>
+<h1>5. 查找所有key</h1>
+<h2>5.1. scan系列命令</h2>
+<pre><code class="language-shell"># 分页查找所有key
+SCAN cursor [MATCH pattern] [COUNT count] [TYPE type]
+</code></pre>
+<p>示例  </p>
+<pre><code class="language-shell">2025-03-13 23:27:05 set name w
+OK
+2025-03-13 23:27:11 set age 19
+OK
+2025-03-13 23:31:32 FLUSHDB
+OK
+2025-03-13 23:31:38 set name shineri
+OK
+2025-03-13 23:31:43 set name shinerio
+OK
+2025-03-13 23:31:48 set age 30
+OK
+2025-03-13 23:31:53 set address beijing
+OK
+2025-03-13 23:34:15 hset person jack 20 alice 30
+2
+2025-03-13 23:34:39 sadd student jack tom mary
+3
+2025-03-13 23:35:46 zadd teach 1 xiaohong
+1
+2025-03-13 23:35:54 zadd teach 10 xiaolan
+1
+2025-03-13 23:36:09 scan 0 count 10
+1) &quot;0&quot;
+2) 1) &quot;age&quot;
+   1) &quot;teach&quot;
+   2) &quot;name&quot;
+   3) &quot;student&quot;
+   4) &quot;address&quot;
+   5) &quot;person&quot;
+2025-03-13 23:37:57 scan 0 match a* count 10
+1) &quot;0&quot;
+2) 1) &quot;age&quot;
+   1) &quot;address&quot;
+2025-03-13 23:38:49 scan 0 match *s* count 10 type string
+1) &quot;0&quot;
+2025-03-13 23:41:01 zscan teach 0
+1) &quot;0&quot;
+2) 1) &quot;xiaohong&quot;
+   1) &quot;1&quot;
+   2) &quot;xiaolan&quot;
+   3) &quot;10&quot;
+3) ) &quot;address&quot;
+2025-03-13 23:39:29 hscan person 0 count 10
+1) &quot;0&quot;
+2) 1) &quot;jack&quot;
+   1) &quot;20&quot;
+   2) &quot;alice&quot;
+2025-03-13 23:40:38 sscan student 0
+1) &quot;0&quot;
+2) 1) &quot;mary&quot;
+   1) &quot;tom&quot;
+   2) &quot;jack&quot;
+</code></pre>
+<h2>5.2. scan与smembers</h2>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th><code>SMEMBERS</code></th>
+<th><code>SCAN</code></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>返回方式</strong></td>
+<td>一次性返回所有数据</td>
+<td>迭代返回，分批获取</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td><strong>小集合</strong>（几千个以内）</td>
+<td><strong>大集合</strong>（百万/千万级）</td>
+</tr>
+<tr>
+<td><strong>是否阻塞</strong></td>
+<td><strong>阻塞</strong>（影响 Redis 其他操作）</td>
+<td><strong>非阻塞</strong>（分批遍历，不影响 Redis）</td>
+</tr>
+<tr>
+<td><strong>查询效率</strong></td>
+<td>快速获取小集合数据</td>
+<td><strong>适合大集合，减少网络传输开销</strong></td>
+</tr>
+<tr>
+<td><strong>数据一致性</strong></td>
+<td>数据不会变化（快照）</td>
+<td>可能在迭代过程中数据发生变化</td>
+</tr>
+<tr>
+<td><strong>支持模式匹配</strong></td>
+<td>❌ 不支持</td>
+<td>✅ <code>MATCH pattern</code></td>
+</tr>
+<tr>
+<td><strong>可能返回重复数据</strong></td>
+<td>❌ 不会</td>
+<td>✅ 可能，需要去重</td>
+</tr>
+<tr>
+<td><strong>COUNT 控制返回量</strong></td>
+<td>❌ 不支持</td>
+<td>✅ 支持 <code>COUNT</code>（但不保证精确数量）</td>
+</tr>
+</tbody></table>
+<h2>5.3. 什么时候用 <code>SMEMBERS</code>，什么时候用 <code>SCAN</code>？</h2>
+<ul>
+<li>✅ <strong>集合很小（&lt; 10,000）</strong> 👉 <code>SMEMBERS</code> <strong>一次性获取</strong>。</li>
+<li>✅ <strong>集合很大（&gt; 10,000）</strong> 👉 用 <code>SCAN</code> <strong>分批遍历，防止阻塞</strong>。</li>
+<li>✅ <strong>需要模式匹配（<code>MATCH</code>）</strong> 👉 用 <code>SCAN</code>（<code>SMEMBERS</code> <strong>不支持</strong> <code>MATCH</code>）。</li>
+<li>✅ <strong>不希望有重复数据，想一次拿全量数据</strong> 👉 用 <code>SMEMBERS</code>（<code>SCAN</code> 可能会返回重复项）。</li>
+</ul>
+<h2>5.4. 总结</h2>
+<ul>
+<li><code>SMEMBERS</code> 适合<strong>小集合</strong>，但<strong>大集合慎用</strong>，否则会<strong>阻塞 Redis</strong>。</li>
+<li><code>SCAN</code> 适合<strong>大集合</strong>，但可能返回重复数据，需要<strong>自己去重</strong>。</li>
+<li>如果集合元素<strong>少于 1 万</strong>，可以放心用 <code>SMEMBERS</code>；<strong>超过 1 万</strong>，建议用 <code>SCAN</code> 逐步遍历。</li>
+</ul>
+<h1>6. ref</h1>
+<p><a href="https://redis.io/docs/latest/commands/">redis命令行文档</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

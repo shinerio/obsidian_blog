@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>(五)NAT ALG - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>(五)NAT ALG</h1>
+        <time datetime="2026-01-03T13:04:29.212Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<hr>
+<p>title: NAT ALG<br>date: 2023-02-01<br>categories:</p>
+<ul>
+<li>network<br>tags:</li>
+<li>network</li>
+<li>nat</li>
+</ul>
+<hr>
+<p><code>NAT ALG</code>能够对特定的应用层协议进行转换，在对这些特定的应用层协议进行<code>NAT</code>转换过程中，通过<code>NAT</code>的会话信息来改变封装在<code>IP</code>报文载荷中的<code>IP</code>和端口信息，最终实现<code>NAT</code>下应用层协议的正常通信。在第四章中我们介绍的ICMP差错报文也可以算是NAT ALG的一种应用，本文将以<code>DNS</code>和<code>FTP</code>协议为例，详细阐述一下<code>NAT ALG</code>的工作原理。</p>
+<h1>1. DNS</h1>
+<p><a href="应用层dns协议解析dns.html" class="internal-link">应用层DNS协议解析|DNS</a>是一个应用层协议，可以根据域名获取对应的<code>IP</code>地址。这个<code>IP</code>地址是放在DNS响应报文的<code>Answers</code>字段中，而整个DNS协议报文都位于四层协议头的<code>payload</code>中，普通的NAT并不会识别并替换这个地址。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424155506.png" alt="|375"></p>
+<p><code>NAT ALG</code>服务于DNS主要有以下两种场景：</p>
+<ol>
+<li>私网的客户端访问公网上的DNS服务器进行A查询，根据域名获得私网服务器的私网IP地址。由于公网的DNS服务器解析的是公网地址，因此需要通过<code>NAT ALG</code>将DNS响应报文中的<code>Answers</code>字段中的公网地址替换为内网主机可以访问的私网IP。</li>
+<li>公网的客户端访问私网上的DNS服务器进行A查询，根据域名获得内网服务器的公网IP地址。由于私网的DNS服务器解析的是私网地址，因此需要通过<code>NAT ALG</code>将DNS响应报文中的<code>Answers</code>字段中的私网地址替换为公网主机可以访问的公网IP。</li>
+</ol>
+<h1>2. FTP</h1>
+<p>FTP有两种不同工作模式：PORT（主动模式）与PASV（被动模式）。两种模式都需要用到两个连接：控制连接与数据连接，控制连接专门用于FTP控制命令及命令执行信息传输，数据连接专门用于传输数据。</p>
+<h2>2.1. 主动模式</h2>
+<p>未经过NAT设备的通信过程如下：</p>
+<ol>
+<li>客户端用端口N与FTP服务器的21端口建立一个控制通道，发送一条命令告诉FTP服务端（即通常说的PORT命令），我的数据通道的通信地址是IP1，数据通道的端口N+1，服务端收到请求后回复ACK确认。</li>
+<li>服务端确认后，用源端口20主动与客户端IP1:N+1建立连接，进行数据通信。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307052323754.png" alt="image.png"></li>
+</ol>
+<p>主动模式下，客户端的ip和端口放在了载荷中，因此这里我们假设客户端在NAT设备环境下（内网），服务端在外网，经过支持NAT ALG设备后的通信过程如下：</p>
+<ol>
+<li>客户端用端口internalPort与FTP服务器的21端口建立一个控制通道，发送一条命令告诉FTP服务端（即通常说的PORT命令），我的数据通道的通信地址是internalPort，数据通道的端口internalPort+1。</li>
+<li>报文到达NAT设备，NAT设备识别是FTP协议后，将IP报文的源IP替换为transitIp，源端口替换为transitPort_N，将载荷部分的数据通道通信地址IP1也替换为transitIp，数据通道的端口替换为transitPort_M。此时NAT设备需要生成两个会话，分别用于控制信道和数据信道。</li>
+<li>服务端确认后，用源端口20主动与客户端transitIp:transitPort_M建立连接，进行数据通信。</li>
+<li>报文到达NAT设备，NAT设备根据数据信道会话将目的ip和端口替换为internalIp和internalPort+1，发送到内网。</li>
+</ol>
+<h2>2.2. 被动模式</h2>
+<p>未经过NAT设备的通信过程如下：</p>
+<ol>
+<li>客户端使用ip1和端口N与FTP服务端(ip2，端口21)建立一个控制通道，发送一条命令告诉服务端（即通常说的PASV命令），我将使用被动模式与你通信。服务端收请求后，会告知客户端我的IP是ip2和监听端口M，你可以和我的这个IP和端口通信。</li>
+<li>客户端收到信息后，使用源端口N+1，与服务端ip2:M建立连接，进行数据通信。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307052345354.png" alt="image.png"></li>
+</ol>
+<p>被动模式下服务端的ip和端口被放在了报文载荷中，因此这里我们假设服务端在NAT设备环境下（内网），客户端在外网，经过支持NAT ALG设备后的通信过程如下：</p>
+<ol>
+<li>客户端使用externalIp和端口externalPort与FTP服务端(ip为transitIp，端口transitPort_N)建立一个控制通道，发送一条命令告诉服务端（即通常说的PASV命令），我将使用被动模式与你通信。</li>
+<li>【配置DNAT】报文到达NAT设备后，将目的ip替换为internalIp，目的端口替换为internalPort（通常为21）。</li>
+<li>服务端收请求后，会告知客户端我的IP是internalIp和监听端口internalPort，你可以和我的这个IP和端口通信。</li>
+<li>【配置SNAT】报文到达NAT设备后，NAT设备识别是FTP协议后，将源IP替换为transitIp，源端口替换为transitPort_N，同时将载荷部署的数据通道通信地址替换为transitIp，端口替换为transitPort_M，并生成会话。</li>
+<li>客户端收到信息后，使用源端口externalPort+1，与服务端transitIp:transitPort_M建立连接，进行数据通信。</li>
+<li>报文到达NAT设备后，匹配已生成会话，将数据报文目的IP替换为internalIp，目的端口替换为internalPort。</li>
+</ol>
+<h1>3. 多通道协议与动态会话</h1>
+<p>传统的NAT会话都是由内网主机发起的某条流触发生成的，会话也只对这条流生效，根据ip报文的五元组进行匹配和转换。为了适应某些多通道协议，NAT ALG除了根据ip头的五元组生成会话外，还需要根据ip报文载荷中可能包含的ip和端口信息生成额外的会话以支撑其他通道的正常流量转发。</p>
+<h1>4. 参考链接</h1>
+<ol>
+<li><a href="https://www.ctfiot.com/6506.html">防火墙ALG技术之DNS协议穿墙术</a></li>
+<li><a href="http://www.h3c.com/cn/d_201206/922132_30005_0.htm">NAT ALG原理与应用-新华三集团-H3C</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tcp重传 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Tcp重传</h1>
+        <time datetime="2026-01-03T13:04:29.212Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. tcp超时重传</h1>
+<p>重传机制的其中一个方式，就是在发送数据时，设定一个定时器，当超过指定的时间后，没有收到对方的<code>ACK</code>确认应答报文，就会重发该数据，也就是我们常说的<strong>超时重传</strong>。</p>
+<p>TCP 会在以下两种情况发生超时重传：</p>
+<ul>
+<li>数据包丢失</li>
+<li>确认应答丢失<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250321195920058.png" alt="image.png"></li>
+</ul>
+<h2>1.1. RTT与RTO</h2>
+<ul>
+<li>RTT(Roud Trip Time): 往返时延，从数据包发出去到接收到ACK的时间。RTT是连接粒度的，每个连接都有一个独立的RTT</li>
+<li>RTO(Retransmission Time Out)：重传时间<br>!<a href="性能指标7-往返时间round-trip-timertt.html" class="internal-link">性能指标<span class="tag">#7</span>. 往返时间(Round-Trip Time，RTT)</a></li>
+</ul>
+<p>超时重传时间是以 <code>RTO</code> （Retransmission Timeout 超时重传时间）表示。</p>
+<blockquote>
+<p>[!question]<br>假设在重传的情况下，超时时间 <code>RTO</code> 「较长或较短」时，会发生什么事情呢？</p>
+</blockquote>
+<ul>
+<li>当超时时间 <strong>RTO 较大</strong>时，重发就慢，丢了老半天才重发，没有效率，性能差；</li>
+<li>当超时时间 <strong>RTO 较小</strong>时，会导致可能并没有丢就重发，于是重发的就快，会增加网络拥塞，导致更多的超时，更多的超时导致更多的重发。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250321200710916.png" alt="image.png"></li>
+</ul>
+<p>精确的测量超时时间 <code>RTO</code> 的值是非常重要的，这可让我们的重传机制更高效，超时重传时间 RTO 的值应该略大于报文往返 RTT 的值。</p>
+<h2>1.2. RTT经典计算方案</h2>
+<p>最初的规范[RFC0793](<a href="https://www.rfc-editor.org/rfc/rfc793">https://www.rfc-editor.org/rfc/rfc793</a><span class="tag">#section-2</span>.8)采用了加权滑动平均来估算RTT，即SRTT(Smoothed Round Trip Time)</p>
+<pre><code>SRTT = ( ALPHA * SRTT ) + ((1-ALPHA) * RTT)
+</code></pre>
+<p>RTO计算如下，其中<code>UBOUND</code>是timeout的上限（1min），LBOUND是timeout的下限（1s），ALPHA是加权因子（0.8-0.9），BETA是时延方差系数（1.3-2）</p>
+<pre><code>RTO = min[UBOUND,max[LBOUND,(BETA*SRTT)]]
+</code></pre>
+<h3>1.2.1. 存在的问题</h3>
+<h4>1.2.1.1. 二义性</h4>
+<p><a href="https://link.zhihu.com/?target=https%3A//tools.ietf.org/html/rfc1122%23page-95">RFC1122</a> 指出当出现数据包重传的情况下，RTT的计算会出现二义性。在测量RTT样本的过程中若一个包的传输出现超时，该数据就会被重传，接着收到一条ACK信息，那么该ACK是对第一条还是第二条传输的确认就存在这二义性。对于客户端来说，它不知道发生了哪种情况，选错情况的结果就是RTT偏大/偏小，影响到RTO的计算。（最简单粗暴的解决方法就是忽略有重传的数据包，只计算那些没重传过的，但这样会导致在网络环境突然恶化的场景下，大量重传数据包没有被用来计算RTT，导致RTO无法更新，进而导致每一个分片报文都一直被重传，详见 <a href="https://link.zhihu.com/?target=https%3A//en.wikipedia.org/wiki/Karn%2527s_algorithm">Karn&#39;s algorithm</a>）</p>
+<h4>1.2.1.2. 网络性能恶化加剧</h4>
+<p>RTT的加权平均算法，ALPHA系数一般都比较大，本质上是一个低通滤波器，对突然的网络波动不敏感，如果网络时延突然增加会导致实际RTT值大于预估值，导致不必要的重传，加重网络负担。</p>
+<h2>1.3. RTT最新方案</h2>
+<p><a href="https://link.zhihu.com/?target=https%3A//tools.ietf.org/html/rfc6298">RFC6298</a> 提出基于滑动平均值SRTT和平均偏差RTTV(Round-Trip-Time variation)来综合计算，在大数据实验的基础上通过调参得到一个控制系数<code>K</code>，一般为4。此外，该算法假设系统时间粒度为<code>G</code>秒，即差值的最小值。</p>
+<ol>
+<li>RTO设置为LOUND，即1s</li>
+<li>第一个RTT(R)计算出来</li>
+</ol>
+<pre><code>SRTT=R
+RTTVAR=R/2
+RTO=SRTT + max(G, K * RTTVAR)
+</code></pre>
+<ol start="3">
+<li>对于后续每一个RTT（R&#39;）</li>
+</ol>
+<pre><code>RTTVAR =  (1 - beta) * RTTVAR + beta * |SRTT - R&#39;|
+SRTT = (1 - alpha) * SRTT + alpha * R&#39;
+RTO = SRTT + max(G, K * RTTVAR)
+</code></pre>
+<h2>1.4. 重传机制</h2>
+<p>如果超时重发的数据，再次超时的时候，又需要重传的时候，TCP 的策略是<strong>超时间隔加倍</strong>。也就是每当遇到一次超时重传的时候，都会将下一次超时时间间隔设为先前值的两倍。tcp_retries2用于控制tcp重传的次数，若发生网络中断，预估需要15min以上才会放弃连接。</p>
+<pre><code class="language-shell">root@vultr:~# cat /proc/sys/net/ipv4/tcp_retries2
+15
+root@vultr:~# sysctl net.ipv4.tcp_retries2
+net.ipv4.tcp_retries2 = 15
+</code></pre>
+<h1>2. 快速重传</h1>
+<p>TCP 还有另外一种<strong>快速重传（Fast Retransmit）机制</strong>，它<strong>不以时间为驱动，而是以数据驱动重传</strong>。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250321204549278.png" alt="image.png"><br>在上图，发送方发出了 1，2，3，4，5 份数据：</p>
+<ul>
+<li>第一份 Seq1 先送到了，于是就 Ack 回 2；</li>
+<li>结果 Seq2 因为某些原因没收到，Seq3 到达了，于是还是 Ack 回 2；</li>
+<li>后面的 Seq4 和 Seq5 都到了，但还是 Ack 回 2，因为 Seq2 还是没有收到；</li>
+<li>发送端收到了三个 Ack = 2 的确认，知道了 Seq2 还没有收到，就会在定时器过期之前，重传丢失的 Seq2。</li>
+<li>最后，收到了 Seq2，此时因为 Seq3，Seq4，Seq5 都收到了，于是 Ack 回 6 。<blockquote>
+<p>[!note]<br>快速重传的工作方式是当收到三个相同的 ACK 报文时，会在定时器过期之前，重传丢失的报文段。</p>
+</blockquote>
+</li>
+</ul>
+<h1>3. SACK</h1>
+<p>快速重传机制只解决了一个问题，就是超时时间的问题，但是它依然面临着另外一个问题。就是<strong>重传的时候，是重传之前的一个，还是重传所有的问题。</strong></p>
+<p>比如对于上面的例子，是重传 Seq2 呢？还是重传 Seq2、Seq3、Seq4、Seq5 呢？因为发送端并不清楚这连续的三个Ack 2是谁传回来的，以上两种情况都是有可能的。可见，这是一把双刃剑。为了解决不知道该重传哪些 TCP 报文，于是就有 <code>SACK</code> 方法。</p>
+<p>这种方式需要在 TCP 头部「选项」字段里加一个 <code>SACK</code> 的东西，它可以将<strong>已经接收到缓存队列的seq信息</strong>发送给发送方，这样发送方就可以知道哪些数据收到了，哪些数据没收到，知道了这些信息，就可以<strong>只重传丢失的数据</strong>。</p>
+<p>如下图，发送方收到了三次同样的 ACK 确认报文，于是就会触发快速重发机制，通过 <code>SACK</code> 信息发现只有 <code>200~299</code> 这段数据丢失，则重发时，就只选择了这个 TCP 段进行重复。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250321205036819.png" alt="image.png"></p>
+<blockquote>
+<p>[!note]<br>如果要支持 <code>SACK</code>，必须双方都要支持。在 Linux 下，可以通过 <code>net.ipv4.tcp_sack</code> 参数打开这个功能（Linux 2.4 后默认打开）。</p>
+</blockquote>
+<pre><code class="language-shell">root@vultr:~# sysctl net.ipv4.tcp_sack
+net.ipv4.tcp_sack = 1
+</code></pre>
+<h1>4. Duplicate SACK</h1>
+<p>Duplicate SACK 又称 <code>D-SACK</code>，其主要使用了SACK来告诉「发送方」有哪些数据被重复接收了。</p>
+<blockquote>
+<p>[!note]<br>sack表现是ack小与sack，代表丢数据了，但是我可以提前ack后面的；D-sack表现是ack大于sack，说明数据重复了，你发给我的数据我已经ack过了。</p>
+</blockquote>
+<h2>4.1. ACK丢包</h2>
+<ul>
+<li>「接收方」发给「发送方」的两个 ACK 确认应答都丢失了，所以发送方超时后，重传第一个数据包（3000 ~ 3499）</li>
+<li>「接收方」发现数据是重复收到的，于是回了一个 SACK = 3000<del>3500，告诉「发送方」 3000</del>3500 的数据早已被接收了，因为ACK都到了 4000 了，已经意味着 4000之前的所有数据都已收到，所以这个 SACK 就代表着 <code>D-SACK</code>。</li>
+<li>这样「发送方」就知道了，数据没有丢，是「接收方」的 ACK 确认报文丢了。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250321205427398.png" alt="image.png"></li>
+</ul>
+<h2>4.2. 网络时延</h2>
+<ul>
+<li>数据包（1000~1499） 被网络延迟了，导致「发送方」没有收到 Ack 1500 的确认报文。</li>
+<li>而后面报文到达的三个相同的 ACK 确认报文，就触发了快速重传机制，但是在重传后，被延迟的数据包（1000~1499）又到了「接收方」；</li>
+<li><strong>所以「接收方」回了一个 SACK=1000~1500，因为 ACK 已经到了 3000，所以这个 SACK 是 D-SACK，表示收到了重复的包。</strong></li>
+<li>这样发送方就知道快速重传触发的原因不是发出去的包丢了，也不是因为回应的 ACK 包丢了，而是因为网络延迟了。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250321205913392.png" alt="image.png"></li>
+</ul>
+<h2>4.3. 优势</h2>
+<p>在TCP重传场景下，Duplicate SACK (D-SACK) 是TCP选择性确认 (SACK) 机制的一个扩展，具有以下重要作用：</p>
+<ol>
+<li><strong>检测重复数据包接收</strong>：D-SACK允许接收方通知发送方它收到了重复的数据段，无论这些重复段是否在接收方的当前接收窗口内。</li>
+<li><strong>区分网络问题类型</strong>：<ul>
+<li>帮助发送方区分是网络延迟导致的数据包重排，还是数据包丢失</li>
+<li>区分数据包被网络复制还是发送方重传导致的重复</li>
+</ul>
+</li>
+<li><strong>改进拥塞控制</strong>：<ul>
+<li>通过正确识别非拥塞丢包情况，避免不必要的拥塞窗口缩小</li>
+<li>当重复包是由网络延迟而非丢包引起时，可以避免错误的重传超时调整</li>
+</ul>
+</li>
+<li><strong>优化重传策略</strong>：<ul>
+<li>减少不必要的重传，提高网络带宽利用率</li>
+<li>允许更精确地计算往返时间(RTT)</li>
+</ul>
+</li>
+<li><strong>提高网络性能</strong>：<ul>
+<li>特别是在无线网络等高丢包环境中效果显著</li>
+<li>减少由于错误解读网络状况而导致的性能下降<br>D-SACK是在RFC 2883中定义的，它通过允许接收方报告重复收到的数据段，使TCP协议能够更智能地应对网络中的各种异常情况，从而提高网络传输效率和可靠性。<blockquote>
+<p>[!note]<br>在 Linux 下可以通过 <code>net.ipv4.tcp_dsack</code> 参数开启/关闭这个功能（Linux 2.4 后默认打开)</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ol>
+<h1>5. tcp user timeout</h1>
+<p>可以针对不同应用设置超时时间，当数据发送超过设置时间后仍然没有ack，或者迟迟读不到数据，就放弃链接。tcp user timouet可以使用setsockopt函数实现。</p>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;sys/socket.h&gt;
+int setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen);
+</code></pre>
+<ul>
+<li><strong>sockfd</strong>：套接字描述符，指定要设置选项的套接字。</li>
+<li><strong>level</strong>：协议级别，指定选项所在的协议层。常见值包括：<ul>
+<li><code>SOL_SOCKET</code>：套接字层级选项</li>
+<li><code>IPPROTO_TCP</code>：TCP协议选项</li>
+<li><code>IPPROTO_IP</code>：IP协议选项</li>
+<li><code>IPPROTO_IPV6</code>：IPv6协议选项</li>
+</ul>
+</li>
+<li><strong>optname</strong>：选项名称，指定要设置的特定选项。不同协议层有不同的选项，例如：<ul>
+<li><code>SO_REUSEADDR</code>、<code>SO_KEEPALIVE</code>（套接字层）</li>
+<li><code>TCP_NODELAY</code>、<code>TCP_USER_TIMEOUT</code>（TCP层）</li>
+<li><code>IP_TTL</code>（IP层）</li>
+</ul>
+</li>
+<li><strong>optval</strong>：选项值的指针，指向包含新选项值的缓冲区。</li>
+<li><strong>optlen</strong>：<code>optval</code> 缓冲区的大小（以字节为单位）。</li>
+</ul>
+<h2>5.1. 控制tcp连接超时时间</h2>
+<p>具体来说，TCP_USER_TIMEOUT定义了TCP在放弃连接之前等待未确认数据的最长时间。当一个TCP连接<strong>已经建立</strong>，并且发送方发送了数据但长时间没有收到确认（ACK）时，这个参数决定了发送方等待多久后认为连接失效。</p>
+<ul>
+<li><strong>不控制建立连接的超时</strong>：TCP 连接建立（三次握手）的超时通常由系统内核参数如 <code>tcp_syn_retries</code> 控制，或者在应用程序中通过 <code>connect()</code> 调用的超时机制控制。</li>
+<li><strong>控制数据传输过程中的超时</strong>：当连接<strong>已建立</strong>，并且有未确认的数据时才生效。</li>
+</ul>
+<pre><code class="language-c">int timeout = 30000;  // 30秒（毫秒为单位）
+setsockopt(sockfd, IPPROTO_TCP, TCP_USER_TIMEOUT, &amp;timeout, sizeof(timeout));
+</code></pre>
+<h2>5.2. 用途</h2>
+<p>主要用于检测网络异常导致的对端无响应情况，特别是在长连接应用中，可以更早地检测到连接断开，而不是一直等待TCP的默认重传机制耗尽，在java应用中可以通过设置<a href="数据库关键配置1-sockettimeoutsockettimeout.html" class="internal-link">数据库关键配置<span class="tag">#1</span>. socketTimeout|socketTimeout</a>控制。</p>
+<h1>6. ref</h1>
+<p><a href="https://www.cnblogs.com/zafu/p/18266870">tcp重传时间 tcp_retries2 tcp 重传机制</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

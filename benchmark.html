@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Benchmark - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Benchmark</h1>
+        <time datetime="2026-01-03T13:04:29.151Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>Go语言标准库内置的testing测试框架提供了基准测试(benchmark)的能力，能让我们很容易地对某一段代码进行性能测试。</p>
+<p>本文中会对斐波那契数列进行基准测试</p>
+<pre><code class="language-go">// fib.go
+package main
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+</code></pre>
+<p>创建一个基准测试用例</p>
+<ul>
+<li>Benchmark测试文件必须以filename加<code>_test</code>结尾</li>
+<li>方法名必须以<code>Benachmark</code>开头</li>
+<li>测试参数必须为<code>b *testing.B</code></li>
+</ul>
+<pre><code class="language-go">// fib_test.go
+package main
+
+import &quot;testing&quot;
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &lt; b.N; n++ {
+        fib(30) // run fib(30) b.N times
+    }
+}
+</code></pre>
+<h1>1. 执行benchmark测试用例</h1>
+<p>执行基准测试用例可以使用命令<code>go test -bench .</code>，这个命令会执行所有基准用例。</p>
+<pre><code class="language-shell">go test -bench .
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12              252           4840508 ns/op
+PASS
+ok      go_test 1.948s
+</code></pre>
+<p>输入结果含义如下：</p>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>goos</td>
+<td>操作系统，这里是windows</td>
+</tr>
+<tr>
+<td>goarch</td>
+<td>CPU架构，这里是64位X86</td>
+</tr>
+<tr>
+<td>pkg</td>
+<td>package名，可以在测试的时候指定package</td>
+</tr>
+<tr>
+<td>cpu</td>
+<td>CPU的信息，这里可以看到是AMD Ryzen 5</td>
+</tr>
+<tr>
+<td>-12</td>
+<td>代表cpu有12个核</td>
+</tr>
+<tr>
+<td>252</td>
+<td>代表b.N的最大值为252</td>
+</tr>
+<tr>
+<td>4840509</td>
+<td>代表for循环了252次，平均每次的耗时约为4.84ms</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>[!question]<br>benchmark用例的参数 <code>b *testing.B</code>，有个属性<code>b.N</code>表示这个用例需要运行的次数。<code>b.N</code> 对于每个用例都是不一样的，那这个值是如何决定的呢？</p>
+</blockquote>
+<p><code>b.N</code> 从1开始，如果该用例能够在 1s 内完成，<code>b.N</code> 的值便会增加，再次执行。<code>b.N</code> 的值大概以 1, 2, 3, 5, 10, 20, 30, 50, 100 这样的序列递增，越到后面，增加得越快。测试结果的输出是以最后一次运行超过1秒的结果为结论的，也就是预热阶段（b.N逐步增长）的耗时并不会被统计和呈现。</p>
+<blockquote>
+<p>[!note]<br>实际执行的时间是1.948s，比 benchtime的1s要长，测试用例编译、执行、销毁等是需要时间的。</p>
+</blockquote>
+<h1>2. ns/op计算</h1>
+<p>ns/op是通过如下公式计算得到：<code>总执行时间 ÷ 操作次数(b.N) = 每次操作平均时间</code><br>在这个Go语言基准测试代码中，<code>for</code>循环是基准测试框架的必要部分。这个循环的目的是确保测试函数执行足够多次，以获得准确的性能测量结果。具体来说，<code>for n := 0; n &lt; b.N; n++</code>这个循环有以下几个重要作用：</p>
+<ol>
+<li><code>b.N</code>是Go测试框架自动确定的循环次数。测试框架会动态调整这个值，以确保测试运行的总时间足够长，能够得到统计学上有意义的结果。</li>
+<li>通过多次执行相同的函数调用(<code>fib(30)</code>)，基准测试可以计算出平均执行时间，这比只执行一次更能准确反映函数的实际性能。</li>
+<li>这种方法能够消除或减少单次测量中可能出现的系统波动和干扰因素的影响。</li>
+<li>如果没有这个循环，基准测试只会执行一次<code>fib(30)</code>，最后得出来的ns/op会被缩小了b.N倍。</li>
+</ol>
+<p>我们可以通过如下两个例子来理解for循环的作用。</p>
+<pre><code class="language-go">package test
+
+import (
+    &quot;testing&quot;
+    &quot;time&quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &lt; b.N; n++ {
+        time.Sleep(time.Duration(10) * time.Millisecond) // run fib(30) b.N times
+    }
+}
+</code></pre>
+<p>输出结果ns/op约等于10ms，符合预期</p>
+<pre><code class="language-shell">goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	     100	  10519669 ns/op
+PASS
+</code></pre>
+<p>如果把for循环删除</p>
+<pre><code class="language-go">package test  
+  
+import (  
+    &quot;testing&quot;  
+    &quot;time&quot;)  
+  
+func fib(n int) int {  
+    if n == 0 || n == 1 {  
+       return n  
+    }  
+    return fib(n-2) + fib(n-1)  
+}  
+  
+func BenchmarkFib(b *testing.B) {  
+    time.Sleep(time.Duration(10) * time.Millisecond)  
+}
+</code></pre>
+<p>输出如下，ns/op被正好缩小了1000000000倍</p>
+<pre><code class="language-shell">goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	1000000000	         0.01012 ns/op
+PASS
+</code></pre>
+<h1>3. 命令参数</h1>
+<h2>3.1. 匹配规则</h2>
+<ul>
+<li>在有多个Benchmark测试方法的时候，如何做到只运行指定的方法呢？</li>
+</ul>
+<h3>3.1.1. 指定package</h3>
+<ol>
+<li>指定package：<code>go test -bench my-package</code></li>
+<li>指定子package：<code>go test -bench my-package/sub-package</code></li>
+<li>当前目录下的所有<code>package：go test -bench ./…</code> （斜杠左侧是一个点，右侧是三个点）</li>
+</ol>
+<h3>3.1.2. 指定方法</h3>
+<p>可以用正则表达式来指定方法名</p>
+<ol>
+<li>所有以Fib结尾的方法：<code>go test -bench=&#39;Fib&lt;p&gt;Go语言标准库内置的testing测试框架提供了基准测试(benchmark)的能力，能让我们很容易地对某一段代码进行性能测试。&lt;/p&gt;
+&lt;p&gt;本文中会对斐波那契数列进行基准测试&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;// fib.go
+package main
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;创建一个基准测试用例&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Benchmark测试文件必须以filename加&lt;code&gt;_test&lt;/code&gt;结尾&lt;/li&gt;
+&lt;li&gt;方法名必须以&lt;code&gt;Benachmark&lt;/code&gt;开头&lt;/li&gt;
+&lt;li&gt;测试参数必须为&lt;code&gt;b *testing.B&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;// fib_test.go
+package main
+
+import &amp;quot;testing&amp;quot;
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        fib(30) // run fib(30) b.N times
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;1. 执行benchmark测试用例&lt;/h1&gt;
+&lt;p&gt;执行基准测试用例可以使用命令&lt;code&gt;go test -bench .&lt;/code&gt;，这个命令会执行所有基准用例。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench .
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12              252           4840508 ns/op
+PASS
+ok      go_test 1.948s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;输入结果含义如下：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名称&lt;/th&gt;
+&lt;th&gt;含义&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;goos&lt;/td&gt;
+&lt;td&gt;操作系统，这里是windows&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;goarch&lt;/td&gt;
+&lt;td&gt;CPU架构，这里是64位X86&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;pkg&lt;/td&gt;
+&lt;td&gt;package名，可以在测试的时候指定package&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;cpu&lt;/td&gt;
+&lt;td&gt;CPU的信息，这里可以看到是AMD Ryzen 5&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;-12&lt;/td&gt;
+&lt;td&gt;代表cpu有12个核&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;252&lt;/td&gt;
+&lt;td&gt;代表b.N的最大值为252&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4840509&lt;/td&gt;
+&lt;td&gt;代表for循环了252次，平均每次的耗时约为4.84ms&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!question]&lt;br&gt;benchmark用例的参数 &lt;code&gt;b *testing.B&lt;/code&gt;，有个属性&lt;code&gt;b.N&lt;/code&gt;表示这个用例需要运行的次数。&lt;code&gt;b.N&lt;/code&gt; 对于每个用例都是不一样的，那这个值是如何决定的呢？&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;b.N&lt;/code&gt; 从1开始，如果该用例能够在 1s 内完成，&lt;code&gt;b.N&lt;/code&gt; 的值便会增加，再次执行。&lt;code&gt;b.N&lt;/code&gt; 的值大概以 1, 2, 3, 5, 10, 20, 30, 50, 100 这样的序列递增，越到后面，增加得越快。测试结果的输出是以最后一次运行超过1秒的结果为结论的，也就是预热阶段（b.N逐步增长）的耗时并不会被统计和呈现。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!note]&lt;br&gt;实际执行的时间是1.948s，比 benchtime的1s要长，测试用例编译、执行、销毁等是需要时间的。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h1&gt;2. ns/op计算&lt;/h1&gt;
+&lt;p&gt;ns/op是通过如下公式计算得到：&lt;code&gt;总执行时间 ÷ 操作次数(b.N) = 每次操作平均时间&lt;/code&gt;&lt;br&gt;在这个Go语言基准测试代码中，&lt;code&gt;for&lt;/code&gt;循环是基准测试框架的必要部分。这个循环的目的是确保测试函数执行足够多次，以获得准确的性能测量结果。具体来说，&lt;code&gt;for n := 0; n &amp;lt; b.N; n++&lt;/code&gt;这个循环有以下几个重要作用：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;b.N&lt;/code&gt;是Go测试框架自动确定的循环次数。测试框架会动态调整这个值，以确保测试运行的总时间足够长，能够得到统计学上有意义的结果。&lt;/li&gt;
+&lt;li&gt;通过多次执行相同的函数调用(&lt;code&gt;fib(30)&lt;/code&gt;)，基准测试可以计算出平均执行时间，这比只执行一次更能准确反映函数的实际性能。&lt;/li&gt;
+&lt;li&gt;这种方法能够消除或减少单次测量中可能出现的系统波动和干扰因素的影响。&lt;/li&gt;
+&lt;li&gt;如果没有这个循环，基准测试只会执行一次&lt;code&gt;fib(30)&lt;/code&gt;，最后得出来的ns/op会被缩小了b.N倍。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;我们可以通过如下两个例子来理解for循环的作用。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package test
+
+import (
+    &amp;quot;testing&amp;quot;
+    &amp;quot;time&amp;quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        time.Sleep(time.Duration(10) * time.Millisecond) // run fib(30) b.N times
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;输出结果ns/op约等于10ms，符合预期&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	     100	  10519669 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果把for循环删除&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package test  
+  
+import (  
+    &amp;quot;testing&amp;quot;  
+    &amp;quot;time&amp;quot;)  
+  
+func fib(n int) int {  
+    if n == 0 || n == 1 {  
+       return n  
+    }  
+    return fib(n-2) + fib(n-1)  
+}  
+  
+func BenchmarkFib(b *testing.B) {  
+    time.Sleep(time.Duration(10) * time.Millisecond)  
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;输出如下，ns/op被正好缩小了1000000000倍&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	1000000000	         0.01012 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;3. 命令参数&lt;/h1&gt;
+&lt;h2&gt;3.1. 匹配规则&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;在有多个Benchmark测试方法的时候，如何做到只运行指定的方法呢？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;3.1.1. 指定package&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;指定package：&lt;code&gt;go test -bench my-package&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;指定子package：&lt;code&gt;go test -bench my-package/sub-package&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;当前目录下的所有&lt;code&gt;package：go test -bench ./…&lt;/code&gt; （斜杠左侧是一个点，右侧是三个点）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;3.1.2. 指定方法&lt;/h3&gt;
+&lt;p&gt;可以用正则表达式来指定方法名&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;所有以Fib结尾的方法：&lt;code&gt;go test -bench=&amp;#39;Fib&lt;article&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Benchmark&lt;/h1&gt;
+        &lt;time datetime=&quot;2026-01-03T13:04:29.151Z&quot;&gt;2026年1月3日&lt;/time&gt;
+        &lt;div class=&quot;tags&quot;&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;section class=&quot;content&quot;&gt;
+        {&lt;p&gt;Go语言标准库内置的testing测试框架提供了基准测试(benchmark)的能力，能让我们很容易地对某一段代码进行性能测试。&lt;/p&gt;
+&lt;p&gt;本文中会对斐波那契数列进行基准测试&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;// fib.go
+package main
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;创建一个基准测试用例&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Benchmark测试文件必须以filename加&lt;code&gt;_test&lt;/code&gt;结尾&lt;/li&gt;
+&lt;li&gt;方法名必须以&lt;code&gt;Benachmark&lt;/code&gt;开头&lt;/li&gt;
+&lt;li&gt;测试参数必须为&lt;code&gt;b *testing.B&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;// fib_test.go
+package main
+
+import &amp;quot;testing&amp;quot;
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        fib(30) // run fib(30) b.N times
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;1. 执行benchmark测试用例&lt;/h1&gt;
+&lt;p&gt;执行基准测试用例可以使用命令&lt;code&gt;go test -bench .&lt;/code&gt;，这个命令会执行所有基准用例。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench .
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12              252           4840508 ns/op
+PASS
+ok      go_test 1.948s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;输入结果含义如下：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;名称&lt;/th&gt;
+&lt;th&gt;含义&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;goos&lt;/td&gt;
+&lt;td&gt;操作系统，这里是windows&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;goarch&lt;/td&gt;
+&lt;td&gt;CPU架构，这里是64位X86&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;pkg&lt;/td&gt;
+&lt;td&gt;package名，可以在测试的时候指定package&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;cpu&lt;/td&gt;
+&lt;td&gt;CPU的信息，这里可以看到是AMD Ryzen 5&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;-12&lt;/td&gt;
+&lt;td&gt;代表cpu有12个核&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;252&lt;/td&gt;
+&lt;td&gt;代表b.N的最大值为252&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;4840509&lt;/td&gt;
+&lt;td&gt;代表for循环了252次，平均每次的耗时约为4.84ms&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!question]&lt;br&gt;benchmark用例的参数 &lt;code&gt;b *testing.B&lt;/code&gt;，有个属性&lt;code&gt;b.N&lt;/code&gt;表示这个用例需要运行的次数。&lt;code&gt;b.N&lt;/code&gt; 对于每个用例都是不一样的，那这个值是如何决定的呢？&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;b.N&lt;/code&gt; 从1开始，如果该用例能够在 1s 内完成，&lt;code&gt;b.N&lt;/code&gt; 的值便会增加，再次执行。&lt;code&gt;b.N&lt;/code&gt; 的值大概以 1, 2, 3, 5, 10, 20, 30, 50, 100 这样的序列递增，越到后面，增加得越快。测试结果的输出是以最后一次运行超过1秒的结果为结论的，也就是预热阶段（b.N逐步增长）的耗时并不会被统计和呈现。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!note]&lt;br&gt;实际执行的时间是1.948s，比 benchtime的1s要长，测试用例编译、执行、销毁等是需要时间的。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h1&gt;2. ns/op计算&lt;/h1&gt;
+&lt;p&gt;ns/op是通过如下公式计算得到：&lt;code&gt;总执行时间 ÷ 操作次数(b.N) = 每次操作平均时间&lt;/code&gt;&lt;br&gt;在这个Go语言基准测试代码中，&lt;code&gt;for&lt;/code&gt;循环是基准测试框架的必要部分。这个循环的目的是确保测试函数执行足够多次，以获得准确的性能测量结果。具体来说，&lt;code&gt;for n := 0; n &amp;lt; b.N; n++&lt;/code&gt;这个循环有以下几个重要作用：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;b.N&lt;/code&gt;是Go测试框架自动确定的循环次数。测试框架会动态调整这个值，以确保测试运行的总时间足够长，能够得到统计学上有意义的结果。&lt;/li&gt;
+&lt;li&gt;通过多次执行相同的函数调用(&lt;code&gt;fib(30)&lt;/code&gt;)，基准测试可以计算出平均执行时间，这比只执行一次更能准确反映函数的实际性能。&lt;/li&gt;
+&lt;li&gt;这种方法能够消除或减少单次测量中可能出现的系统波动和干扰因素的影响。&lt;/li&gt;
+&lt;li&gt;如果没有这个循环，基准测试只会执行一次&lt;code&gt;fib(30)&lt;/code&gt;，最后得出来的ns/op会被缩小了b.N倍。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;我们可以通过如下两个例子来理解for循环的作用。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package test
+
+import (
+    &amp;quot;testing&amp;quot;
+    &amp;quot;time&amp;quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        time.Sleep(time.Duration(10) * time.Millisecond) // run fib(30) b.N times
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;输出结果ns/op约等于10ms，符合预期&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	     100	  10519669 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果把for循环删除&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package test  
+  
+import (  
+    &amp;quot;testing&amp;quot;  
+    &amp;quot;time&amp;quot;)  
+  
+func fib(n int) int {  
+    if n == 0 || n == 1 {  
+       return n  
+    }  
+    return fib(n-2) + fib(n-1)  
+}  
+  
+func BenchmarkFib(b *testing.B) {  
+    time.Sleep(time.Duration(10) * time.Millisecond)  
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;输出如下，ns/op被正好缩小了1000000000倍&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	1000000000	         0.01012 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;3. 命令参数&lt;/h1&gt;
+&lt;h2&gt;3.1. 匹配规则&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;在有多个Benchmark测试方法的时候，如何做到只运行指定的方法呢？&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;3.1.1. 指定package&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;指定package：&lt;code&gt;go test -bench my-package&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;指定子package：&lt;code&gt;go test -bench my-package/sub-package&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;当前目录下的所有&lt;code&gt;package：go test -bench ./…&lt;/code&gt; （斜杠左侧是一个点，右侧是三个点）&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h3&gt;3.1.2. 指定方法&lt;/h3&gt;
+&lt;p&gt;可以用正则表达式来指定方法名&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;所有以Fib结尾的方法：&lt;code&gt;go test -bench=&amp;#39;Fib&amp;lt;p&amp;gt;Go语言标准库内置的testing测试框架提供了基准测试(benchmark)的能力，能让我们很容易地对某一段代码进行性能测试。&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;本文中会对斐波那契数列进行基准测试&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;// fib.go
+package main
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;创建一个基准测试用例&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;Benchmark测试文件必须以filename加&amp;lt;code&amp;gt;_test&amp;lt;/code&amp;gt;结尾&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;方法名必须以&amp;lt;code&amp;gt;Benachmark&amp;lt;/code&amp;gt;开头&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;测试参数必须为&amp;lt;code&amp;gt;b *testing.B&amp;lt;/code&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;// fib_test.go
+package main
+
+import &amp;amp;quot;testing&amp;amp;quot;
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &amp;amp;lt; b.N; n++ {
+        fib(30) // run fib(30) b.N times
+    }
+}
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h1&amp;gt;1. 执行benchmark测试用例&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;执行基准测试用例可以使用命令&amp;lt;code&amp;gt;go test -bench .&amp;lt;/code&amp;gt;，这个命令会执行所有基准用例。&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;go test -bench .
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12              252           4840508 ns/op
+PASS
+ok      go_test 1.948s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;输入结果含义如下：&amp;lt;/p&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;名称&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;含义&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;goos&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;操作系统，这里是windows&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;goarch&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;CPU架构，这里是64位X86&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;pkg&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;package名，可以在测试的时候指定package&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;cpu&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;CPU的信息，这里可以看到是AMD Ryzen 5&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;-12&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;代表cpu有12个核&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;252&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;代表b.N的最大值为252&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;4840509&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;代表for循环了252次，平均每次的耗时约为4.84ms&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;[!question]&amp;lt;br&amp;gt;benchmark用例的参数 &amp;lt;code&amp;gt;b *testing.B&amp;lt;/code&amp;gt;，有个属性&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt;表示这个用例需要运行的次数。&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt; 对于每个用例都是不一样的，那这个值是如何决定的呢？&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt; 从1开始，如果该用例能够在 1s 内完成，&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt; 的值便会增加，再次执行。&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt; 的值大概以 1, 2, 3, 5, 10, 20, 30, 50, 100 这样的序列递增，越到后面，增加得越快。测试结果的输出是以最后一次运行超过1秒的结果为结论的，也就是预热阶段（b.N逐步增长）的耗时并不会被统计和呈现。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;[!note]&amp;lt;br&amp;gt;实际执行的时间是1.948s，比 benchtime的1s要长，测试用例编译、执行、销毁等是需要时间的。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;h1&amp;gt;2. ns/op计算&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;ns/op是通过如下公式计算得到：&amp;lt;code&amp;gt;总执行时间 ÷ 操作次数(b.N) = 每次操作平均时间&amp;lt;/code&amp;gt;&amp;lt;br&amp;gt;在这个Go语言基准测试代码中，&amp;lt;code&amp;gt;for&amp;lt;/code&amp;gt;循环是基准测试框架的必要部分。这个循环的目的是确保测试函数执行足够多次，以获得准确的性能测量结果。具体来说，&amp;lt;code&amp;gt;for n := 0; n &amp;amp;lt; b.N; n++&amp;lt;/code&amp;gt;这个循环有以下几个重要作用：&amp;lt;/p&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt;是Go测试框架自动确定的循环次数。测试框架会动态调整这个值，以确保测试运行的总时间足够长，能够得到统计学上有意义的结果。&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;通过多次执行相同的函数调用(&amp;lt;code&amp;gt;fib(30)&amp;lt;/code&amp;gt;)，基准测试可以计算出平均执行时间，这比只执行一次更能准确反映函数的实际性能。&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;这种方法能够消除或减少单次测量中可能出现的系统波动和干扰因素的影响。&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;如果没有这个循环，基准测试只会执行一次&amp;lt;code&amp;gt;fib(30)&amp;lt;/code&amp;gt;，最后得出来的ns/op会被缩小了b.N倍。&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;p&amp;gt;我们可以通过如下两个例子来理解for循环的作用。&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;package test
+
+import (
+    &amp;amp;quot;testing&amp;amp;quot;
+    &amp;amp;quot;time&amp;amp;quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func BenchmarkFib(b *testing.B) {
+    for n := 0; n &amp;amp;lt; b.N; n++ {
+        time.Sleep(time.Duration(10) * time.Millisecond) // run fib(30) b.N times
+    }
+}
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;输出结果ns/op约等于10ms，符合预期&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	     100	  10519669 ns/op
+PASS
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;如果把for循环删除&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;package test  
+  
+import (  
+    &amp;amp;quot;testing&amp;amp;quot;  
+    &amp;amp;quot;time&amp;amp;quot;)  
+  
+func fib(n int) int {  
+    if n == 0 || n == 1 {  
+       return n  
+    }  
+    return fib(n-2) + fib(n-1)  
+}  
+  
+func BenchmarkFib(b *testing.B) {  
+    time.Sleep(time.Duration(10) * time.Millisecond)  
+}
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;输出如下，ns/op被正好缩小了1000000000倍&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib
+BenchmarkFib-8   	1000000000	         0.01012 ns/op
+PASS
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h1&amp;gt;3. 命令参数&amp;lt;/h1&amp;gt;
+&amp;lt;h2&amp;gt;3.1. 匹配规则&amp;lt;/h2&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;在有多个Benchmark测试方法的时候，如何做到只运行指定的方法呢？&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;3.1.1. 指定package&amp;lt;/h3&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;指定package：&amp;lt;code&amp;gt;go test -bench my-package&amp;lt;/code&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定子package：&amp;lt;code&amp;gt;go test -bench my-package/sub-package&amp;lt;/code&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;当前目录下的所有&amp;lt;code&amp;gt;package：go test -bench ./…&amp;lt;/code&amp;gt; （斜杠左侧是一个点，右侧是三个点）&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h3&amp;gt;3.1.2. 指定方法&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;可以用正则表达式来指定方法名&amp;lt;/p&amp;gt;
+&amp;lt;ol&amp;gt;
+&amp;lt;li&amp;gt;所有以Fib结尾的方法：&amp;lt;code&amp;gt;go test -bench=&amp;amp;#39;Fib$&amp;amp;#39; benchmark-demo&amp;lt;/code&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;所有以BenchmarkNew开始的方法：&amp;lt;code&amp;gt;go test -bench=&amp;amp;#39;^BenchmarkNew&amp;amp;#39; benchmark-demo&amp;lt;/code&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;/ol&amp;gt;
+&amp;lt;h2&amp;gt;3.2. 指定cpu&amp;lt;/h2&amp;gt;
+&amp;lt;p&amp;gt;我们仔细观察&amp;lt;a href=&amp;quot;benchmark1-执行benchmark测试用例步骤一.html&amp;quot; class=&amp;quot;internal-link&amp;quot;&amp;gt;benchmark&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#1&amp;lt;/span&amp;gt;. 执行benchmark测试用例|步骤一&amp;lt;/a&amp;gt;的输出：&amp;lt;br&amp;gt;BenchmarkFib-12 中的 &amp;lt;code&amp;gt;-12&amp;lt;/code&amp;gt; 即 &amp;lt;code&amp;gt;GOMAXPROCS&amp;lt;/code&amp;gt;，默认等于CPU核数。可以通过&amp;lt;code&amp;gt;-cpu&amp;lt;/code&amp;gt;参数改变&amp;lt;code&amp;gt;GOMAXPROCS&amp;lt;/code&amp;gt;，&amp;lt;code&amp;gt;-cpu&amp;lt;/code&amp;gt; 支持传入一个列表作为参数，例如：&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;go test -bench . -cpu=1 
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-1               238           4724139 ns/op
+PASS
+ok      go_test 1.915s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;在上面的例子中，改变CPU的核数对结果几乎没有影响，因为这个Fib的调用是串行的，不涉及并发编程，改造测试用例如下：&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;package test
+
+import (
+    &amp;amp;quot;sync&amp;amp;quot;
+    &amp;amp;quot;testing&amp;amp;quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func fib_sum(index int) int {
+    count := 0
+    wg := sync.WaitGroup{}
+    lock := sync.Mutex{}
+    // 算10遍
+    for i := 0; i &amp;amp;lt; 10; i++ {
+        wg.Add(1)
+        go func() {
+            sum := fib(index)
+            lock.Lock()
+            count += sum
+            lock.Unlock()
+            wg.Done()
+        }()
+    }
+    wg.Wait()
+    return count
+}
+
+func BenchmarkFib(b *testing.B) {
+    for i := 0; i &amp;amp;lt; b.N; i++ {
+        fib_sum(30)
+    }
+}
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;可以看出在使用了并发编程后，10个cpu的运行效率比单个cpu运行效率明显提高了。&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;go test -bench . -cpu=1 
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib          21          53187164 ns/op
+PASS
+ok      go_test/test    1.745s
+
+go test -bench . -cpu=10
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib-10               76          15448673 ns/op
+PASS
+ok      go_test/test    1.785s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h2&amp;gt;3.3. 测试时间与测试轮数&amp;lt;/h2&amp;gt;
+&amp;lt;p&amp;gt;对于性能测试来说，提升测试准确度的一个重要手段就是增加测试的次数。我们可以使用 &amp;lt;code&amp;gt;-benchtime&amp;lt;/code&amp;gt; 和 &amp;lt;code&amp;gt;-count&amp;lt;/code&amp;gt; 两个参数达到这个目的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;3.3.1. benchtime&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;benchmark 的默认时间是 1s，那么我们可以使用 &amp;lt;code&amp;gt;-benchtime&amp;lt;/code&amp;gt; 指定为 5s。例如：&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;go test -bench . -benchtime=5s
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12             1201           4876905 ns/op
+PASS
+ok      go_test 6.615s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;将 &amp;lt;code&amp;gt;-benchtime&amp;lt;/code&amp;gt; 设置为 5s，用例执行次数也变成了原来的5倍，每次函数调用时间仍为 04.8ms作用，几乎没有变化（我们这个测试用例的执行与b.N没有关系）。&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;-benchtime&amp;lt;/code&amp;gt; 的值除了是时间外，还可以是具体的次数。例如，执行 30 次可以用 &amp;lt;code&amp;gt;-benchtime=30x&amp;lt;/code&amp;gt;：&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;go test -bench . -benchtime=30x
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4639033 ns/op
+PASS
+ok      go_test 0.417s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h3&amp;gt;3.3.2. count&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;-count&amp;lt;/code&amp;gt; 参数可以用来设置 benchmark 的轮数。例如，进行3轮benchmark。&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;go test -bench . -benchtime=30x -count=3
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4907513 ns/op
+BenchmarkFib-12               30           4996390 ns/op
+BenchmarkFib-12               30           5041850 ns/op
+PASS
+ok      go_test 0.734s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h1&amp;gt;4. 内存分配测试&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;-benchmem&amp;lt;/code&amp;gt; 参数可以度量内存分配的次数。内存分配次数也性能也是息息相关的，例如不合理的切片容量，将导致内存重新分配，带来不必要的开销。&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;在下面的例子中，&amp;lt;code&amp;gt;generateWithCap&amp;lt;/code&amp;gt; 和 &amp;lt;code&amp;gt;generate&amp;lt;/code&amp;gt; 的作用是一致的，生成一组长度为 n 的随机序列。唯一的不同在于，&amp;lt;code&amp;gt;generateWithCap&amp;lt;/code&amp;gt; 创建切片时，将切片的容量(capacity)设置为n，这样切片就会一次性申请n个整数所需的内存。&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;package Generate
+
+import (
+    &amp;amp;quot;math/rand&amp;amp;quot;
+    &amp;amp;quot;testing&amp;amp;quot;
+)
+
+func generateWithCap(n int) []int {
+    nums := make([]int, 0, n)
+    for i := 0; i &amp;amp;lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func generate(n int) []int {
+    nums := make([]int, 0)
+    for i := 0; i &amp;amp;lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func BenchmarkGenerateWithCap(b *testing.B) {
+    for n := 0; n &amp;amp;lt; b.N; n++ {
+        generateWithCap(1000000)
+    }
+}
+
+func BenchmarkGenerate(b *testing.B) {
+    for n := 0; n &amp;amp;lt; b.N; n++ {
+        generate(1000000)
+    }
+}
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;运行该用例的结果是：&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;go test -bench=&amp;amp;#39;Generate&amp;amp;#39; .
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap
+BenchmarkGenerateWithCap-12           88          12633669 ns/op
+BenchmarkGenerate
+BenchmarkGenerate-12                  62          17817368 ns/op
+PASS
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;可以看到生成100w个数字的随机序列，&amp;lt;code&amp;gt;GenerateWithCap&amp;lt;/code&amp;gt;的耗时比 &amp;lt;code&amp;gt;Generate&amp;lt;/code&amp;gt;少很多。我们可以使用 &amp;lt;code&amp;gt;-benchmem&amp;lt;/code&amp;gt; 参数看到内存分配的情况：&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;go test -bench . -benchmem 
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap-12           98          12146879 ns/op         8003645 B/op          1 allocs/op
+BenchmarkGenerate-12                  58          17856278 ns/op        41678169 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        2.459s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;Generate&amp;lt;/code&amp;gt;分配的内存是&amp;lt;code&amp;gt;GenerateWithCap&amp;lt;/code&amp;gt;的5倍，设置了切片容量，内存只分配一次，而不设置切片容量，内存分配了 40 次。&amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;5. 测试函数时间和空间复杂度&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;不同的函数复杂度不同，O(1)，O(n)，O(n^2) 等，利用benchmark验证复杂度一个简单的方式，是构造不同的输入。对刚才的 benchmark 稍作改造，便能够达到目的。&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;对刚刚的例子进行稍加改造&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;package main  
+  
+import (  
+    &amp;amp;quot;math/rand&amp;amp;quot;  
+    &amp;amp;quot;testing&amp;amp;quot;  
+    &amp;amp;quot;time&amp;amp;quot;  
+)  
+  
+func generate(n int) []int {  
+    rand.Seed(time.Now().UnixNano())  
+    nums := make([]int, 0)  
+    for i := 0; i &amp;amp;lt; n; i++ {  
+        nums = append(nums, rand.Int())  
+    }  
+    return nums  
+}  
+func benchmarkGenerate(i int, b *testing.B) {  
+    for n := 0; n &amp;amp;lt; b.N; n++ {  
+        generate(i)  
+    }  
+}  
+  
+func BenchmarkGenerate1000(b *testing.B)    { benchmarkGenerate(1000, b) }  
+func BenchmarkGenerate10000(b *testing.B)   { benchmarkGenerate(10000, b) }  
+func BenchmarkGenerate100000(b *testing.B)  { benchmarkGenerate(100000, b) }  
+func BenchmarkGenerate1000000(b *testing.B) { benchmarkGenerate(1000000, b) }
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;可以看到时间复杂度和空间复杂度都是线性增长的，说明时间和空间复杂度都是&amp;lt;code&amp;gt;o(n)&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;go test -bench . -benchmem
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerate1000-12           49246             23597 ns/op           25208 B/op         12 allocs/op
+BenchmarkGenerate10000-12           7395            169348 ns/op          357625 B/op         19 allocs/op
+BenchmarkGenerate100000-12           646           1771936 ns/op         4101387 B/op         28 allocs/op
+BenchmarkGenerate1000000-12           66          18853998 ns/op        41678114 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        6.410s
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h1&amp;gt;6. 控制计时&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;ResetTimer，如果在benchmark开始前，需要一些准备工作，如果准备工作比较耗时，则需要将这部分代码的耗时忽略掉，则可以在需要计时之前调用ResetTimer来重制计时&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;StopTimer&amp;amp;amp;StartTimer，如果在benchmark执行过程中，有些操作比较耗时，且不想参与计算，可以通过Stop&amp;amp;amp;Start的方式，忽略掉中间部分的耗时。&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;7. 并行测试&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;前面的BenchmarkFib是常规的串行测试，如果被测试的方法在真实环境中存在并发调用，那么在基准测试中也应该通过并行测试来了解其基本性能（例如锁造成的阻塞）&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-go&amp;quot;&amp;gt;package main
+
+import &amp;amp;quot;testing&amp;amp;quot;
+
+func BenchmarkParallelFib(b *testing.B) {
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            fib(30)
+        }
+    })
+}
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;p&amp;gt;执行结果&amp;lt;/p&amp;gt;
+&amp;lt;pre&amp;gt;&amp;lt;code class=&amp;quot;language-shell&amp;quot;&amp;gt;goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkParallelFib
+BenchmarkParallelFib-12             1663            621800 ns/op
+PASS
+&amp;lt;/code&amp;gt;&amp;lt;/pre&amp;gt;
+&amp;lt;h2&amp;gt;7.1. b.RunParallel&amp;lt;/h2&amp;gt;
+&amp;lt;p&amp;gt;这是 &amp;lt;code&amp;gt;*testing.B&amp;lt;/code&amp;gt; 对象的一个方法，其作用是并行执行基准测试。它会启动多个goroutine来并行运行传入的函数。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;b.RunParallel&amp;lt;/code&amp;gt; 方法会尽力让基准测试以&amp;lt;code&amp;gt;GOMAXPROCS(CPU 核心数)&amp;lt;/code&amp;gt;个并发来执行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;可以通过&amp;lt;code&amp;gt;-cpu&amp;lt;/code&amp;gt;命令来指定并发度&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;可以通过 &amp;lt;code&amp;gt;b.SetParallelism(p)&amp;lt;/code&amp;gt; 来显式设置并发度。这会将并发 goroutine 的数量设置为 &amp;lt;code&amp;gt;p * GOMAXPROCS&amp;lt;/code&amp;gt;&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h2&amp;gt;7.2. &amp;lt;code&amp;gt;func(pb *testing.PB){}&amp;lt;/code&amp;gt;&amp;lt;/h2&amp;gt;
+&amp;lt;p&amp;gt;这是一个匿名函数，会被并行执行。&amp;lt;code&amp;gt;pb *testing.PB&amp;lt;/code&amp;gt;：&amp;lt;code&amp;gt;pb&amp;lt;/code&amp;gt; 是&amp;lt;code&amp;gt;*testing.PB&amp;lt;/code&amp;gt; 类型的指针，它是 &amp;lt;code&amp;gt;b.RunParallel&amp;lt;/code&amp;gt; 方法提供的一个对象，用于控制并行基准测试的迭代。&amp;lt;code&amp;gt;pb.Next()&amp;lt;/code&amp;gt;：这是 &amp;lt;code&amp;gt;*testing.PB&amp;lt;/code&amp;gt; 对象的一个方法，它会返回一个布尔值。只要返回 &amp;lt;code&amp;gt;true&amp;lt;/code&amp;gt;，就表明基准测试应该继续迭代。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;循环控制&amp;lt;/strong&amp;gt;：它类似于普通基准测试中的 &amp;lt;code&amp;gt;i &amp;amp;lt; b.N&amp;lt;/code&amp;gt; 条件，返回一个布尔值表示是否继续执行下一次迭代。&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;计数机制&amp;lt;/strong&amp;gt;：Go 测试框架会确保所有并发goroutine总共执行的操作次数接近&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt;。&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;动态分配&amp;lt;/strong&amp;gt;：与单线程测试不同，&amp;lt;code&amp;gt;b.N&amp;lt;/code&amp;gt;的操作次数会被动态分配给多个goroutine，而 &amp;lt;code&amp;gt;pb.Next()&amp;lt;/code&amp;gt;负责协调这一分配过程。&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;strong&amp;gt;负载均衡&amp;lt;/strong&amp;gt;：测试框架会自动平衡各个goroutine之间的工作负载，避免某些 goroutine工作过多或过少。&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;[!note]&amp;lt;br&amp;gt;在并发基准测试中也可以使用 &amp;lt;code&amp;gt;-benchtime&amp;lt;/code&amp;gt; 标志来指定测试运行的时间或者次数。这个标志对并发测试和普通基准测试都有效。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+#39; benchmark-demo&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;所有以BenchmarkNew开始的方法：&lt;code&gt;go test -bench=&amp;#39;^BenchmarkNew&amp;#39; benchmark-demo&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;3.2. 指定cpu&lt;/h2&gt;
+&lt;p&gt;我们仔细观察&lt;a href=&quot;benchmark1-执行benchmark测试用例步骤一.html&quot; class=&quot;internal-link&quot;&gt;benchmark&lt;span class=&quot;tag&quot;&gt;#1&lt;/span&gt;. 执行benchmark测试用例|步骤一&lt;/a&gt;的输出：&lt;br&gt;BenchmarkFib-12 中的 &lt;code&gt;-12&lt;/code&gt; 即 &lt;code&gt;GOMAXPROCS&lt;/code&gt;，默认等于CPU核数。可以通过&lt;code&gt;-cpu&lt;/code&gt;参数改变&lt;code&gt;GOMAXPROCS&lt;/code&gt;，&lt;code&gt;-cpu&lt;/code&gt; 支持传入一个列表作为参数，例如：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -cpu=1 
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-1               238           4724139 ns/op
+PASS
+ok      go_test 1.915s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在上面的例子中，改变CPU的核数对结果几乎没有影响，因为这个Fib的调用是串行的，不涉及并发编程，改造测试用例如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package test
+
+import (
+    &amp;quot;sync&amp;quot;
+    &amp;quot;testing&amp;quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func fib_sum(index int) int {
+    count := 0
+    wg := sync.WaitGroup{}
+    lock := sync.Mutex{}
+    // 算10遍
+    for i := 0; i &amp;lt; 10; i++ {
+        wg.Add(1)
+        go func() {
+            sum := fib(index)
+            lock.Lock()
+            count += sum
+            lock.Unlock()
+            wg.Done()
+        }()
+    }
+    wg.Wait()
+    return count
+}
+
+func BenchmarkFib(b *testing.B) {
+    for i := 0; i &amp;lt; b.N; i++ {
+        fib_sum(30)
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看出在使用了并发编程后，10个cpu的运行效率比单个cpu运行效率明显提高了。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -cpu=1 
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib          21          53187164 ns/op
+PASS
+ok      go_test/test    1.745s
+
+go test -bench . -cpu=10
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib-10               76          15448673 ns/op
+PASS
+ok      go_test/test    1.785s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;3.3. 测试时间与测试轮数&lt;/h2&gt;
+&lt;p&gt;对于性能测试来说，提升测试准确度的一个重要手段就是增加测试的次数。我们可以使用 &lt;code&gt;-benchtime&lt;/code&gt; 和 &lt;code&gt;-count&lt;/code&gt; 两个参数达到这个目的。&lt;/p&gt;
+&lt;h3&gt;3.3.1. benchtime&lt;/h3&gt;
+&lt;p&gt;benchmark 的默认时间是 1s，那么我们可以使用 &lt;code&gt;-benchtime&lt;/code&gt; 指定为 5s。例如：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;go test -bench . -benchtime=5s
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12             1201           4876905 ns/op
+PASS
+ok      go_test 6.615s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;将 &lt;code&gt;-benchtime&lt;/code&gt; 设置为 5s，用例执行次数也变成了原来的5倍，每次函数调用时间仍为 04.8ms作用，几乎没有变化（我们这个测试用例的执行与b.N没有关系）。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;-benchtime&lt;/code&gt; 的值除了是时间外，还可以是具体的次数。例如，执行 30 次可以用 &lt;code&gt;-benchtime=30x&lt;/code&gt;：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;go test -bench . -benchtime=30x
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4639033 ns/op
+PASS
+ok      go_test 0.417s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;3.3.2. count&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;-count&lt;/code&gt; 参数可以用来设置 benchmark 的轮数。例如，进行3轮benchmark。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -benchtime=30x -count=3
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4907513 ns/op
+BenchmarkFib-12               30           4996390 ns/op
+BenchmarkFib-12               30           5041850 ns/op
+PASS
+ok      go_test 0.734s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;4. 内存分配测试&lt;/h1&gt;
+&lt;p&gt;&lt;code&gt;-benchmem&lt;/code&gt; 参数可以度量内存分配的次数。内存分配次数也性能也是息息相关的，例如不合理的切片容量，将导致内存重新分配，带来不必要的开销。&lt;/p&gt;
+&lt;p&gt;在下面的例子中，&lt;code&gt;generateWithCap&lt;/code&gt; 和 &lt;code&gt;generate&lt;/code&gt; 的作用是一致的，生成一组长度为 n 的随机序列。唯一的不同在于，&lt;code&gt;generateWithCap&lt;/code&gt; 创建切片时，将切片的容量(capacity)设置为n，这样切片就会一次性申请n个整数所需的内存。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package Generate
+
+import (
+    &amp;quot;math/rand&amp;quot;
+    &amp;quot;testing&amp;quot;
+)
+
+func generateWithCap(n int) []int {
+    nums := make([]int, 0, n)
+    for i := 0; i &amp;lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func generate(n int) []int {
+    nums := make([]int, 0)
+    for i := 0; i &amp;lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func BenchmarkGenerateWithCap(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        generateWithCap(1000000)
+    }
+}
+
+func BenchmarkGenerate(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        generate(1000000)
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;运行该用例的结果是：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench=&amp;#39;Generate&amp;#39; .
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap
+BenchmarkGenerateWithCap-12           88          12633669 ns/op
+BenchmarkGenerate
+BenchmarkGenerate-12                  62          17817368 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看到生成100w个数字的随机序列，&lt;code&gt;GenerateWithCap&lt;/code&gt;的耗时比 &lt;code&gt;Generate&lt;/code&gt;少很多。我们可以使用 &lt;code&gt;-benchmem&lt;/code&gt; 参数看到内存分配的情况：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -benchmem 
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap-12           98          12146879 ns/op         8003645 B/op          1 allocs/op
+BenchmarkGenerate-12                  58          17856278 ns/op        41678169 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        2.459s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Generate&lt;/code&gt;分配的内存是&lt;code&gt;GenerateWithCap&lt;/code&gt;的5倍，设置了切片容量，内存只分配一次，而不设置切片容量，内存分配了 40 次。&lt;/p&gt;
+&lt;h1&gt;5. 测试函数时间和空间复杂度&lt;/h1&gt;
+&lt;p&gt;不同的函数复杂度不同，O(1)，O(n)，O(n^2) 等，利用benchmark验证复杂度一个简单的方式，是构造不同的输入。对刚才的 benchmark 稍作改造，便能够达到目的。&lt;/p&gt;
+&lt;p&gt;对刚刚的例子进行稍加改造&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package main  
+  
+import (  
+    &amp;quot;math/rand&amp;quot;  
+    &amp;quot;testing&amp;quot;  
+    &amp;quot;time&amp;quot;  
+)  
+  
+func generate(n int) []int {  
+    rand.Seed(time.Now().UnixNano())  
+    nums := make([]int, 0)  
+    for i := 0; i &amp;lt; n; i++ {  
+        nums = append(nums, rand.Int())  
+    }  
+    return nums  
+}  
+func benchmarkGenerate(i int, b *testing.B) {  
+    for n := 0; n &amp;lt; b.N; n++ {  
+        generate(i)  
+    }  
+}  
+  
+func BenchmarkGenerate1000(b *testing.B)    { benchmarkGenerate(1000, b) }  
+func BenchmarkGenerate10000(b *testing.B)   { benchmarkGenerate(10000, b) }  
+func BenchmarkGenerate100000(b *testing.B)  { benchmarkGenerate(100000, b) }  
+func BenchmarkGenerate1000000(b *testing.B) { benchmarkGenerate(1000000, b) }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看到时间复杂度和空间复杂度都是线性增长的，说明时间和空间复杂度都是&lt;code&gt;o(n)&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -benchmem
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerate1000-12           49246             23597 ns/op           25208 B/op         12 allocs/op
+BenchmarkGenerate10000-12           7395            169348 ns/op          357625 B/op         19 allocs/op
+BenchmarkGenerate100000-12           646           1771936 ns/op         4101387 B/op         28 allocs/op
+BenchmarkGenerate1000000-12           66          18853998 ns/op        41678114 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        6.410s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;6. 控制计时&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;ResetTimer，如果在benchmark开始前，需要一些准备工作，如果准备工作比较耗时，则需要将这部分代码的耗时忽略掉，则可以在需要计时之前调用ResetTimer来重制计时&lt;/li&gt;
+&lt;li&gt;StopTimer&amp;amp;StartTimer，如果在benchmark执行过程中，有些操作比较耗时，且不想参与计算，可以通过Stop&amp;amp;Start的方式，忽略掉中间部分的耗时。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;7. 并行测试&lt;/h1&gt;
+&lt;p&gt;前面的BenchmarkFib是常规的串行测试，如果被测试的方法在真实环境中存在并发调用，那么在基准测试中也应该通过并行测试来了解其基本性能（例如锁造成的阻塞）&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package main
+
+import &amp;quot;testing&amp;quot;
+
+func BenchmarkParallelFib(b *testing.B) {
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            fib(30)
+        }
+    })
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;执行结果&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkParallelFib
+BenchmarkParallelFib-12             1663            621800 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;7.1. b.RunParallel&lt;/h2&gt;
+&lt;p&gt;这是 &lt;code&gt;*testing.B&lt;/code&gt; 对象的一个方法，其作用是并行执行基准测试。它会启动多个goroutine来并行运行传入的函数。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;b.RunParallel&lt;/code&gt; 方法会尽力让基准测试以&lt;code&gt;GOMAXPROCS(CPU 核心数)&lt;/code&gt;个并发来执行&lt;/li&gt;
+&lt;li&gt;可以通过&lt;code&gt;-cpu&lt;/code&gt;命令来指定并发度&lt;/li&gt;
+&lt;li&gt;可以通过 &lt;code&gt;b.SetParallelism(p)&lt;/code&gt; 来显式设置并发度。这会将并发 goroutine 的数量设置为 &lt;code&gt;p * GOMAXPROCS&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;7.2. &lt;code&gt;func(pb *testing.PB){}&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;这是一个匿名函数，会被并行执行。&lt;code&gt;pb *testing.PB&lt;/code&gt;：&lt;code&gt;pb&lt;/code&gt; 是&lt;code&gt;*testing.PB&lt;/code&gt; 类型的指针，它是 &lt;code&gt;b.RunParallel&lt;/code&gt; 方法提供的一个对象，用于控制并行基准测试的迭代。&lt;code&gt;pb.Next()&lt;/code&gt;：这是 &lt;code&gt;*testing.PB&lt;/code&gt; 对象的一个方法，它会返回一个布尔值。只要返回 &lt;code&gt;true&lt;/code&gt;，就表明基准测试应该继续迭代。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;循环控制&lt;/strong&gt;：它类似于普通基准测试中的 &lt;code&gt;i &amp;lt; b.N&lt;/code&gt; 条件，返回一个布尔值表示是否继续执行下一次迭代。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;计数机制&lt;/strong&gt;：Go 测试框架会确保所有并发goroutine总共执行的操作次数接近&lt;code&gt;b.N&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;动态分配&lt;/strong&gt;：与单线程测试不同，&lt;code&gt;b.N&lt;/code&gt;的操作次数会被动态分配给多个goroutine，而 &lt;code&gt;pb.Next()&lt;/code&gt;负责协调这一分配过程。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;负载均衡&lt;/strong&gt;：测试框架会自动平衡各个goroutine之间的工作负载，避免某些 goroutine工作过多或过少。&lt;blockquote&gt;
+&lt;p&gt;[!note]&lt;br&gt;在并发基准测试中也可以使用 &lt;code&gt;-benchtime&lt;/code&gt; 标志来指定测试运行的时间或者次数。这个标志对并发测试和普通基准测试都有效。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+}
+    &lt;/section&gt;
+&lt;/article&gt;amp;#39; benchmark-demo&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;所有以BenchmarkNew开始的方法：&lt;code&gt;go test -bench=&amp;#39;^BenchmarkNew&amp;#39; benchmark-demo&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2&gt;3.2. 指定cpu&lt;/h2&gt;
+&lt;p&gt;我们仔细观察&lt;a href=&quot;benchmark1-执行benchmark测试用例步骤一.html&quot; class=&quot;internal-link&quot;&gt;benchmark&lt;span class=&quot;tag&quot;&gt;#1&lt;/span&gt;. 执行benchmark测试用例|步骤一&lt;/a&gt;的输出：&lt;br&gt;BenchmarkFib-12 中的 &lt;code&gt;-12&lt;/code&gt; 即 &lt;code&gt;GOMAXPROCS&lt;/code&gt;，默认等于CPU核数。可以通过&lt;code&gt;-cpu&lt;/code&gt;参数改变&lt;code&gt;GOMAXPROCS&lt;/code&gt;，&lt;code&gt;-cpu&lt;/code&gt; 支持传入一个列表作为参数，例如：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -cpu=1 
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-1               238           4724139 ns/op
+PASS
+ok      go_test 1.915s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在上面的例子中，改变CPU的核数对结果几乎没有影响，因为这个Fib的调用是串行的，不涉及并发编程，改造测试用例如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package test
+
+import (
+    &amp;quot;sync&amp;quot;
+    &amp;quot;testing&amp;quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func fib_sum(index int) int {
+    count := 0
+    wg := sync.WaitGroup{}
+    lock := sync.Mutex{}
+    // 算10遍
+    for i := 0; i &amp;lt; 10; i++ {
+        wg.Add(1)
+        go func() {
+            sum := fib(index)
+            lock.Lock()
+            count += sum
+            lock.Unlock()
+            wg.Done()
+        }()
+    }
+    wg.Wait()
+    return count
+}
+
+func BenchmarkFib(b *testing.B) {
+    for i := 0; i &amp;lt; b.N; i++ {
+        fib_sum(30)
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看出在使用了并发编程后，10个cpu的运行效率比单个cpu运行效率明显提高了。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -cpu=1 
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib          21          53187164 ns/op
+PASS
+ok      go_test/test    1.745s
+
+go test -bench . -cpu=10
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib-10               76          15448673 ns/op
+PASS
+ok      go_test/test    1.785s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;3.3. 测试时间与测试轮数&lt;/h2&gt;
+&lt;p&gt;对于性能测试来说，提升测试准确度的一个重要手段就是增加测试的次数。我们可以使用 &lt;code&gt;-benchtime&lt;/code&gt; 和 &lt;code&gt;-count&lt;/code&gt; 两个参数达到这个目的。&lt;/p&gt;
+&lt;h3&gt;3.3.1. benchtime&lt;/h3&gt;
+&lt;p&gt;benchmark 的默认时间是 1s，那么我们可以使用 &lt;code&gt;-benchtime&lt;/code&gt; 指定为 5s。例如：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;go test -bench . -benchtime=5s
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12             1201           4876905 ns/op
+PASS
+ok      go_test 6.615s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;将 &lt;code&gt;-benchtime&lt;/code&gt; 设置为 5s，用例执行次数也变成了原来的5倍，每次函数调用时间仍为 04.8ms作用，几乎没有变化（我们这个测试用例的执行与b.N没有关系）。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;-benchtime&lt;/code&gt; 的值除了是时间外，还可以是具体的次数。例如，执行 30 次可以用 &lt;code&gt;-benchtime=30x&lt;/code&gt;：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;go test -bench . -benchtime=30x
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4639033 ns/op
+PASS
+ok      go_test 0.417s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;3.3.2. count&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;-count&lt;/code&gt; 参数可以用来设置 benchmark 的轮数。例如，进行3轮benchmark。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -benchtime=30x -count=3
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4907513 ns/op
+BenchmarkFib-12               30           4996390 ns/op
+BenchmarkFib-12               30           5041850 ns/op
+PASS
+ok      go_test 0.734s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;4. 内存分配测试&lt;/h1&gt;
+&lt;p&gt;&lt;code&gt;-benchmem&lt;/code&gt; 参数可以度量内存分配的次数。内存分配次数也性能也是息息相关的，例如不合理的切片容量，将导致内存重新分配，带来不必要的开销。&lt;/p&gt;
+&lt;p&gt;在下面的例子中，&lt;code&gt;generateWithCap&lt;/code&gt; 和 &lt;code&gt;generate&lt;/code&gt; 的作用是一致的，生成一组长度为 n 的随机序列。唯一的不同在于，&lt;code&gt;generateWithCap&lt;/code&gt; 创建切片时，将切片的容量(capacity)设置为n，这样切片就会一次性申请n个整数所需的内存。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package Generate
+
+import (
+    &amp;quot;math/rand&amp;quot;
+    &amp;quot;testing&amp;quot;
+)
+
+func generateWithCap(n int) []int {
+    nums := make([]int, 0, n)
+    for i := 0; i &amp;lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func generate(n int) []int {
+    nums := make([]int, 0)
+    for i := 0; i &amp;lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func BenchmarkGenerateWithCap(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        generateWithCap(1000000)
+    }
+}
+
+func BenchmarkGenerate(b *testing.B) {
+    for n := 0; n &amp;lt; b.N; n++ {
+        generate(1000000)
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;运行该用例的结果是：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench=&amp;#39;Generate&amp;#39; .
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap
+BenchmarkGenerateWithCap-12           88          12633669 ns/op
+BenchmarkGenerate
+BenchmarkGenerate-12                  62          17817368 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看到生成100w个数字的随机序列，&lt;code&gt;GenerateWithCap&lt;/code&gt;的耗时比 &lt;code&gt;Generate&lt;/code&gt;少很多。我们可以使用 &lt;code&gt;-benchmem&lt;/code&gt; 参数看到内存分配的情况：&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -benchmem 
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap-12           98          12146879 ns/op         8003645 B/op          1 allocs/op
+BenchmarkGenerate-12                  58          17856278 ns/op        41678169 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        2.459s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;Generate&lt;/code&gt;分配的内存是&lt;code&gt;GenerateWithCap&lt;/code&gt;的5倍，设置了切片容量，内存只分配一次，而不设置切片容量，内存分配了 40 次。&lt;/p&gt;
+&lt;h1&gt;5. 测试函数时间和空间复杂度&lt;/h1&gt;
+&lt;p&gt;不同的函数复杂度不同，O(1)，O(n)，O(n^2) 等，利用benchmark验证复杂度一个简单的方式，是构造不同的输入。对刚才的 benchmark 稍作改造，便能够达到目的。&lt;/p&gt;
+&lt;p&gt;对刚刚的例子进行稍加改造&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package main  
+  
+import (  
+    &amp;quot;math/rand&amp;quot;  
+    &amp;quot;testing&amp;quot;  
+    &amp;quot;time&amp;quot;  
+)  
+  
+func generate(n int) []int {  
+    rand.Seed(time.Now().UnixNano())  
+    nums := make([]int, 0)  
+    for i := 0; i &amp;lt; n; i++ {  
+        nums = append(nums, rand.Int())  
+    }  
+    return nums  
+}  
+func benchmarkGenerate(i int, b *testing.B) {  
+    for n := 0; n &amp;lt; b.N; n++ {  
+        generate(i)  
+    }  
+}  
+  
+func BenchmarkGenerate1000(b *testing.B)    { benchmarkGenerate(1000, b) }  
+func BenchmarkGenerate10000(b *testing.B)   { benchmarkGenerate(10000, b) }  
+func BenchmarkGenerate100000(b *testing.B)  { benchmarkGenerate(100000, b) }  
+func BenchmarkGenerate1000000(b *testing.B) { benchmarkGenerate(1000000, b) }
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;可以看到时间复杂度和空间复杂度都是线性增长的，说明时间和空间复杂度都是&lt;code&gt;o(n)&lt;/code&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;go test -bench . -benchmem
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerate1000-12           49246             23597 ns/op           25208 B/op         12 allocs/op
+BenchmarkGenerate10000-12           7395            169348 ns/op          357625 B/op         19 allocs/op
+BenchmarkGenerate100000-12           646           1771936 ns/op         4101387 B/op         28 allocs/op
+BenchmarkGenerate1000000-12           66          18853998 ns/op        41678114 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        6.410s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h1&gt;6. 控制计时&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;ResetTimer，如果在benchmark开始前，需要一些准备工作，如果准备工作比较耗时，则需要将这部分代码的耗时忽略掉，则可以在需要计时之前调用ResetTimer来重制计时&lt;/li&gt;
+&lt;li&gt;StopTimer&amp;amp;StartTimer，如果在benchmark执行过程中，有些操作比较耗时，且不想参与计算，可以通过Stop&amp;amp;Start的方式，忽略掉中间部分的耗时。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;7. 并行测试&lt;/h1&gt;
+&lt;p&gt;前面的BenchmarkFib是常规的串行测试，如果被测试的方法在真实环境中存在并发调用，那么在基准测试中也应该通过并行测试来了解其基本性能（例如锁造成的阻塞）&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-go&quot;&gt;package main
+
+import &amp;quot;testing&amp;quot;
+
+func BenchmarkParallelFib(b *testing.B) {
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            fib(30)
+        }
+    })
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;执行结果&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-shell&quot;&gt;goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkParallelFib
+BenchmarkParallelFib-12             1663            621800 ns/op
+PASS
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;7.1. b.RunParallel&lt;/h2&gt;
+&lt;p&gt;这是 &lt;code&gt;*testing.B&lt;/code&gt; 对象的一个方法，其作用是并行执行基准测试。它会启动多个goroutine来并行运行传入的函数。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;b.RunParallel&lt;/code&gt; 方法会尽力让基准测试以&lt;code&gt;GOMAXPROCS(CPU 核心数)&lt;/code&gt;个并发来执行&lt;/li&gt;
+&lt;li&gt;可以通过&lt;code&gt;-cpu&lt;/code&gt;命令来指定并发度&lt;/li&gt;
+&lt;li&gt;可以通过 &lt;code&gt;b.SetParallelism(p)&lt;/code&gt; 来显式设置并发度。这会将并发 goroutine 的数量设置为 &lt;code&gt;p * GOMAXPROCS&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;7.2. &lt;code&gt;func(pb *testing.PB){}&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;这是一个匿名函数，会被并行执行。&lt;code&gt;pb *testing.PB&lt;/code&gt;：&lt;code&gt;pb&lt;/code&gt; 是&lt;code&gt;*testing.PB&lt;/code&gt; 类型的指针，它是 &lt;code&gt;b.RunParallel&lt;/code&gt; 方法提供的一个对象，用于控制并行基准测试的迭代。&lt;code&gt;pb.Next()&lt;/code&gt;：这是 &lt;code&gt;*testing.PB&lt;/code&gt; 对象的一个方法，它会返回一个布尔值。只要返回 &lt;code&gt;true&lt;/code&gt;，就表明基准测试应该继续迭代。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;循环控制&lt;/strong&gt;：它类似于普通基准测试中的 &lt;code&gt;i &amp;lt; b.N&lt;/code&gt; 条件，返回一个布尔值表示是否继续执行下一次迭代。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;计数机制&lt;/strong&gt;：Go 测试框架会确保所有并发goroutine总共执行的操作次数接近&lt;code&gt;b.N&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;动态分配&lt;/strong&gt;：与单线程测试不同，&lt;code&gt;b.N&lt;/code&gt;的操作次数会被动态分配给多个goroutine，而 &lt;code&gt;pb.Next()&lt;/code&gt;负责协调这一分配过程。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;负载均衡&lt;/strong&gt;：测试框架会自动平衡各个goroutine之间的工作负载，避免某些 goroutine工作过多或过少。&lt;blockquote&gt;
+&lt;p&gt;[!note]&lt;br&gt;在并发基准测试中也可以使用 &lt;code&gt;-benchtime&lt;/code&gt; 标志来指定测试运行的时间或者次数。这个标志对并发测试和普通基准测试都有效。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+#39; benchmark-demo</code></li>
+<li>所有以BenchmarkNew开始的方法：<code>go test -bench=&#39;^BenchmarkNew&#39; benchmark-demo</code></li>
+</ol>
+<h2>3.2. 指定cpu</h2>
+<p>我们仔细观察<a href="benchmark1-执行benchmark测试用例步骤一.html" class="internal-link">benchmark<span class="tag">#1</span>. 执行benchmark测试用例|步骤一</a>的输出：<br>BenchmarkFib-12 中的 <code>-12</code> 即 <code>GOMAXPROCS</code>，默认等于CPU核数。可以通过<code>-cpu</code>参数改变<code>GOMAXPROCS</code>，<code>-cpu</code> 支持传入一个列表作为参数，例如：</p>
+<pre><code class="language-shell">go test -bench . -cpu=1 
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-1               238           4724139 ns/op
+PASS
+ok      go_test 1.915s
+</code></pre>
+<p>在上面的例子中，改变CPU的核数对结果几乎没有影响，因为这个Fib的调用是串行的，不涉及并发编程，改造测试用例如下：</p>
+<pre><code class="language-go">package test
+
+import (
+    &quot;sync&quot;
+    &quot;testing&quot;
+)
+
+func fib(n int) int {
+    if n == 0 || n == 1 {
+        return n
+    }
+    return fib(n-2) + fib(n-1)
+}
+
+func fib_sum(index int) int {
+    count := 0
+    wg := sync.WaitGroup{}
+    lock := sync.Mutex{}
+    // 算10遍
+    for i := 0; i &lt; 10; i++ {
+        wg.Add(1)
+        go func() {
+            sum := fib(index)
+            lock.Lock()
+            count += sum
+            lock.Unlock()
+            wg.Done()
+        }()
+    }
+    wg.Wait()
+    return count
+}
+
+func BenchmarkFib(b *testing.B) {
+    for i := 0; i &lt; b.N; i++ {
+        fib_sum(30)
+    }
+}
+</code></pre>
+<p>可以看出在使用了并发编程后，10个cpu的运行效率比单个cpu运行效率明显提高了。</p>
+<pre><code class="language-shell">go test -bench . -cpu=1 
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib          21          53187164 ns/op
+PASS
+ok      go_test/test    1.745s
+
+go test -bench . -cpu=10
+goos: darwin
+goarch: amd64
+pkg: go_test/test
+cpu: Intel(R) Core(TM) i7-4770HQ CPU @ 2.20GHz
+BenchmarkFib-10               76          15448673 ns/op
+PASS
+ok      go_test/test    1.785s
+</code></pre>
+<h2>3.3. 测试时间与测试轮数</h2>
+<p>对于性能测试来说，提升测试准确度的一个重要手段就是增加测试的次数。我们可以使用 <code>-benchtime</code> 和 <code>-count</code> 两个参数达到这个目的。</p>
+<h3>3.3.1. benchtime</h3>
+<p>benchmark 的默认时间是 1s，那么我们可以使用 <code>-benchtime</code> 指定为 5s。例如：</p>
+<pre><code class="language-go">go test -bench . -benchtime=5s
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12             1201           4876905 ns/op
+PASS
+ok      go_test 6.615s
+</code></pre>
+<p>将 <code>-benchtime</code> 设置为 5s，用例执行次数也变成了原来的5倍，每次函数调用时间仍为 04.8ms作用，几乎没有变化（我们这个测试用例的执行与b.N没有关系）。</p>
+<p><code>-benchtime</code> 的值除了是时间外，还可以是具体的次数。例如，执行 30 次可以用 <code>-benchtime=30x</code>：</p>
+<pre><code class="language-go">go test -bench . -benchtime=30x
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4639033 ns/op
+PASS
+ok      go_test 0.417s
+</code></pre>
+<h3>3.3.2. count</h3>
+<p><code>-count</code> 参数可以用来设置 benchmark 的轮数。例如，进行3轮benchmark。</p>
+<pre><code class="language-shell">go test -bench . -benchtime=30x -count=3
+goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkFib-12               30           4907513 ns/op
+BenchmarkFib-12               30           4996390 ns/op
+BenchmarkFib-12               30           5041850 ns/op
+PASS
+ok      go_test 0.734s
+</code></pre>
+<h1>4. 内存分配测试</h1>
+<p><code>-benchmem</code> 参数可以度量内存分配的次数。内存分配次数也性能也是息息相关的，例如不合理的切片容量，将导致内存重新分配，带来不必要的开销。</p>
+<p>在下面的例子中，<code>generateWithCap</code> 和 <code>generate</code> 的作用是一致的，生成一组长度为 n 的随机序列。唯一的不同在于，<code>generateWithCap</code> 创建切片时，将切片的容量(capacity)设置为n，这样切片就会一次性申请n个整数所需的内存。</p>
+<pre><code class="language-go">package Generate
+
+import (
+    &quot;math/rand&quot;
+    &quot;testing&quot;
+)
+
+func generateWithCap(n int) []int {
+    nums := make([]int, 0, n)
+    for i := 0; i &lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func generate(n int) []int {
+    nums := make([]int, 0)
+    for i := 0; i &lt; n; i++ {
+        nums = append(nums, rand.Int())
+    }
+    return nums
+}
+
+func BenchmarkGenerateWithCap(b *testing.B) {
+    for n := 0; n &lt; b.N; n++ {
+        generateWithCap(1000000)
+    }
+}
+
+func BenchmarkGenerate(b *testing.B) {
+    for n := 0; n &lt; b.N; n++ {
+        generate(1000000)
+    }
+}
+</code></pre>
+<p>运行该用例的结果是：</p>
+<pre><code class="language-shell">go test -bench=&#39;Generate&#39; .
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap
+BenchmarkGenerateWithCap-12           88          12633669 ns/op
+BenchmarkGenerate
+BenchmarkGenerate-12                  62          17817368 ns/op
+PASS
+</code></pre>
+<p>可以看到生成100w个数字的随机序列，<code>GenerateWithCap</code>的耗时比 <code>Generate</code>少很多。我们可以使用 <code>-benchmem</code> 参数看到内存分配的情况：</p>
+<pre><code class="language-shell">go test -bench . -benchmem 
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerateWithCap-12           98          12146879 ns/op         8003645 B/op          1 allocs/op
+BenchmarkGenerate-12                  58          17856278 ns/op        41678169 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        2.459s
+</code></pre>
+<p><code>Generate</code>分配的内存是<code>GenerateWithCap</code>的5倍，设置了切片容量，内存只分配一次，而不设置切片容量，内存分配了 40 次。</p>
+<h1>5. 测试函数时间和空间复杂度</h1>
+<p>不同的函数复杂度不同，O(1)，O(n)，O(n^2) 等，利用benchmark验证复杂度一个简单的方式，是构造不同的输入。对刚才的 benchmark 稍作改造，便能够达到目的。</p>
+<p>对刚刚的例子进行稍加改造</p>
+<pre><code class="language-go">package main  
+  
+import (  
+    &quot;math/rand&quot;  
+    &quot;testing&quot;  
+    &quot;time&quot;  
+)  
+  
+func generate(n int) []int {  
+    rand.Seed(time.Now().UnixNano())  
+    nums := make([]int, 0)  
+    for i := 0; i &lt; n; i++ {  
+        nums = append(nums, rand.Int())  
+    }  
+    return nums  
+}  
+func benchmarkGenerate(i int, b *testing.B) {  
+    for n := 0; n &lt; b.N; n++ {  
+        generate(i)  
+    }  
+}  
+  
+func BenchmarkGenerate1000(b *testing.B)    { benchmarkGenerate(1000, b) }  
+func BenchmarkGenerate10000(b *testing.B)   { benchmarkGenerate(10000, b) }  
+func BenchmarkGenerate100000(b *testing.B)  { benchmarkGenerate(100000, b) }  
+func BenchmarkGenerate1000000(b *testing.B) { benchmarkGenerate(1000000, b) }
+</code></pre>
+<p>可以看到时间复杂度和空间复杂度都是线性增长的，说明时间和空间复杂度都是<code>o(n)</code></p>
+<pre><code class="language-shell">go test -bench . -benchmem
+goos: windows
+goarch: amd64
+pkg: go_test/Generate
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkGenerate1000-12           49246             23597 ns/op           25208 B/op         12 allocs/op
+BenchmarkGenerate10000-12           7395            169348 ns/op          357625 B/op         19 allocs/op
+BenchmarkGenerate100000-12           646           1771936 ns/op         4101387 B/op         28 allocs/op
+BenchmarkGenerate1000000-12           66          18853998 ns/op        41678114 B/op         38 allocs/op
+PASS
+ok      go_test/Generate        6.410s
+</code></pre>
+<h1>6. 控制计时</h1>
+<ul>
+<li>ResetTimer，如果在benchmark开始前，需要一些准备工作，如果准备工作比较耗时，则需要将这部分代码的耗时忽略掉，则可以在需要计时之前调用ResetTimer来重制计时</li>
+<li>StopTimer&amp;StartTimer，如果在benchmark执行过程中，有些操作比较耗时，且不想参与计算，可以通过Stop&amp;Start的方式，忽略掉中间部分的耗时。</li>
+</ul>
+<h1>7. 并行测试</h1>
+<p>前面的BenchmarkFib是常规的串行测试，如果被测试的方法在真实环境中存在并发调用，那么在基准测试中也应该通过并行测试来了解其基本性能（例如锁造成的阻塞）</p>
+<pre><code class="language-go">package main
+
+import &quot;testing&quot;
+
+func BenchmarkParallelFib(b *testing.B) {
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            fib(30)
+        }
+    })
+}
+</code></pre>
+<p>执行结果</p>
+<pre><code class="language-shell">goos: windows
+goarch: amd64
+pkg: go_test
+cpu: AMD Ryzen 5 3600 6-Core Processor
+BenchmarkParallelFib
+BenchmarkParallelFib-12             1663            621800 ns/op
+PASS
+</code></pre>
+<h2>7.1. b.RunParallel</h2>
+<p>这是 <code>*testing.B</code> 对象的一个方法，其作用是并行执行基准测试。它会启动多个goroutine来并行运行传入的函数。</p>
+<ul>
+<li><code>b.RunParallel</code> 方法会尽力让基准测试以<code>GOMAXPROCS(CPU 核心数)</code>个并发来执行</li>
+<li>可以通过<code>-cpu</code>命令来指定并发度</li>
+<li>可以通过 <code>b.SetParallelism(p)</code> 来显式设置并发度。这会将并发 goroutine 的数量设置为 <code>p * GOMAXPROCS</code></li>
+</ul>
+<h2>7.2. <code>func(pb *testing.PB){}</code></h2>
+<p>这是一个匿名函数，会被并行执行。<code>pb *testing.PB</code>：<code>pb</code> 是<code>*testing.PB</code> 类型的指针，它是 <code>b.RunParallel</code> 方法提供的一个对象，用于控制并行基准测试的迭代。<code>pb.Next()</code>：这是 <code>*testing.PB</code> 对象的一个方法，它会返回一个布尔值。只要返回 <code>true</code>，就表明基准测试应该继续迭代。</p>
+<ul>
+<li><strong>循环控制</strong>：它类似于普通基准测试中的 <code>i &lt; b.N</code> 条件，返回一个布尔值表示是否继续执行下一次迭代。</li>
+<li><strong>计数机制</strong>：Go 测试框架会确保所有并发goroutine总共执行的操作次数接近<code>b.N</code>。</li>
+<li><strong>动态分配</strong>：与单线程测试不同，<code>b.N</code>的操作次数会被动态分配给多个goroutine，而 <code>pb.Next()</code>负责协调这一分配过程。</li>
+<li><strong>负载均衡</strong>：测试框架会自动平衡各个goroutine之间的工作负载，避免某些 goroutine工作过多或过少。<blockquote>
+<p>[!note]<br>在并发基准测试中也可以使用 <code>-benchtime</code> 标志来指定测试运行的时间或者次数。这个标志对并发测试和普通基准测试都有效。</p>
+</blockquote>
+</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

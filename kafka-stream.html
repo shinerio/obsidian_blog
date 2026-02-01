@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka Stream - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Kafka Stream</h1>
+        <time datetime="2026-01-03T13:04:29.189Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 流式计算和批计算</h1>
+<h2>1.1. 流式计算</h2>
+<p>流式计算是持续地从数据源获取数据，并实时地对数据进行处理和分析。</p>
+<h3>1.1.1. 特点</h3>
+<ul>
+<li><strong>实时性强</strong>，能够在数据到达时立即进行处理。</li>
+<li><strong>数据无边界</strong>，是持续产生的</li>
+<li><strong>计算模型有状态</strong>，需要维护中间状态，一般用增量计算代替全量计算</li>
+<li><strong>时延敏感</strong>，需要低延迟处理。</li>
+</ul>
+<h3>1.1.2. 应用场景</h3>
+<ul>
+<li>实时监控和异常检测(如网络流量监控、安全威胁检测等)</li>
+<li>实时数据分析(如实时点击流分析、用户行为分析等)</li>
+<li>实时决策和推荐(如实时定价、个性化推荐等)</li>
+</ul>
+<h2>1.2. 批计算</h2>
+<p>以离线的方式，周期性地从数据源根据过滤条件获取数据集，并对整个数据集进行处理和分析。</p>
+<h3>1.2.1. 特点</h3>
+<ul>
+<li><strong>数据集有边界</strong>，一般是静态的</li>
+<li><strong>计算模型无状态</strong>，不需要维护中间状态，一般采用全量计算</li>
+<li><strong>延迟不敏感</strong>，但处理吞吐量大</li>
+</ul>
+<h3>1.2.2. 应用场景</h3>
+<ul>
+<li>离线数据分析(如用户画像)</li>
+<li>大规模数据处理(如网页索引、推荐系统构建等)</li>
+<li>机器学习模型训练和评估</li>
+</ul>
+<h1>2. kafka stream</h1>
+<p>常见的流式处理框架有flink和storm等，相比如这些专业的流失处理框架，kafka stream的一个最大优点是非常轻量，kafka Streams利用kafka作为数据源，其本身仅仅是kafka的一个客户端库，它可以像其他普通的Kafka消费者客户端一样，通过标准的kafka协议与broker进行交互。kafka streams实时消费上游的topic，经过自定义的计算，将结果生产到下游的topic，理论上你可以自己写调用Producer api和Consumer api来实现一个流计算应用。</p>
+<h2>2.1. 关键特性</h2>
+<ul>
+<li>时间的定义：生成时间、处理时间、事件时间</li>
+<li>时间窗口：sliding window、hopping window、event window</li>
+<li>处理晚到数据</li>
+<li>map-reduce</li>
+<li>table join</li>
+<li>中间状态</li>
+<li>exactly-once</li>
+</ul>
+<h2>2.2. 计算模型</h2>
+<p><code>KStream</code>和<code>KTable</code>则是<code>Kafka Stream</code>库在客户端对数据流进行各种转换操作时使用的抽象模型 </p>
+<ul>
+<li><code>KStream</code>代表了一个无界的持续更新的记录流，用于表示和处理有序的、不断插入的事件序列</li>
+<li><code>KTable</code>是持久化状态存储，用于表示记录对连续数据流执行计算后持久化存储的结果视图</li>
+</ul>
+<h2>2.3. 存储模型</h2>
+<h3>2.3.1. KTable</h3>
+<p>Kafka Stream可以为每个流任务嵌入一个或多个本地状态存储[KTable](<a href="https://kafka.apache.org/31/documentation/streams/architecture">https://kafka.apache.org/31/documentation/streams/architecture</a><span class="tag">#streams_architecture_recovery</span>)，并且允许开发者通过API的方式进行访问、查询所需要处理的数据。这些状态数据底层默认是基于RocksDB数据库实现的，本质其实是在内存的一个hashmap。 而且状态存储默认支持同步到远端的kafka broker，以topic的方式记录本地存储的changelog。 当kafka streams的task因重建或者动态扩缩容而发生迁移时，若迁移后的kafka streams实例无法从本地磁盘恢复状态，就会读取下changelog的topic来重建状态存储。具体的工作流程如下：</p>
+<ol>
+<li><strong>从变更日志恢复状态</strong>： 当Kafka Streams应用启动时，它首先检查本地状态存储。如果状态存储存在，它会检查最后处理的偏移量。<ul>
+<li>如果本地状态存储的数据是完整的，Kafka Streams会从本地状态存储恢复数据。</li>
+<li>然后，从变更日志主题中读取从最后一个处理偏移量到当前最新偏移量之间的所有变更，并将这些变更应用到本地状态存储。</li>
+</ul>
+</li>
+<li><strong>从检查点恢复进度</strong>： Kafka Streams还会从检查点恢复处理进度。检查点记录了每个分区的偏移量，即每个分区处理到哪一条记录。当应用程序重新启动时，它会从这些偏移量继续读取和处理记录。</li>
+<li><strong>保证数据一致性</strong>：<ul>
+<li>Kafka Streams确保本地状态存储与变更日志主题中的数据一致。每次状态存储更新时，都会记录在变更日志中。</li>
+<li>通过事务机制，Kafka Streams可以确保所有操作（读取、处理、写入）的一致性。即使在发生故障时，未完成的事务也会回滚，保证不会出现重复处理或数据丢失的情况。</li>
+</ul>
+</li>
+</ol>
+<h3>2.3.2. GlobalKtable</h3>
+<p><code>KTable</code>的数据是按主题分区的，每个流处理应用实例只处理其负责的partition的数据。<code>globalKtable</code>保存来自所有kafka stream client输出的ktable数据，相同key的情况下，kafka的顺序机制保证后写入的会覆盖之前写入的。</p>
+<ul>
+<li><strong>数据分布</strong>：<ul>
+<li><code>KTable</code>：按分区处理，每个实例只处理分配给它的分区数据。</li>
+<li><code>GlobalKTable</code>：全局处理，每个实例都有整个表的副本。</li>
+</ul>
+</li>
+<li><strong>状态存储</strong>：<ul>
+<li><code>KTable</code>：本地状态存储与分区数据相关。</li>
+<li><code>GlobalKTable</code>：本地状态存储整个表的数据。</li>
+</ul>
+</li>
+<li><strong>查询能力</strong>：<ul>
+<li><code>KTable</code>：只能查询本地分区数据。</li>
+<li><code>GlobalKTable</code>：可以查询整个表的数据。</li>
+</ul>
+</li>
+<li><strong>使用场景</strong>：<ul>
+<li><code>KTable</code>：适用于需要对分区数据进行处理和变换的场景。</li>
+<li><code>GlobalKTable</code>：适用于需要全局状态访问的场景。<blockquote>
+<p>优势globalKtable的数据在本地也会缓存，因此无法避免并发问题，并发场景下建议将数据存储到关系型数据库或redis等集中式仓库。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<p><a href="https://hustclf.github.io/posts/cfee7ffb/">kafka streams：一款轻量级流式计算引擎 | 大飞哥的博客 (hustclf.github.io)</a><br><a href="https://blog.csdn.net/u012364631/article/details/94019707">KafkaStream之时间窗口WindowBy_kafka steam windowedby 时间不准确-CSDN博客</a></p>
+<h2>2.4. 任务分配</h2>
+<p>由于kafka stream的数据来源是topic，因此kafka stream任务的分配也和partition的分配一样，kafka会将多个partition平均分配到多个节点上，如果kafka stream client的数量大于kafka stream partition，那么会存在某个client没有任务可以处理的情况。当kafka stream client动态增加会减少时，会出现tasks重新分配。tasks重新分配需要<code>state store</code>重建然后才能继续执行task， 重建<code>state store</code>会优先从本地磁盘恢复，若找不到本地磁盘信息则会通过远端kafka集群的备份topic来重建这些信息，可能会耗时较长。</p>
+<h2>2.5. 有向无环图</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202406222050375.png" alt="image.png"><br>System.out.println(topology.describe());topology 中 processor 有两种比较特殊。</p>
+<ul>
+<li>source processor: 定义了 topology 的入口，即从哪些topic 读取数据  </li>
+<li>sink processor: 定义了 topology 的出口，即将最终结果写入哪些 topic</li>
+</ul>
+<pre><code class="language-java">public class App {  
+    public static void main(String[] args) throws InterruptedException {  
+        Properties properties = new Properties();  
+        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, &quot;wordcount-app&quot;);  
+        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, &quot;localhost:9092&quot;);  
+        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());  
+        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());  
+  
+        Topology topology = new Topology();  
+        StoreBuilder&lt;KeyValueStore&lt;String, Long&gt;&gt; countStoreBuilder =  
+                Stores.keyValueStoreBuilder(  
+                        Stores.persistentKeyValueStore(&quot;counts-store&quot;),  
+                        Serdes.String(),  
+                        Serdes.Long()  
+                );  
+        // 将状态存储添加到拓扑  
+        topology.addStateStore(countStoreBuilder);  
+  
+        // 使用text-lines-topic作为输入源，kafka stream支持定义从多个数据源获取数据
+        topology.addSource(&quot;Source&quot;, &quot;text-lines-topic&quot;)  
+                // processor1: 删除引号  
+                .addProcessor(&quot;removeQuotes&quot;, RemoveQuotesProcessor::new,&quot;Source&quot;) 
+                // processor2: 单词统计  
+                .addProcessor(&quot;wordCount&quot;, WordCountProcessor::new,&quot;removeQuotes&quot;)                 // wordCount需要用到单词计数作为中间状态
+                .connectProcessorAndStateStores(&quot;wordCount&quot;, &quot;counts-store&quot;) 
+                // 将数据输出到streams-wordcount-output中，支持多个topic输出，输出的value是long类型，所以需要指定为LongSerializer()
+                .addSink(&quot;Sink&quot;, &quot;streams-wordcount-output&quot;, new StringSerializer(), new LongSerializer(), &quot;wordCount&quot;);  
+        System.out.println(topology.describe());  
+  
+        KafkaStreams kafkaStreams = new KafkaStreams(topology, properties);  
+        kafkaStreams.setUncaughtExceptionHandler((Thread thread, Throwable throwable) -&gt; {  
+            System.err.println(&quot;Uncaught exception in thread &quot; + thread + &quot;: &quot; + throwable);  
+            throwable.printStackTrace();  
+        });  
+  
+        kafkaStreams.setStateListener((newState, oldState) -&gt; {  
+            System.out.println(&quot;State changed from &quot; + oldState + &quot; to &quot; + newState);  
+        });  
+  
+        kafkaStreams.start();  
+    }  
+  
+    static class RemoveQuotesProcessor implements Processor&lt;String, String, String, String&gt; {  
+  
+        /**  
+         * 泛型1：当前processor处理后输出的key的类型  
+         * 泛型2：当前processor处理后输出的value的类型  
+         */  
+        private ProcessorContext&lt;String, String&gt; context;  
+  
+        /**  
+         * 只调用一次，在处理器开始处理数据之前被调用，用于初始化处理器。  
+         * 1. 获取和存储 ProcessorContext。  
+         * 2. 初始化任何需要的资源,如状态存储。  
+         * 3. 设置定时器或调度定期操作  
+         */  
+        @Override  
+        public void init(ProcessorContext&lt;String, String&gt; context) {  
+            this.context = context;  
+        }  
+  
+        @Override  
+        public void process(Record&lt;String, String&gt; record) {  
+            String replace = record.value().replace(&quot;\&quot;&quot;, &quot;&quot;);  
+            // 创建新的记录，并保留原始记录的时间戳  
+            context.forward(record.withValue(replace));  
+        }  
+  
+        @Override  
+        public void close() {  
+            Processor.super.close();  
+        }  
+    }  
+  
+    static class WordCountProcessor implements Processor&lt;String, String, String, Long&gt; {  
+  
+        private ProcessorContext&lt;String, Long&gt; context;  
+        private KeyValueStore&lt;String, Long&gt; kvStore;  
+  
+        @Override  
+        public void init(ProcessorContext&lt;String, Long&gt; context) {  
+            this.context = context;  
+            // 初始化计数器，用于存储中间计算状态，以便进行流式计算
+            this.kvStore = context.getStateStore(&quot;counts-store&quot;);  
+        }  
+  
+        @Override  
+        public void process(Record&lt;String, String&gt; record) {  
+            String[] words = record.value().toLowerCase().split(&quot;\\W+&quot;);  
+            for (String word : words) {  
+                Long count = kvStore.get(word);  
+                if (count == null) {  
+                    kvStore.put(word, 1L);  
+                    context.forward(new Record&lt;&gt;(word, 1L, record.timestamp()));  
+                } else {  
+                    kvStore.put(word, count + 1);  
+                    context.forward(new Record&lt;&gt;(word, count + 1, record.timestamp()));  
+                }  
+            }  
+        }  
+    }  
+}
+</code></pre>
+<p>打印出来的topology如下：</p>
+<pre><code>Topologies:
+   Sub-topology: 0
+    Source: Source (topics: [text-lines-topic])
+      --&gt; removeQuotes
+    Processor: removeQuotes (stores: [])
+      --&gt; wordCount
+      &lt;-- Source
+    Processor: wordCount (stores: [counts-store])
+      --&gt; Sink
+      &lt;-- removeQuotes
+    Sink: Sink (topic: streams-wordcount-output)
+      &lt;-- wordCount
+</code></pre>
+<h2>2.6. 时间</h2>
+<p>time是kafka streams中一个非常重要的概念，下文基于窗口的处理操作也依赖时间定义来划分边界。kakfa streams分为3种时间定义：</p>
+<ul>
+<li>Event time： 事件真实发生的时间，在写入kafka时可以指定 timestamp来表述该时间。如果事件是汽车GPS传感器报告的地理位置变化，则相关的事件时间就是GPS传感器捕获位置变化的时间。</li>
+<li>Processing time：日志在kafka streams任务中处理时的时间，即记录被消费的时间。处理时间可能比原始事件时间晚几毫秒、几小时或几天等。想象一个分析平台，它读取和处理来自汽车传感器的地理位置数据，并将其呈现在车队管理仪表板上。在这里，分析应用程序的处理时间可能比事件时间晚几毫秒或几秒(例如，基于Apache Kafka和Kafka Streams的实时管道)，或者晚几小时(例如，基于Apache Hadoop或Apache Spark的批处理管道)。</li>
+<li>Ingestion time：记录日志被写进kafka的topic的时间。与事件时间的区别在于，这个摄入时间戳是在Kafka broker将记录追加到目标topic时生成的，而不是在&quot;源头&quot;创建记录时生成的。与处理时间的区别在于，处理时间是流处理应用程序处理记录的时间。例如,如果一个记录从未被处理，它就没有处理时间的概念，但它仍然有摄入时间。<br>事件时间和摄入时间之间的选择实际上是通过Kafka的配置来完成的(而不是Kafka Streams)。从Kafka 0.10.x开始，时间戳会自动嵌入到Kafka消息中。根据Kafka的配置，这些时间戳代表事件时间或摄入时间。相应的Kafka配置设置可以在broker级别或每个topic上指定。Kafka Streams中的默认时间戳提取器将按原样检索这些嵌入的时间戳。因此，应用程序的有效时间语义取决于这些嵌入时间戳的Kafka配置。</li>
+</ul>
+<p>Kafka Streams通过TimestampExtractor接口为每个数据记录分配一个时间戳。每条记录的时间戳描述了流在时间方面的进展，并被诸如窗口操作等依赖时间的操作所使用。因此，这个时间只有在新记录到达处理器时才会前进。我们将这种数据驱动的时间称为应用程序的stream time，以区别于应用程序实际执行时的wall-clock time。TimestampExtractor接口的具体实现将为stream time定义提供不同的语义。例如，基于数据记录的实际内容(如嵌入的时间戳字段)检索或计算时间戳，以提供事件时间语义，而返回当前wall-clock time则为stream time提供处理时间语义。因此，开发人员可以根据其业务需求强制执行不同的时间概念。</p>
+<p>最后，当Kafka Streams应用程序向Kafka写入记录时，它也会为这些新记录分配时间戳。时间戳的分配方式取决于上下文:</p>
+<ol>
+<li>当通过处理某些输入记录生成新的输出记录时，例如在process()函数调用中触发的context.forward()，输出记录时间戳直接继承自输入记录时间戳。</li>
+<li>当通过周期性函数(如Punctuator<span class="tag">#punctuate</span>())生成新的输出记录时，输出记录时间戳被定义为流任务的当前内部时间(通过context.timestamp()获得)。</li>
+<li>对于聚合操作，结果更新记录的时间戳将是所有贡献到结果的输入记录的最大时间戳。<br>也可以在Processor API中通过在调用<code>&lt;span class=&quot;tag&quot;&gt;#forward&lt;/span&gt;()</code>时显式地为输出记录分配时间戳来改变默认行为。</li>
+</ol>
+<p>对于聚合和连接操作,时间戳的计算遵循以下规则:</p>
+<ol>
+<li>对于具有左右输入记录的连接操作(stream-stream, table-table)，输出记录的时间戳被分配为max(left.ts, right.ts)。</li>
+<li>对于stream-table连接，输出记录被分配来自流记录的时间戳。</li>
+<li>对于聚合操作，Kafka Streams还会计算所有记录的最大时间戳，按键计算，可以是全局的(对于非窗口化操作)或每个窗口的。</li>
+<li>对于无状态操作，输入记录时间戳被直接传递。对于flatMap及其兄弟操作(发出多个记录)，所有输出记录都继承自相应输入记录的时间戳。</li>
+</ol>
+<h2>2.7. 窗口</h2>
+<p>kafka Streams窗口默认是键控窗口（每个key有独立窗口维护）。在Kafka Streams中，时间窗口操作通常是在分组（grouped）或者已分组（keyed）的流上进行的，每个不同的 key 都有其独立的时间窗口集合。这意味着相同key的消息会被聚合到同一个窗口中，而不同key的消息则分别进入各自的窗口。<br>好处:</p>
+<ul>
+<li>这种设计允许并行处理不同 key 的数据。</li>
+<li>可以独立地对每个 key 进行聚合、计数或其他窗口操作。<br>假设您在处理用户点击数据，key 是用户 ID。每个用户（每个 key）都会有自己的一组时间窗口，用于统计该用户在不同时间段的点击次数。我们也可以通过一些方案可以实现非键控窗口（全局窗口），例如：</li>
+</ul>
+<pre><code class="language-java">KStream&lt;String, Long&gt; input = ...;
+
+KTable&lt;Windowed&lt;String&gt;, Long&gt; windowedCounts = input
+    .selectKey((k, v) -&gt; &quot;global&quot;)  // 将所有消息分配到同一个 key
+    .groupByKey()
+    .windowedBy(TimeWindows.of(Duration.ofMinutes(5)))
+    .count();
+</code></pre>
+<p>kafka streams的DSL提供了多种[时间窗口](<a href="https://kafka.apache.org/31/documentation/streams/developer-guide/dsl-api">https://kafka.apache.org/31/documentation/streams/developer-guide/dsl-api</a><span class="tag">#sliding-time-windows</span>)</p>
+<table>
+<thead>
+<tr>
+<th>窗口类型</th>
+<th>表现</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Hopping time window</td>
+<td>基于时间</td>
+<td>大小固定、重叠的窗口</td>
+</tr>
+<tr>
+<td>Tumbling time window</td>
+<td>基于时间</td>
+<td>大小固定、不重叠的窗口</td>
+</tr>
+<tr>
+<td>Sliding time window</td>
+<td>基于时间</td>
+<td>大小固定，重叠的窗口，仅用于join计算的窗口</td>
+</tr>
+<tr>
+<td>Session window</td>
+<td>基于session</td>
+<td>大小不固定、不重叠的、基于数据驱动的窗口</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3>2.7.1. hopping time window</h3>
+<p>定义一个大小为5分钟、间隔为1分钟的Hopping time window。kafka窗口采用左闭右开原则，即窗口是<code>[0,5),[5,10),[10,15)....</code></p>
+<pre><code class="language-java">// A hopping time window with a size of 5 minutes and an advance interval of 1 minute.  
+Duration windowSize = Duration.ofMinutes(5);  
+Duration advance = Duration.ofMinutes(1);  
+TimeWindows.ofSizeWithNoGrace(windowSize).advanceBy(advance);
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202406262317017.png" alt="image.png"></p>
+<h3>2.7.2. Tumbling time window</h3>
+<p>Tumbling time window是hopping time window的一种特例，即windows和interval一样大。这种窗口相互之间不会重叠，可以保证一个记录只会属于一个窗口。kafka窗口采用左闭右开原则，定义一个大小为5分钟的Tumbling time window，<code>[0,5),[5,10),[10,15)....</code></p>
+<pre><code class="language-java">// A tumbling time window with a size of 5 minutes (and, by definition, an implicit  
+// advance interval of 5 minutes), and grace period of 1 minute.  
+Duration windowSize = Duration.ofMinutes(5);  
+Duration gracePeriod = Duration.ofMinutes(1);  
+TimeWindows.ofSizeAndGrace(windowSize, gracePeriod);  
+  
+// The above is equivalent to the following code:  
+TimeWindows.ofSizeAndGrace(windowSize, gracePeriod).advanceBy(windowSize);
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202406262304468.png" alt="image.png"><br>The grace period to admit out-of-order events to a window. Must be non-negative. 是一个窗口在其原定结束时间后，额外等待迟到数据的时间段。它允许在窗口结束后的一段时间内继续接受和处理迟到的数据，而不会立即关闭窗口。</p>
+<p>以下代码，每隔10秒对当前窗口内的单词数量进行计数。</p>
+<pre><code class="language-java">public static void main(String[] args) throws InterruptedException {  
+    Properties properties = new Properties();  
+    properties.put(StreamsConfig.APPLICATION_ID_CONFIG, &quot;wordcount-app&quot;);  
+    properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, &quot;localhost:9092&quot;);  
+    properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());  
+    properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());  
+  
+    StreamsBuilder builder = new StreamsBuilder();  
+    builder.stream(&quot;text-lines-topic&quot;, Consumed.with(Serdes.String(), Serdes.String()))  
+            .map((key, value) -&gt; new KeyValue&lt;&gt;(key, value.replace(&quot;\&quot;&quot;, &quot;&quot;)))  
+            .flatMapValues((key, textLine) -&gt; Arrays.asList(textLine.toLowerCase().split(&quot;\\W+&quot;)))  
+            .groupBy((key, word) -&gt; word)  
+            .windowedBy(TimeWindows.ofSizeAndGrace(Duration.ofSeconds(10), Duration.ofSeconds(2)))  
+            .count()  
+            .toStream()  
+            .map((key, value) -&gt; new KeyValue&lt;&gt;(key.key(), value))  
+            .to(&quot;streams-wordcount-output&quot;, Produced.with(Serdes.String(), Serdes.Long()));  
+  
+    KafkaStreams kafkaStreams = new KafkaStreams(builder.build(), properties);  
+    kafkaStreams.setUncaughtExceptionHandler((Thread thread, Throwable throwable) -&gt; {  
+        System.err.println(&quot;Uncaught exception in thread &quot; + thread + &quot;: &quot; + throwable);  
+        throwable.printStackTrace();  
+    });  
+  
+    kafkaStreams.setStateListener((newState, oldState) -&gt; {  
+        System.out.println(&quot;State changed from &quot; + oldState + &quot; to &quot; + newState);  
+    });  
+  
+    kafkaStreams.start();  
+}
+</code></pre>
+<h3>2.7.3. slide time window</h3>
+<h1>3. docker安装kafka测试</h1>
+<p><a href="https://kafka.apache.org/31/documentation/streams/quickstart">Apache Kafka</a></p>
+<pre><code class="language-shell"># zookeeper
+docker run -d --name zookeeper -p 2181:2181 -t wurstmeister/zookeeper
+# kafka, docker inspect查看zookeeper地址并配置
+docker run -d --name kafka -p 9092:9092 -e KAFKA_BROKER_ID=0 -e KAFKA_ZOOKEEPER_CONNECT=172.17.0.2:2181 -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 -e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 wurstmeister/kafka
+</code></pre>
+<p>进入kafka容器后，创建topic</p>
+<pre><code class="language-shell">/opt/kafka_2.13-2.8.1/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic text-lines-topic --partitions 1 --replication-factor 1
+</code></pre>
+<p>运行以下代码，进行流式计算，单词统计</p>
+<pre><code class="language-java">public class App {  
+    public static void main(String[] args) {  
+        Properties properties = new Properties();  
+        properties.put(StreamsConfig.APPLICATION_ID_CONFIG, &quot;wordcount-app&quot;);  
+        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, &quot;localhost:9092&quot;);  
+        properties.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());  
+        properties.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass());  
+  
+        StreamsBuilder builder = new StreamsBuilder();  
+        builder  
+                // 使用topic text-lines-topic作为输入源  
+                .&lt;String, String&gt;stream(&quot;text-lines-topic&quot;)  
+                // 将每个小时转换为单词列表  
+                    .flatMapValues(textLine -&gt; Arrays.asList(textLine.toLowerCase().split(&quot;\\W+&quot;)))  
+                // 按照单词分组  
+                .groupBy((key, word) -&gt; word)  
+                // 1. 对每个单词计数  
+                // 2. 将KTable持久化到一个名为&quot;counts-store&quot;的状态存储中(默认使用RocksDB)  
+                .count(Materialized.as(&quot;counts-store&quot;))  
+                // 将技术结果输出到topic streams-wordcount-output中  
+                .toStream().to(&quot;streams-wordcount-output&quot;, Produced.with(Serdes.String(), Serdes.Long()));  
+  
+        Topology topology = builder.build();  
+        KafkaStreams streams = new KafkaStreams(topology, properties); 
+        streams.start();  
+    }  
+}
+</code></pre>
+<p>生产消息</p>
+<pre><code class="language-shell">/opt/kafka_2.13-2.8.1/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic text-lines-topic
+&gt;good good study
+&gt;day day up
+&gt;good good study
+&gt;day day up
+&gt;good good study
+&gt;day day up
+&gt;good good study
+&gt;day day up up
+</code></pre>
+<p>消费者</p>
+<pre><code class="language-shell">/opt/kafka_2.13-2.8.1/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic streams-wordcount-output --from-beginning --formatter kafka.tools.DefaultMessageFormatter --property print.key=true --property print.value=true --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property value.deserializer=org.apache.kafka.common.serialization.LongDeserializer
+# 输出
+good	6
+study	3
+day	6
+up	3
+good	8
+study	4
+day	8
+up	5
+</code></pre>
+<blockquote>
+<p>输出是一个连续的，不断被更新的流</p>
+</blockquote>
+<p>将应用重启后，producer生产新消息<code>good good study</code>，会发现下游topic中计数会更新</p>
+<pre><code>good    10
+study	5
+</code></pre>
+<pre><code class="language-shell">/opt/kafka_2.13-2.8.1/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+# 输出
+/opt/kafka_2.13-2.8.1/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list
+__consumer_offsets
+streams-wordcount-output
+text-lines-topic
+wordcount-app-KSTREAM-AGGREGATE-STATE-STORE-0000000004-changelog
+wordcount-app-KSTREAM-AGGREGATE-STATE-STORE-0000000004-repartition
+wordcount-app-counts-store-changelog
+wordcount-app-counts-store-repartition
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

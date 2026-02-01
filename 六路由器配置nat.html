@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>(六)路由器配置NAT - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>(六)路由器配置NAT</h1>
+        <time datetime="2026-01-03T13:04:29.212Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>本章节主要以cisco路由器配置为例，使用GNS3仿真平台搭建一个最简单的实验环境进行验证。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307110023052.png" alt="image.png"></p>
+<h1>1. 常用命令（cisco）</h1>
+<p>首先介绍本实验可能用到的一些命令，先有个概念，后面再在实验中熟悉并掌握。</p>
+<h2>1.1. VPC</h2>
+<pre><code class="language-shell"># 配置ip、掩码和网关
+ip address/mask gateway
+# show ip
+查看ip
+</code></pre>
+<h2>1.2. 路由器</h2>
+<pre><code class="language-shell"># 进入全局模式
+configure terminal
+# 查看所有接口
+do show interface
+# 进入接口模式
+interface g0/0
+# 配置路由器接口ip和掩码
+ip address 192.168.0.1 255.255.255.0
+# 激活
+no shut
+# 退出
+exit
+# 查看路由
+show ip route
+# 指定NAT内部接口 在内网相应接口的接口配置模式下执行
+ip nat inside 
+# 指定NAT外部接口 在外网相应接口的接口配置模式下执行
+ip nat outside
+# 在内部地址与外部地址之间建立静态地址转换关系
+ip nat inside source static [NAT前的内部地址] [NAT后的外部地址] 
+# 在外部地址与内部地址之间建立静态地址转换关系
+ip nat outside source static [NAT前的外部地址] [NAT后的内部地址] 
+# 显示当前存在的NAT转换信息
+show ip nat translations
+# 查看NAT的统计信息
+show ip nat statics
+# 显示当前存在的NAT转换的详细信息
+show ip nat translations verbose
+# 跟踪NAT操作，显示出每个被转换的数据包
+debug ip nat
+# 删除静态NAT映射
+no ip nat inside source static local-address global-address 
+no ip nat outside source static local-address global-address 
+# 删除动态NAT映射表中的所有内容
+clear ip nat translations *
+# pnat
+ip nat inside source static {UDP|TCP} local-address port global-address port
+ip nat outside source static {UDP|TCP} local-address port global-address port
+# 定义一个标准的access-list规则，声明允许哪些内部本地地址可以进行动态地址转换，其中，access-list-number为1－99之间的一个任意整数，通配符为子网掩码的反掩码
+access-list access-list-number permit 源地址 通配符 
+# 定义内部全局地址池
+ip nat pool 地址池名 起始IP地址 终止IP地址 netmask 子网掩码
+# 定义符合先前定义的access-list规则的IP数据包与先前定义的地址池中的IP地址进行转换，只分配ip，不复用端口
+ip nat inside source list access-list-number pool 内部全局地址池名
+# 定义符合先前定义的access-list规则的IP数据包与先前定义的地址池中的IP地址进行复用地址转换，同ip复用端口
+ip nat inside source list list-number pool 内部全局地址池名 overload
+# 删除全局地址池 
+no ip nat pool name 
+# 删除访问列表
+no access-list access-list-number  
+# 删除动态源地址转换
+no ip nat inside source list list-number pool 内部全局地址池名
+no ip nat inside source list list-number pool 内部全局地址池名 overload
+</code></pre>
+<h1>2. 环境</h1>
+<h2>2.1. 配置PC</h2>
+<h3>2.1.1. PC1</h3>
+<pre><code class="language-shell">PC1&gt; ip 192.168.0.2/24 192.168.0.1
+Checking for duplicate address...
+PC1 : 192.168.0.2 255.255.255.0 gateway 192.168.0.1
+</code></pre>
+<h3>2.1.2. PC2</h3>
+<pre><code class="language-shell">PC2&gt; ip 30.0.0.2/24  30.0.0.1
+Checking for duplicate address...
+PC2 : 10.0.0.2 255.255.255.0 gateway 10.0.0.1
+</code></pre>
+<h2>2.2. 配置路由器</h2>
+<h3>2.2.1. R1</h3>
+<h4>2.2.1.1. g0/0</h4>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g0/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 192.168.0.1 255.255.255.0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shut
+R1(config-if)#
+*Jul 10 14:48:52.979: %LINK-3-UPDOWN: Interface GigabitEthernet0/0, changed state to up
+*Jul 10 14:48:53.979: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0, changed state to up
+</code></pre>
+<h4>2.2.1.2. g1/0</h4>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g1/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 20.0.0.2 255.255.255.0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shut
+</code></pre>
+<h3>2.2.2. R2</h3>
+<h4>2.2.2.1. #### g0/0</h4>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g0/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 20.0.0.3 255.255.255.0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shut
+</code></pre>
+<h4>2.2.2.2. g1/0</h4>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g1/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; address 30.0.0.1 255.255.255.0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#no&lt;/span&gt; shut
+</code></pre>
+<h3>2.2.3. 查看路由</h3>
+<h4>2.2.3.1. R1</h4>
+<pre><code class="language-shell">R1(config-if)&lt;span class=&quot;tag&quot;&gt;#do&lt;/span&gt; show ip route
+Codes: C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     20.0.0.0/24 is subnetted, 1 subnets
+C       20.0.0.0 is directly connected, GigabitEthernet1/0
+C    192.168.0.0/24 is directly connected, GigabitEthernet0/0
+</code></pre>
+<p>存在两条直连路由</p>
+<h4>2.2.3.2. R2</h4>
+<pre><code class="language-shell">R2(config)&lt;span class=&quot;tag&quot;&gt;#do&lt;/span&gt; show ip route
+Codes: C - connected, S - static, R - RIP, M - mobile, B - BGP
+       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area 
+       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2
+       E1 - OSPF external type 1, E2 - OSPF external type 2
+       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2
+       ia - IS-IS inter area, * - candidate default, U - per-user static route
+       o - ODR, P - periodic downloaded static route
+
+Gateway of last resort is not set
+
+     20.0.0.0/24 is subnetted, 1 subnets
+C       20.0.0.0 is directly connected, GigabitEthernet0/0
+     30.0.0.0/24 is subnetted, 1 subnets
+C       30.0.0.0 is directly connected, GigabitEthernet1/0
+</code></pre>
+<p>存在两条直连路由</p>
+<h3>2.2.4. ping实验</h3>
+<p>此时两台路由器上并没有运行任何路由协议，都只存在直连路由，因此在pc1上很显然是ping不通pc2的，因为R1并不知道<code>30.0.0.0/24</code>网段下一跳应该送到何处。</p>
+<pre><code class="language-shell">[PC1&gt; ping 30.0.0.2/24 
+*192.168.0.1 icmp_seq=1 ttl=255 time=45.867 ms (ICMP type:3, code:1, Destination host unreachable)
+    *192.168.0.1 icmp_seq=2 ttl=255 time=11.573 ms (ICMP type:3, code:1, Destination host unreachable)
+*192.168.0.1 icmp_seq=3 ttl=255 time=8.511 ms (ICMP type:3, code:1, Destination host unreachable)](&lt;PC1%3E ping 20.0.0.3                
+
+84 bytes from 20.0.0.3 icmp_seq=1 ttl=255 time=11.490 ms
+84 bytes from 20.0.0.3 icmp_seq=2 ttl=255 time=5.910 ms
+84 bytes from 20.0.0.3 icmp_seq=3 ttl=255 time=5.994 ms
+
+PC1&gt; ping 30.0.0.2
+
+*192.168.0.1 icmp_seq=1 ttl=255 time=11.198 ms (ICMP type:3, code:1, Destination host unreachable)
+*192.168.0.1 icmp_seq=2 ttl=255 time=12.263 ms (ICMP type:3, code:1, Destination host unreachable)&gt;)
+</code></pre>
+<h2>2.3. 配置静态NAT</h2>
+<h3>2.3.1. inside方式</h3>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat inside source static 192.168.0.2 20.0.0.4
+R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g0/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat inside
+
+*Jul  6 16:20:25.563: %LINEPROTO-5-UPDOWN: Line protocol on Interface NVI0, changed state to up
+R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g1/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat outside
+R1(config)&lt;span class=&quot;tag&quot;&gt;#do&lt;/span&gt; show ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+--- 20.0.0.4           192.168.0.2        ---                ---
+
+R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; route 30.0.0.0 255.255.255.0 20.0.0.3
+</code></pre>
+<p>这里我们在R1上添加了30.0.0.0/24的路由，下一跳送给R2，但是R2上并没有添加指向192.168.0.0/24的路由。如果不对源地址进行NAT，R2路由器是不知道192.168.0.0/24网段下一跳应该送到哪里的，但是经过NAT后源地址已经变成了20.0.0.4，R2上有这条直连路由，流量经过NAT后可以通。</p>
+<h4>2.3.1.1. pc1 ping 30.0.0.2</h4>
+<p>pc1抓包，NAT前<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307102331836.png" alt="image.png"><br>pc2抓包，NAT后<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307102332512.png" alt="image.png"><br>去程流量从inside口入，匹配nat规则，源地址替换为20.0.0.4；<br>回程流量匹配会话，目的地址由20.0.0.4替换为192.168.0.2</p>
+<h4>2.3.1.2. pc2 ping 192.168.0.2</h4>
+<p>配置路由</p>
+<pre><code class="language-shell">R2(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; route 192.168.0.0 255.255.255.0 20.0.0.2
+</code></pre>
+<p>抓包如下：<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307110013686.png" alt="image.png"><br>去程从outside口入，不进行NAT地址替换，pc1看到的源地址就是30.0.0.2；<br>回程从inside口入，进行NAT地址替换，源地址替换为20.0.0.4；<br>pc2访问的目的是192.168.0.2，reply报文源地址是20.0.0.4，地址不匹配，流量不通。</p>
+<h4>2.3.1.3. pc2 ping 20.0.0.4</h4>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307110016948.png" alt="image.png"><br>去程从outside口入，不进行NAT地址替换，30.0.0.2 -&gt; 20.0.0.4；<br>回程从inside口入，进行NAT地址替换，192.168.0.2 -&gt; 30.0.0.2变为20.0.0.4 -&gt; 30.0.0.2;<br>流量正常。</p>
+<h3>2.3.2. outside方式</h3>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat outside source static 30.0.0.2 20.0.0.4
+R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g0/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat inside
+
+*Jul  6 16:20:25.563: %LINEPROTO-5-UPDOWN: Line protocol on Interface NVI0, changed state to up
+R1(config)&lt;span class=&quot;tag&quot;&gt;#interface&lt;/span&gt; g1/0
+R1(config-if)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat outside
+R1(config)&lt;span class=&quot;tag&quot;&gt;#do&lt;/span&gt; show ip nat translations
+Pro Inside global      Inside local       Outside local      Outside global
+--- ---                ---                20.0.0.4           30.0.0.2
+
+R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; route 30.0.0.0 255.255.255.0 20.0.0.3
+
+R2(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; route 192.168.0.0 255.255.255.0 20.0.0.2
+</code></pre>
+<h4>2.3.2.1. p2 ping 192.168.0.2</h4>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307102344888.png" alt="image.png"></p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307102344140.png" alt="image.png"><br>去程从R1的outside口进，匹配nat规则，源地址替换为20.0.0.4;<br>返程根据会话将目的地址20.0.0.4替换为30.0.0.2;<br>流量正常</p>
+<h4>2.3.2.2. p1 ping 30.0.0.2</h4>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307102350377.png" alt="image.png"><br>由于是在outside配置的nat规则，因此去程从inside口进，并不会进行nat，pc2收到的源地址就是192.168.0.2；<br>返程从outside口进时匹配到了nat规则，将源地址30.0.0.2替换为20.0.0.4；<br>对于pc1来说，看到的源地址20.0.0.4和发出的报文目的地址30.0.0.2不匹配，流量不通。</p>
+<h4>2.3.2.3. pc1 ping 20.0.0.4</h4>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307110001925.png" alt="image.png"><br>由于是在outside配置的nat规则，因此去程并不会进行nat，pc2收到的源地址就是192.168.0.2，而返程在outside口进时匹配到了nat规则，将源地址30.0.0.2替换为20.0.0.4，对于pc1来说就是看到的与20.0.0.4这个地址在通信。</p>
+<h3>2.3.3. 总结</h3>
+<ol>
+<li>inside规则匹配从inside口流入的流量并替换<strong>源地址</strong>；outside规则匹配从outside口流入的流量并替换<strong>源地址</strong>。两个规则是相对的，inside配置的规则，对于内网主机来说看到的外网地址是真实地址，对于外网主机来说看到的是NAT后的内网主机地址；而对于outside规则来说，对于内网主机看到的外网地址是NAT后的地址，对于外网主机来说看到的地址是真实的内网地址。</li>
+<li>inside的规则是给内网主机做nat的，outside的规则是给外网主机做nat的，其实我们可以发现inside和outside是对等的。</li>
+<li>静态规则即可以正向内网主动访问外网，也可以反向外网主动访问内网。</li>
+</ol>
+<h2>2.4. 配置静态PNAT</h2>
+<p>指定端口进行NAT</p>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat inside source static tcp 192.168.0.2  23 20.0.0.4 10000
+</code></pre>
+<p>pc2 通过tcp协议ping 20.0.0.4</p>
+<pre><code>PC2&gt; ping ?
+**ping** HOST [OPTION ...]
+  Ping the network HOST. HOST can be an ip address or name
+    Options:
+     **-1**             ICMP mode, default
+     **-2**             UDP mode
+     **-3**             TCP mode
+     **-c** count       Packet count, default 5
+     **-D**             Set the Don&#39;t Fragment bit
+     **-f** FLAG        Tcp header FLAG |**C**|**E**|**U**|**A**|**P**|**R**|**S**|**F**|
+                               bits |7 6 5 4 3 2 1 0|
+     **-i** ms          Wait ms milliseconds between sending each packet
+     **-l** size        Data size
+     **-P** protocol    Use IP protocol in ping packets
+                      **1** - ICMP (default), **17** - UDP, **6** - TCP
+     **-p** port        Destination port
+     **-s** port        Source port
+     **-T** ttl         Set ttl, default 64
+     **-t**             Send packets until interrupted by Ctrl+C
+     **-w** ms          Wait ms milliseconds to receive the response
+
+  Notes: 1. Using names requires DNS to be set.
+         2. Use Ctrl+C to stop the command.
+
+PC2&gt; ping 20.0.0.4 -P 6 -p 10000 -c 3
+Connect   10000@20.0.0.4 seq=1 ttl=62 time=24.921 ms
+SendData  10000@20.0.0.4 seq=1 ttl=62 time=33.232 ms
+Close     10000@20.0.0.4 seq=1 ttl=62 time=34.103 ms
+Connect   10000@20.0.0.4 seq=2 ttl=62 time=35.078 ms
+SendData  10000@20.0.0.4 seq=2 ttl=62 time=36.881 ms
+Close     10000@20.0.0.4 seq=2 ttl=62 time=25.813 ms
+Connect   10000@20.0.0.4 seq=3 ttl=62 time=49.130 ms
+SendData  10000@20.0.0.4 seq=3 ttl=62 time=40.901 ms
+Close     10000@20.0.0.4 seq=3 ttl=62 time=41.091 ms
+</code></pre>
+<p>NAT前目的IP为20.0.0.4，目的端口为10000；NAT后目的ip为192.168.0.2，目的端口为23<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307112319770.png" alt="image.png"></p>
+<h2>2.5. 配置动态NAT</h2>
+<p>在192.168.0.0/24网络环境中新增pc3，更新组网图如下：<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307120026316.png" alt="image.png"></p>
+<h3>2.5.1. 配置源地址段为<code>192.168.0.0/24</code>的动态nat规则</h3>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat pool mytest 20.0.0.10 20.0.0.20 netmask 255.255.255.0
+!定义内部全局地址池
+R1(config)&lt;span class=&quot;tag&quot;&gt;#access-list&lt;/span&gt; 10 permit 192.168.0.0 0.0.0.255
+!定义访问控制列表，内部本地地址范围
+R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat inside source list 10 pool mytest
+!建立映射关系
+</code></pre>
+<h4>2.5.1.1. pc1 ping 30.0.0.2</h4>
+<p>源地址在192.168.0.0/24内，动态源地址替换为了20.0.0.10<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307112339759.png" alt="image.png"></p>
+<h4>2.5.1.2. pc3 ping 30.0.0.2</h4>
+<p>源地址在192.168.0.0/24内，动态替换源地址为20.0.0.11<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307112348596.png" alt="image.png"></p>
+<h4>2.5.1.3. 总结</h4>
+<p>一个ip只可以被一个内网主机使用，ip不会在主机间复用。</p>
+<h3>2.5.2. 配置源地址段为<code>192.168.0.2/32</code>的动态nat规则</h3>
+<pre><code class="language-shell">R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat pool mytest 20.0.0.10 20.0.0.20 netmask 255.255.255.0
+!定义内部全局地址池
+R1(config)&lt;span class=&quot;tag&quot;&gt;#access-list&lt;/span&gt; 10 permit 192.168.0.2 0.0.0.0
+!定义访问控制列表，内部本地地址范围
+R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat inside source list 10 pool mytest
+!建立映射关系
+</code></pre>
+<h4>2.5.2.1. pc1 ping 30.0.0.2</h4>
+<p>源地址在192.168.0.2/32内，动态源地址替换为了20.0.0.12<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307112355238.png" alt="image.png"></p>
+<h4>2.5.2.2. pc3 ping 30.0.0.2</h4>
+<p>源地址不在192.168.0.2/32内，不替换源地址。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307112354696.png" alt="image.png"></p>
+<h2>2.6. 配置动态PNAT</h2>
+<p>通过overload参数控制地址重复</p>
+<pre><code>R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat pool mytest 20.0.0.10 20.0.0.20 netmask 255.255.255.0
+!定义内部全局地址池
+R1(config)&lt;span class=&quot;tag&quot;&gt;#access-list&lt;/span&gt; 10 permit 192.168.0.0 0.0.0.255
+!定义访问控制列表，内部本地地址范围
+R1(config)&lt;span class=&quot;tag&quot;&gt;#ip&lt;/span&gt; nat inside source list 10 pool mytest overload
+!建立映射关系
+</code></pre>
+<p>使用pc1和pc3同时ping 30.0.0.2，可以发现复用了同一个20.0.0.12地址<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202307120013041.png" alt="image.png"></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

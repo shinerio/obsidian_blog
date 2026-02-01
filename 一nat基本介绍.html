@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAT概览 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>NAT概览</h1>
+        <time datetime="2022-05-04T00:00:00.000Z">2022年5月4日</time>
+        <div class="tags">
+            
+            <span class="tag">nat</span>
+            
+            <span class="tag">network</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 背景</h1>
+<p><code>IPv4</code>地址使用4个字节进行存储，最多能够提供<code>2^32</code>个<code>IPv4</code>地址。随着互联网尤其是物联网的发展，全球<code>IPv4</code>地址早已不够用，因此人们发明了<code>NAT</code>（网络地址转换）来缓解这个问题。</p>
+<p>简单来说，国际互联网组织划分了三个网络地址段作为内部网络本地通信使用，分别是<code>10.0.0.0/8</code>,<code>172.16.0.0/12</code>,<code>192.168.0.0/16</code>。大部分内部机器都使用这些网段中的私有<code>IP</code>地址，如果它们需要访问公网服务，那么则需要经过<code>NAT</code>。</p>
+<ul>
+<li><strong>出向流量</strong>：需要经过一台<code>NAT</code>设备，它会对流量进行<code>SNAT</code>(源地址替换)，将私网地址和端口转换成<code>NAT</code>设备的公网地址和端口，然后再将包发出去；</li>
+<li><strong>回程流量</strong>：到达<code>NAT</code>设备后进行相反的转换<code>DNAT</code>(目的地址替换)，然后再转发给客户端。</li>
+</ul>
+<!--more-->
+
+<h1>2. 三四层NAT</h1>
+<p><code>NAT</code>(Network address translation)即网络地址转换，工作在<code>OSI</code>模型的三层或四层(<code>PNAT</code>)，用于修改<code>IP</code>数据包中的<code>IP</code>地址和端口。当内网的一些主机本来已经分配到了<code>local ip</code>地址，但又想和<code>Internet</code>的主机通信时，可使用<code>NAT</code>技术。</p>
+<p>为了更好地表述各种NAT映射方式的区别，我们首先统一下相关术语。</p>
+<ul>
+<li>内网主机IP：<code>InternalIp</code></li>
+<li>内网主机端口：<code>InternalPort</code></li>
+<li><code>NAT</code>后的外网主机<code>IP</code>：<code>TransitIp</code></li>
+<li>NAT后的外网主机端口：<code>TransitPort</code></li>
+<li>外网主机<code>IP</code>：<code>ExternalIp</code></li>
+<li>外网主机端口：<code>ExternalPort</code></li>
+</ul>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/NAT%E5%9F%BA%E7%A1%80%E6%A8%A1%E5%9E%8B.png" alt="image.png"></p>
+<p>在最常见的家庭网络中，我们大部分的的设备（手机、电脑、具备联网功能智能家居）都处于internal network环境中，具有一个<code>192.168.x.x</code>的地址，而这个地址是一个私网地址，是不能被公网设备识别和路由的。日常访问的百度、淘宝等都可以认为是工作在external network环境中，具备一个或一组代表身份和位置信息的公网IP地址。为了实现内网设备访问公网服务，就必须在设备接入公网前经历一次<code>NAT</code>，将一个公网的IP用作<code>transitIP</code>。在运营商给你分配了公网ip的情况下，你家的路由器就是<code>firewall</code>，承担了<code>NAT</code>的功能。这种情况下的路由器一般有两个地址，一个是<code>192.168.x.1</code>的ip地址用作内网设备的默认网关，另一个则是用作NAT的公网IP地址，此时路由器就像一座桥一样，连接了两个本不能互通的网络环境。</p>
+<h2>2.1. 按NAT使用场景</h2>
+<p>从<code>NAT</code>的使用场景来看，<code>NAT</code>可以分为<code>SNAT</code>、<code>DNAT</code>和<code>FULLNAT</code></p>
+<ul>
+<li>SNAT，替换源地址，SNAT一般可以分为两种<ol>
+<li>地址池方式，适用于有大量内网主机需要访问外网主机的场景，使用地址池中的随机IP替换源地址</li>
+<li>出接口方式，内网主机直接使用外网接口的IP地址访问外网，适用于外网接口IP是动态获取的场景。</li>
+</ol>
+</li>
+<li>DNAT，替换目的地址。</li>
+<li>FULLNAT，源地址和目的地址同时替换，使用FULLNAT可以简化内部主机的设置，避免配置网关或路由。</li>
+</ul>
+<h2>2.2. 按映射方式划分</h2>
+<p>从<code>NAT</code>的映射方式来看，<code>NAT</code>可以分为<code>Basic NAT</code>和<code>PNAT</code>：</p>
+<ul>
+<li><strong>Basic NAT</strong>，只转化<code>IP</code>，<code>IP</code>不复用，不映射端口，内外部<code>IP</code>地址一比一映射，工作在<code>OSI</code>模型的第三层。</li>
+<li><strong>PNAT</strong>，除了转化IP，还复用<code>IP</code>，做端口映射，可以用于多个内部地址映射到少量（甚至一个）外部地址，工作在<code>OSI</code>模型的第四层。</li>
+</ul>
+<h2>2.3. 按生命周期划分</h2>
+<p>从<code>NAT</code>的生命周期来看，可以分为静态<code>NAT</code>和动态<code>NAT</code>：</p>
+<ul>
+<li><strong>静态NAT</strong>，将内部网络中的每个主机都永久映射成外部网络中的某个地址。</li>
+<li><strong>动态NAT</strong>，在外部网络中定义了一个或多个合法地址池，采用动态分配会话的方法将内部网络地址映射为外部网络地址。同时，分配的会话存在过期时间，过期后自动回收。</li>
+</ul>
+<h2>2.4. 按形态划分</h2>
+<p>从<code>NAT</code>的形态上来看，可以分为完全锥型<code>NAT</code>、地址受限锥型<code>NAT</code>、端口受限锥型<code>NAT</code>和对称型<code>NAT</code>。</p>
+<ul>
+<li><strong>完全锥型NAT</strong>，完全锥形<code>NAT</code>只与<code>InternalIp</code>、<code>InternalPort</code>有关，只要<code>InternalIp</code>和<code>InternalPort</code>不变，都会分配同一个<code>TransitIp</code>和<code>TransitPort</code>。我们把<code>InternalIp:InternalPort</code>到<code>TransitIp:TransitPort</code>的这个映射关系称之为<a href="二nat会话会话.html" class="internal-link">(二)NAT会话|会话</a>。一旦这个会话建立起来，任意外网的主机都可以通过访问映射后的<code>TransitIp</code>和<code>TransitPort</code>，实现<strong>主动</strong>访问位于内网的主机设备功能。</li>
+<li><strong>地址受限锥型NAT</strong>，地址受限锥型<code>NAT</code>与完全锥型<code>NAT</code>的区别在于，会话除了维护<code>IP</code>和端口的映射关系外，还维护了内网主机主动访问的外网主机<code>IP</code>列表，不在列表中的主机无法通过访问内映射后的<code>TransitIp</code>和<code>TransitPort</code>主动访问内网主机。因此，要想外部主机能够主动向该内部主机发起通信，必须先由该内部主机向这个外部发起一次通信，但是不必担心<code>ExternalPort</code>是否与内网主机请求的端口号是否一致。比如内网使用<code>TransitIp1:TransitPort1</code>访问外网<code>ExternalIp1:ExternalPort1</code>，完全锥型可以实现外网其他主机<code>ExternalIp2:ExternalPort2</code>访问<code>TransitIp1:TransitPort1</code>，但是地址受限型只能使用源地址为<code>ExternalIp1</code>，端口任意的方式来访问<code>TransitIp1:TransitPort1</code>。</li>
+<li><strong>端口受限锥型NAT</strong>，端口受限锥型<code>NAT</code>与地址受限锥型<code>NAT</code>的区别在于，会话额外保存了外网主机的端口信息。因此外网主机主动访问内网主机，除了有<code>ExternalIp</code>的限制外，还有<code>ExternalPort</code>的限制。比如内网使用<code>TransitIp1:TransitPort1</code>访问外网<code>ExternalIp1:ExternalPort1</code>，地址受限型可以使用<code>ExternalIp1:ExternalPort2</code>访问<code>TransitIp1:TransitPort1</code>，但是端口受限型只能使用<code>ExternalIp1:ExternalPort1</code>访问<code>TransitIp1:TransitPort1</code>。</li>
+<li><strong>对称NAT</strong>，从同一个内网<code>InternalIp</code>和<code>InternalPort</code>发送到同一个<code>ExternalIp</code>和<code>ExternalPort</code>的请求都会被映射到同一个<code>TransitIp</code>和<code>TransitPort</code>。但四元组<code>(InternalIp,InternalPort,ExternalIp,ExternalPort)</code>只要有一个发生变化都会使用不同的映射。对称型NAT下，只能由内网主机访问外网主机，外网主机是不允许主动访问内网主机的。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>NAT类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>完全锥型NAT</td>
+<td>一旦会话生成后，任何公网主机都可与之通讯。双方都可以主动发起连接。</td>
+</tr>
+<tr>
+<td>地址受限锥型NAT</td>
+<td>只有内网主动连接的公网主机可与之通讯。在内网主机发起连接后，被访问的公网主机可通过任意端口主动与内网主机通讯。</td>
+</tr>
+<tr>
+<td>端口受限锥型NAT</td>
+<td>只有内网主动连接的公网主机可与之通讯。在内网主机发起连接后，被访问的公网只能通过固定的端口与之进行通讯。</td>
+</tr>
+<tr>
+<td>对称型NAT</td>
+<td>根据四元组创建NAT映射，四元组中的任何一项发生变化均导致NAT映射的更换。此时双方一对一映射，因此称之为对称NAT。对称型NAT下，只能由内网主机访问外网主机，外网主机是不允许主动访问内网主机的。</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>锥型NAT的通信双方是对等的，外网主机不管是换<code>IP</code>还是端口，感知到的都是对端的同一个<code>IP</code>和端口在提供某个特定服务，双方都可以主动发起通信；而对称型NAT违反了协议双方对等的原则，外网主机是无法主动访问内网主机的，换个外网地址或端口，NAT后的地址和端口就会变化。</p>
+</blockquote>
+<h1>3. 七层NAT</h1>
+<p>普通<code>NAT</code>实现了对<code>UDP</code>或<code>TCP</code>报文头中的的<code>IP</code>地址及端口转换的功能，但对七层应用层数据载荷中的字段无能为力。在许多应用层协议中，有很多协议都包含多通道的信息，比如多媒体协议（H.323、SIP等）、FTP、SQLNET等，这种多通道的应用需要首先在控制通道中对后续数据通道的<code>IP</code>和端口进行协商，然后根据协商结果创建多个数据通道连接。控制信道的报文中，<code>TCP/UDP</code>除了传输层头中携带<code>IP</code>地址信息外，报文的有效载荷中也带有地址或者端口信息，这些内容不能被<code>NAT</code>进行有效的转换，就可能导致未知问题。</p>
+<p>而<code>NAT ALG</code>(Application Level Gateway，应用层网关)技术能对多通道协议进行应用层报文信息的解析和地址转换，将载荷中需要进行地址转换的<code>IP</code>地址和端口或者需特殊处理的字段进行相应的转换和处理，从而保证应用层通信的正确性。<code>ALG</code>需要识别并适配每一种应用层协议，不同应用协议的载荷中IP地址和端口的位置不同，因此具有很大的局限性，幸运的是ALG支持了我们常用的大多数协议，包括：FTP、H.323（包括RAS、H.225、H.245）、SIP、DNS、ILS、MSN/QQ、NBT、RTSP、SQLNET、TFTP等。</p>
+<h1>4. NAT应用场景</h1>
+<ul>
+<li>多个内网主机共享公网<code>IP</code>，节省<code>IP</code>资源</li>
+<li>作为内网流量统一出口，共享公网带宽</li>
+<li>隐藏内网主机真实地址，避免直接暴露，可以抵挡端口扫描之类的攻击</li>
+<li>工作在NAT模式下的lvs四层负载均衡</li>
+</ul>
+<h1>5. NAT局限性</h1>
+<ul>
+<li><code>NAT</code>下的网络被分为外网和内网两部分，<code>NAT</code>设备一般以网关的形式作为私网到公网的路由出口，双向流量都要经过<code>NAT</code>设备，容易成为性能瓶颈</li>
+<li>由于<code>NAT</code>将内部网络信息进行了隐藏和转换，<code>NAT</code>下的设备无法进行对等网络传输（需要<code>NAT</code>穿透）</li>
+<li><code>NAT</code>不能实现对通信双方的全透明，因为上层协议可能在传输的数据包中携带<code>IP</code>和端口信息（需要<code>NAT ALG</code>）</li>
+<li>应用层需保持<code>UDP</code>会话连接，而由于<code>NAT</code>资源有限，所以<code>UDP</code>的会话会很快被回收（以便端口重用）。由于UDP是无连接的，<code>UDP</code>层应用需要在无数据传输、但需要保持连接时通过<code>heartbeat</code>的方式保持会话不过期。</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

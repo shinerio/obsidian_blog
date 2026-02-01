@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>应用层DNS协议 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>应用层DNS协议</h1>
+        <time datetime="2020-04-29T00:00:00.000Z">2020年4月29日</time>
+        <div class="tags">
+            
+            <span class="tag">network</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><code>DNS</code>（Domain Name System）域名解析服务采用<code>C/S</code>架构，是一个应用层协议。<code>DNS</code>的作用是将人类可读的域名（如：<a href="http://www.shinerio.cc%EF%BC%89">www.shinerio.cc）</a> 转换为机器可读的 IP 地址（如：1111.111.111.111）。当前，对于每一级域名长度的限制是63个字符，域名总长度则不能超过253个字符。<code>DNS</code>协议建立在<code>UDP</code>或<code>TCP</code>协议之上，默认使用53号端口。客户端默认通过UDP协议进行通信，但是由于广域网中不适合传输过大的<code>UDP</code>数据包，因此规定当报文长度超过了512字节时，应转换为使用<code>TCP</code>协议进行数据传输。此时可能会出现如下的两种情况：</p>
+<ul>
+<li>客户端认为<code>UDP</code>响应包长度可能超过512字节，主动使用<code>TCP</code>协议</li>
+<li>客户端使用UDP协议发送DNS请求，服务端发现响应报文超过了 512 字节，在截断的<code>UDP</code>响应报文中将<code>TC</code>设置为1，以通知客户端该报文已经被截断，客户端收到之后再发起一次<code>TCP</code>请求（该特性通常也被安全厂商作为一种有效防御<code>DNS Query Flood</code>攻击的手段）</li>
+</ul>
+<!--more-->
+<h1>1. 基本概念</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424141937.png" alt=""></p>
+<h2>1.1. 域名结构</h2>
+<p>常见的域名格式有：</p>
+<ul>
+<li><a href="http://www.google.com">www.google.com</a></li>
+<li>mail.google.com </li>
+<li>scholar.google.com</li>
+</ul>
+<p>【顶级域名】： .com<br>【二级域名】： google<br>【三级域名】：www/mail/scholar<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424142522.png" alt=""></p>
+<h2>1.2. DNS记录类型</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424152649.png" alt=""></p>
+<h3>1.2.1. A记录</h3>
+<p>A记录是用来指定主机名（或域名）对应的IP地址记录。如设置二级域名<code>shinerio.cc</code>对应<code>ip</code>地址为<code>185.199.111.153</code>（gitpage服务器地址）等。当然，也可以为三级域名<code>mail.shinerio.cc</code>绑定对应<code>ip</code>地址。一个域名可以对应多条<code>A</code>记录，即对应多个ip地址，实现<code>DNS</code>负载均衡。</p>
+<p>主机记录<code>www</code>解析后域名为<code>www.shinerio.cc</code>。<code>@</code>直接解析主域名<code>shinerio.cc</code>，相当于<code>www.shinerio.cc</code>。<code>*</code>匹配所有域名<code>*.shinerio.cc</code>，将所有<code>shinerio.cc</code>下的子域名指向同一服务器地址。<code>mail</code>将域名解析为<code>mail.shinerio.cc</code>，通常用于解析邮箱服务器。主机记录<code>xxx</code>解析后域名为<code>xxx.shinerio.cc</code>，用于解析<code>xxx</code>类型服务。</p>
+<h3>1.2.2. AAAA记录</h3>
+<p>AAAA记录和A记录的区别在于，AAAA记录将域名解析到一个<code>ipv6</code>地址。</p>
+<h3>1.2.3. NS记录</h3>
+<p><code>NS记录</code>指定解析域名或子域名的DNS服务器。</p>
+<h3>1.2.4. MX记录</h3>
+<p>MX记录（邮件交换）用来指定接收信息的邮件服务器。建立邮箱时，一般会根据邮箱服务商提供的MX记录填写此记录。</p>
+<h3>1.2.5. CNAME</h3>
+<p><code>CNAME</code>记录将多个名字映射到另外一个域名。如将shinerio.cc记录别名为<code>shinerio.github.io</code>，这样用<code>shinerio.cc</code>替代<code>shinerio.github.io</code>访问gitpage提供的个人博客主页。</p>
+<p>使用<code>CNAME</code>记录可以很方便地变更IP地址。如果一台服务器有100个网站，每个网站有一个域名。如果使用A记录，那么服务器ip更改时，则需要修改100条A记录。如果使用CNAME指向同一域名，那么该台服务器变更IP时，只需要变更别名的A记录就可以。</p>
+<h1>2. 域名解析</h1>
+<h2>2.1. 域名服务器层次</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424144017.png" alt=""></p>
+<h3>2.1.1. 根域名服务器</h3>
+<p>最高层次的域名服务器，也是最重要的域名服务器。全球有13个根域名服务器名称，并不是一个名字对应一台物理服务器的地址，一个根服务器的名字可以作为入口对应一组服务器集群来提供域名解析服务。</p>
+<ul>
+<li>a.root-servers.net.</li>
+<li>b.root-servers.net.</li>
+<li>c.root-servers.net.</li>
+<li>d.root-servers.net.</li>
+<li>e.root-servers.net.</li>
+<li>f.root-servers.net.</li>
+<li>g.root-servers.net.</li>
+<li>h.root-servers.net.</li>
+<li>i.root-servers.net.</li>
+<li>j.root-servers.net.</li>
+<li>k.root-servers.net.</li>
+<li>l.root-servers.net.</li>
+<li>m.root-servers.net.</li>
+</ul>
+<h3>2.1.2. 顶级域名服务器</h3>
+<p>主要负责管理在该顶级域名服务器注册的下一级域名(二级域名)。所有顶级域名服务器的名称和IP地址是在根服务器注册的，也就是说，根域名服务器知道所有的顶级域名服务器的名称和IP地址。</p>
+<h3>2.1.3. 权威域名服务器</h3>
+<p>负责一个区的域名服务器，顶级域名服务器也可以算作是权威域名服务器，只不过由于其特殊性，我们专门把它划分为一类。因此权威域名服务器通常是指顶级域名以下的管理二级、三级、四级等域名的服务器。</p>
+<h3>2.1.4. 本地域名服务器</h3>
+<p>当一个主机(个人电脑)发出DNS请求时，查询请求就被发送到本地域名服务器，本地域名服务器负责回答这个查询，或者代替主机向域名空间中不同层次的权威域名服务器查询，再把查询的结果返回给主机。</p>
+<h2>2.2. 解析过程</h2>
+<p>DNS解析过程其实可以看做一个多岔树递归查询算法，从根节点出发，递归找下属域名服务器，直到解析成功。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424150647.png" alt=""></p>
+<p>在浏览器中输入<code>www.shinerio.cc</code>域名，操作系统会先检查自己本地的<code>hosts</code>文件是否存在域名映射关系。如果存在映射关系，则根据映射完成域名解析；如果没有映射，则查找本地DNS缓存，是否存在域名映射关系，如果有，则直接返回，完成域名解析。</p>
+<p>如果<code>hosts</code>与本地DNS缓存都没有相应的域名映射关系，首先会找网络配置参数中设置的首选DNS服务器（记为A-DNS服务器），此服务器收到查询时，如果要查询的域名包含在本地配置区域资源中，则返回解析结果给客户机，完成域名解析，此解析具有权威性。如果要查询的域名，不由A-DNS服务器区域解析，但该服务器已缓存了此网址映射关系，则调用这个IP地址映射，完成域名解析，此解析不具有权威性。</p>
+<p>如果A-DNS服务器本地区域文件与缓存解析都失效，则根据A-DNS服务器的设置（是否设置转发器）进行查询。</p>
+<ul>
+<li>如果未用转发模式，本地DNS就把请求发至根DNS服务器（记为B-DNS服务器），B-DNS服务器收到请求后会判断这个域名(.com)是谁来授权管理，并会返回一个负责该顶级域名服务器的一个IP。A-DNS服务器收到IP信息后，将会联系负责.com域的这台服务器（记为C-DNS服务器）。C-DNS服务器收到请求后，如果自己无法解析，它就会找一个管理.com域的下一级DNS服务器地址（记为D-DNS服务器）给A-DNS服务器。当A-DNS服务器收到这个地址后，就会找D-DNS服务器，重复上面的动作，进行查询，直至找到<code>www.shinerio.cc</code>主机。</li>
+<li>如果用的是转发模式，A-DNS服务器就会把请求转发至上一级DNS服务器（记为E-DNS服务器），由E-DNS服务器进行解析；如果E-DNS服务器如果不能解析，那么会继续找根DNS或把转请求转至上上级，以此循环。</li>
+</ul>
+<h1>3. 协议报文格式</h1>
+<p><code>DNS</code>采用<code>UDP</code>或<code>TCP</code>传输，主要是查看<code>DNS</code>报文首部中的标志字段。当客户端发出<code>DNS</code>查询请求，从服务器收到的响应报文中的<code>TC</code>（截断标志）比特被置为1时，表示应答总长度超过512字节，只返回前512个字节，这时DNS就需要使用TCP重发原来的查询请求。因为在<code>UDP</code>的应用程序中，其应用程序被限制在512个字节或更小，因此<code>DNS</code>报文穿数据流只能有512字节，而<code>TCP</code>能将用户的数据流分为一些报文段，因此<code>TCP</code>就能用多个报文段去传超过512字节的数据流或是任意长度的数据流。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424155506.png" alt=""></p>
+<h2>3.1. 头部</h2>
+<h3>3.1.1. 会话标识（字节）</h3>
+<p>会话标识是DNS报文的ID标识，对于请求报文和其对应的应答报文，这个字段是相同的，通过它可以区分DNS应答报文是哪个请求的响应。</p>
+<h3>3.1.2. 标志（2字节）</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424155715.png" alt=""></p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>QR（bit）</td>
+<td>查询/响应标志，0为查询，1为响应</td>
+</tr>
+<tr>
+<td>opcode（4bit）</td>
+<td>0表示标准查询，1表示反向查询，2表示服务器状态请求</td>
+</tr>
+<tr>
+<td>AA（1bit）</td>
+<td>表示授权回答</td>
+</tr>
+<tr>
+<td>TC（1bit）</td>
+<td>表示可截断的</td>
+</tr>
+<tr>
+<td>RD（1bit）</td>
+<td>表示期望递归</td>
+</tr>
+<tr>
+<td>RA（1bit）</td>
+<td>表示可用递归</td>
+</tr>
+<tr>
+<td>rcode（4bit）</td>
+<td>表示返回码，0表示没有差错，3表示名字差错，2表示服务器错误（Server Failure）</td>
+</tr>
+</tbody></table>
+<h3>3.1.3. Questions（2字节）</h3>
+<p>问题计数，DNS查询请求的数目</p>
+<h3>3.1.4. Answers（2字节）</h3>
+<p>回答资源计数，DNS响应的数目</p>
+<h3>3.1.5. Authority RRs（2字节）</h3>
+<p>权威名称服务器计数，权威名称服务器的数目。</p>
+<h3>3.1.6. Additional RRs（2字节）</h3>
+<p>额外的记录数目（权威名称服务器对应<code>IP</code>地址的数目）</p>
+<h2>3.2. 正文</h2>
+<h3>3.2.1. Queries</h3>
+<p><code>Queries</code>部分是用来显示DNS下查询请求的问题，通常只有一个问题。该部分包含正在进行的查询信息，包含查询名（被查询主机名字）、查询类型、查询类。</p>
+<h4>3.2.1.1. 查询名</h4>
+<p>一般为要查询的域名，有时也会是 IP 地址，用于反向查询，一般的格式如下图所示。</p>
+<div align="center">
+<img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424163058.png" width="100%"><br>
+<sup><strong>Fig 1:</strong>NAME格式</sup>
+</div>
+#### 查询类类型
+DNS 查询请求的资源类型。通常查询类型为 A 类型，表示由域名获取对应的 IP 地址。
+
+<div align="center">
+<sup><strong>Tab 1:</strong>查询类型</sup>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>助记符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>A</td>
+<td>由域名获得IPv4地址</td>
+</tr>
+<tr>
+<td>2</td>
+<td>NS</td>
+<td>查询域名服务器</td>
+</tr>
+<tr>
+<td>5</td>
+<td>CNAME</td>
+<td>查询规范名称</td>
+</tr>
+<tr>
+<td>6</td>
+<td>SOA</td>
+<td>开始授权</td>
+</tr>
+<tr>
+<td>11</td>
+<td>WKS</td>
+<td>熟知服务</td>
+</tr>
+<tr>
+<td>12</td>
+<td>PTR</td>
+<td>把IP地址转换成域名</td>
+</tr>
+<tr>
+<td>13</td>
+<td>HINFO</td>
+<td>主机信息</td>
+</tr>
+<tr>
+<td>15</td>
+<td>MX</td>
+<td>邮件交换</td>
+</tr>
+<tr>
+<td>28</td>
+<td>AAAA</td>
+<td>由域名获得IPv6地址</td>
+</tr>
+<tr>
+<td>252</td>
+<td>AXFR</td>
+<td>传送整个区的请求</td>
+</tr>
+<tr>
+<td>255</td>
+<td>ANY</td>
+<td>对所有记录的请求</td>
+</tr>
+</tbody></table>
+<h4>3.2.1.2. 查询类</h4>
+<p>通常为<code>0x0001</code>，表明是互联网地址。</p>
+<h3>3.2.2. Answers,Authoritative namesversers,Additional recoreds</h3>
+<p>这三个部分格式一样，如下图所示。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424160818.png" alt=""></p>
+<ul>
+<li><font color=red>Name</font>。它的格式和Queries区域的查询名字字段是一样的。有一点不同就是，当报文中域名重复出现的时候，该字段使用2个字节的偏移指针来表示。比如，在资源记录中，域名通常是查询问题部分的域名的重复，因此用2字节的指针来表示，具体格式是最前面的两个高位是11，用于识别指针。其余的14位从DNS报文的开始处计数（从0开始），指出该报文中的相应字节数。一个典型的例子，C00C(1100000000001100，12正好是头部的长度，其正好指向Queries区域的查询名字字段)。</li>
+<li><font color=red>生存时间</font>。以秒为单位，表示的是资源记录的生命周期，一般用于当地址解析程序取出资源记录后决定保存及使用缓存数据的时间，它同时也可以表明该资源记录的稳定程度，极为稳定的信息会被分配一个很大的值（比如86400，这是一天的秒数）。</li>
+<li><font color=red>data</font>。该字段是一个可变长字段，表示按照查询段的要求返回的相关资源记录的数据。可以是Address（表明查询报文想要的回应是一个IP地址）或者CNAME（表明查询报文想要的回应是一个规范主机名）等。</li>
+</ul>
+<h2>3.3. wireshark抓包分析</h2>
+<h3>3.3.1. 请求报文</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424163208.png" alt=""></p>
+<h3>3.3.2. 响应报文</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200424163312.png" alt=""></p>
+<h1>4. nslookup和dig</h1>
+<p>通过命令行查询域名对应ip有两种方式：</p>
+<ul>
+<li>使用<code>nslookup shinerio.cc</code>查询域名ip</li>
+<li>使用<code>dig shinerio.cc</code>查询域名ip</li>
+</ul>
+<h1>5. DNS Over TCP</h1>
+<p>客户端默认通过UDP协议进行通信，但是由于广域网中不适合传输过大的<code>UDP</code>数据包，因此规定当报文长度超过了512字节时，应转换为使用<code>TCP</code>协议进行数据传输。此时可能会出现如下的两种情况：</p>
+<ul>
+<li>客户端认为<code>UDP</code>响应包长度可能超过512字节，主动使用<code>TCP</code>协议</li>
+<li>客户端使用UDP协议发送DNS请求，服务端发现响应报文超过了 512 字节，在截断的<code>UDP</code>响应报文中将<code>TC</code>设置为1，以通知客户端该报文已经被截断，客户端收到之后再发起一次<code>TCP</code>请求（该特性通常也被安全厂商作为一种有效防御<code>DNS Query Flood</code>攻击的手段）</li>
+</ul>
+<p>使用以下脚本<code>python3 dns_query.py shinerio.site 8.8.8.8</code>可以使用TCP发起DNS请求。</p>
+<pre><code>import dns.resolver
+import dns.query
+import dns.rdatatype
+
+def tcp_dns_query(domain, dns_server):
+    resolver = dns.resolver.Resolver()
+    resolver.nameservers = [dns_server]
+    query = dns.message.make_query(domain, dns.rdatatype.A)
+    try:
+        response = dns.query.tcp(query, dns_server)
+        for answer in response.answer:
+            for item in answer.items:
+                print(item.address)
+    except dns.resolver.NXDOMAIN:
+        print(f&quot;域名 {domain} 未找到。&quot;)
+    except dns.resolver.NoAnswer:
+        print(f&quot;DNS服务器 {dns_server} 没有返回答案。&quot;)
+    except dns.resolver.Timeout:
+        print(f&quot;查询 {domain} 超时。&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    import sys
+
+    if len(sys.argv)!= 3:
+        print(&quot;用法: python tcp_dns_query.py [域名] [DNS服务器地址]&quot;)
+    else:
+        domain = sys.argv[1]
+        dns_server = sys.argv[2]
+        tcp_dns_query(domain, dns_server)
+</code></pre>
+<p>!<a href="dns-over-tcppcapng.html" class="internal-link">dns_over_tcp.pcapng</a><br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229214126094.png" alt="image.png"></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

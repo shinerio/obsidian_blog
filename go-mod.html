@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Mod - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Go Mod</h1>
+        <time datetime="2026-01-03T13:04:29.131Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>从 Go 1.11开始，Go引入了Go Modules作为官方的依赖管理解决方案。在Go Modules模式下，依赖项会被下载到<code>$GOPATH/pkg/mod</code>目录下，<code>go install</code>命令默认会将可执行文件安装到<code>$GOPATH/bin</code>目录下。<code>go.mod</code>文件位于项目根目录下，用于记录项目的模块信息和依赖项及其版本，一个典型的例子如下：</p>
+<pre><code class="language-go">module github.com/shinerio/cusmodule
+go 1.16
+require (
+    github.com/cenk/backoff v2.2.1+incompatible
+    github.com/coreos/bbolt v1.3.3
+    github.com/edwingeng/doublejump v0.0.0-20200330080233-e4ea8bd1cbed
+    github.com/stretchr/objx v0.3.0 // indirect
+    github.com/stretchr/testify v1.7.0
+    go.etcd.io/bbolt v1.3.6 // indirect
+    go.etcd.io/etcd/client/v2 v2.305.0-rc.1
+    go.etcd.io/etcd/client/v3 v3.5.0-rc.1
+    golang.org/x/net v0.0.0-20210610132358-84b48f89b13b // indirect
+    golang.org/x/sys v0.0.0-20210611083646-a4fc73990273 // indirect
+)
+exclude (
+    go.etcd.io/etcd/client/v2 v2.305.0-rc.0
+    go.etcd.io/etcd/client/v3 v3.5.0-rc.0
+)
+retract (
+    v1.0.0 // 废弃的版本，请使用v1.1.0
+)
+</code></pre>
+<h1>1. go mod命令</h1>
+<pre><code>download    download modules to local cache
+edit        edit go.mod from tools or scripts
+graph       print module requirement graph
+init        initialize new module in current directory
+tidy        add missing and remove unused modules
+vendor      make vendored copy of dependencies
+verify      verify dependencies have expected content
+why         explain why packages or modules are needed
+</code></pre>
+<h1>2. module path</h1>
+<p>go.mod的第一行是module path, 一般采用仓库+module name的方式定义。这样我们获取一个module的时候，就可以到它的仓库中去查询，或者让go proxy到仓库中去查询。</p>
+<pre><code class="language-shell">module github.com/shinerio/cusmodule
+</code></pre>
+<p>如果你的版本已经大于等于2.0.0，按照Go的规范，你应该加上major的后缀，module path改成下面的方式:</p>
+<pre><code class="language-shell">module github.com/shinerio/cusmodule/v2
+module github.com/shinerio/cusmodule/v3
+</code></pre>
+<p>而且引用代码的时候，也要加上<code>v2</code>、<code>v3</code>、<code>vx</code>后缀，以便和其它major版本进行区分。这是一个很奇怪的约定，带来的好处是你一个项目中可以使用依赖库的不同的major版本，它们可以共存。</p>
+<h1>3. go directive</h1>
+<p>第二行是go directive。格式是 <code>go 1.xx</code>，它并不是指你当前使用的Go版本，而是指名你的代码所需要的Go的最低版本。因为Go的标准库也有所变化，一些新的API也被增加进来，如果你的代码用到了这些新的API，你可能需要指名它依赖的go版本。</p>
+<h1>4. require</h1>
+<p>require段中列出了项目所需要的各个依赖库以及它们的版本，除了正规的<code>v1.3.0</code>这样的版本外，还有一些奇奇怪怪的版本和注释。</p>
+<h2>4.1. indirect注释</h2>
+<pre><code class="language-go">    golang.org/x/net v0.0.0-20210610132358-84b48f89b13b // indirect
+    golang.org/x/sys v0.0.0-20210611083646-a4fc73990273 // indirect
+</code></pre>
+<p>有些库后面加了<code>indirect</code>后缀，代表间接的使用了这个库，但是又没有被列到某个go.mod中。下面的情况之一就会对这个库加indirect后缀：</p>
+<ul>
+<li>当前项目依赖A，但是A的go.mod遗漏了B,那么就会在当前项目的go.mod中补充B，加indirect注释</li>
+<li>当前项目依赖A，但是A没有go.mod，同样就会在当前项目的go.mod中补充B，加indirect注释</li>
+<li>当前项目依赖A，A又依赖B，当对A降级的时候，降级的A不再依赖B，这个时候B就标记indirect注释</li>
+</ul>
+<h2>4.2. incompatible</h2>
+<p>有些库后面加了incompatible后缀，但是你如果看这些项目，它们只是发布了v2.2.1的tag，并没有<code>+incompatible</code>后缀。</p>
+<pre><code class="language-go">github.com/cenk/backoff v2.2.1+incompatible
+</code></pre>
+<p>这些库采用了go.mod的管理，但是不幸的是，虽然这些库的版major版本已经大于等于2了，但是他们的module path中依然没有添加v2、v3这样的后缀。所以go module把它们标记为<code>incompatible</code>的，虽然可以引用，但是实际它们是不符合规范的。</p>
+<h1>5. exclude</h1>
+<p>如果你想在你的项目中跳过某个依赖库的某个版本，你就可以使用这个段。</p>
+<pre><code class="language-go">exclude (
+    go.etcd.io/etcd/client/v2 v2.305.0-rc.0
+)
+</code></pre>
+<p>这样，Go在版本选择的时候，就会主动跳过这些版本，比如你使用<code>go get -u ......</code>或者<code>go get github.com/xxx/xxx@latest</code>等命令时，会执行version query的动作，这些版本不在考虑的范围之内。</p>
+<h1>6. replace</h1>
+<p>replace也是常用的一个手段，用来解决一些错误的依赖库的引用或者调试依赖库。</p>
+<pre><code class="language-go">replace github.com/coreos/bbolt =&gt; go.etcd.io/bbolt v1.3.3
+replace github.com/panicthis/A v1.1.0 =&gt; github.com/panicthis/R v1.8.0
+replace github.com/coreos/bbolt =&gt; ../R
+</code></pre>
+<p>比如etcd v3.3.x的版本中错误的使用了github.com/coreos/bbolt作为bbolt的module path，其实这个库在它自己的go.mod中声明的module path是go.etcd.io/bbolt，又比如etcd使用的grpc版本有问题，你也可以通过replace替换成所需的grpc版本。</p>
+<p>甚至你觉得某个依赖库有问题，自己fork到本地做修改，想调试一下，你也可以替换成本地的文件夹。</p>
+<p>replace可以替换某个库的所有版本到另一个库的特定版本，也可以替换某个库的特定版本到另一个库的特定版本。</p>
+<h1>7. retract</h1>
+<p>retract是go 1.16中新增加的内容，借用学术界期刊撤稿的术语，宣布撤回库的某个版本。如果你误发布了某个版本，或者事后发现某个版本不成熟，那么你可以推一个新的版本，在新的版本中，声明前面的某个版本被撤回，提示大家都不要用了。撤回的版本tag依然还存在，go proxy也存在这个版本，所以你如果强制使用，还是可以使用的，否则这些版本就会被跳过。和exclude的区别是retract是这个库的owner定义的， 而exclude是库的使用者在自己的go.mod中定义的。</p>
+<h1>8. vendor目录</h1>
+<p>Go 还支持使用 <code>vendor</code> 目录来管理依赖。可以通过执行 <code>go mod vendor</code> 命令，将项目所有依赖项复制到项目根目录下的 <code>vendor</code> 目录中。当使用 <code>-mod=vendor</code> 标志进行编译时，Go 会优先从 <code>vendor</code> 目录中查找依赖项，而非从 <code>$GOPATH/pkg/mod</code> 或 <code>GOMODCACHE</code> 中查找。示例命令如下</p>
+<pre><code>go build -mod=vendor
+</code></pre>
+<h1>9. ref</h1>
+<p><a href="https://colobu.com/2021/06/28/dive-into-go-module-1/">https://colobu.com/2021/06/28/dive-into-go-module-1/</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

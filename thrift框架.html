@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thrift协议 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Thrift协议</h1>
+        <time datetime="2023-01-25T00:00:00.000Z">2023年1月25日</time>
+        <div class="tags">
+            
+            <span class="tag">protocol</span>
+            
+            <span class="tag">network</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><code>Thrift</code>是一种轻量化、语言无关的RPC框架。主要包含三大部分：代码生成、序列化框架、RPC框架。</p>
+<p><img src="https://github.com/apache/thrift/raw/master/doc/images/thrift-layers.png" alt=""></p>
+<!--more-->
+
+<h1>Thrift网络协议栈</h1>
+<p><code>Thrfit</code>采用的是<code>C/S</code>模型，网络协议栈从下到上分别为：<code>Transport layer</code>、<code>Protocol layer</code>、<code>Processor layer</code>、<code>Server layer</code>。</p>
+<pre><code>  +-------------------------------------------+
+  | Server                                    |
+  | (single-threaded, event-driven etc)       |
+  +-------------------------------------------+
+  | Processor                                 |
+  | (compiler generated)                      |
+  +-------------------------------------------+
+  | Protocol                                  |
+  | (JSON, compact etc)                       |
+  +-------------------------------------------+
+  | Transport                                 |
+  | (raw TCP, HTTP etc)                       |
+  +-------------------------------------------+
+</code></pre>
+<h2>Transport</h2>
+<p><code>Thrift</code> 传输层为网络<code>write/read</code>提供了一个简单的抽象，定义了具体的网络传输协议。其本质是一个提供了通过各种协议进行通信的框架，支持包括<code>HTTP</code>和<code>TCP</code>等。这使<code>Thrift</code>能够将底层传输与系统的其余部分解耦（例如，序列化/反序列化）。传输层接口暴露的一些方法包括：<code>open、close、read、write、flush</code>等</p>
+<p>传输层分为<code>TTransport</code>（客户端）和<code>TServerTransport</code>（服务端）两类，配合装饰器模式，通过节点流和包装流的概念来区分各种<code>Transport</code>实现。</p>
+<pre><code class="language-mermaid">classDiagram
+class Closeable
+&lt;&lt;interface&gt;&gt; Closeable
+class TTransport {
+    +open()
+    +close()
+    +read()
+    +write()
+    +flush()
+}
+&lt;&lt;abstract&gt;&gt; TTransport
+TTransport..|&gt;Closeable
+class TNonblockingTransport
+&lt;&lt;abstract&gt;&gt; TNonblockingTransport
+class TNonblockingSocket
+TTransport&lt;|--TNonblockingTransport
+TNonblockingTransport&lt;|--TNonblockingSocket
+class TFileTransport
+TTransport&lt;|--TFileTransport
+class TFramedTransport
+TTransport&lt;|--TFramedTransport
+class TIOStreamTransport
+TTransport&lt;|--TIOStreamTransport
+class TZlibTransport
+TIOStreamTransport&lt;|--TZlibTransport
+class TSocket
+TIOStreamTransport&lt;|--TSocket
+class TServerTransport {
+    +open()
+    +close()
+    +listen()
+    +accept()
+}
+&lt;&lt;abstract&gt;&gt; TServerTransport
+TServerTransport..|&gt;Closeable
+class TNonblockingServerTransport
+TServerTransport&lt;|--TNonblockingServerTransport
+class TNonblockingServerSocket
+TNonblockingServerTransport&lt;|--TNonblockingServerSocket
+class TServerSocket
+TServerTransport&lt;|--TServerSocket
+</code></pre>
+<h3>客户端传输层（TTransport）</h3>
+<ul>
+<li><code>TIOStreamTransport</code>: 是最常用的基于阻塞式<code>I/O</code>模型的传输层实现，通过一个输入流和一个输出流实现了所有的传输操作；完美的兼容Java的各种I/O流操作；是<code>TSocket</code>和<code>TZlibTransport</code>基类。</li>
+<li><code>TSocket</code>: 通过<code>Socket</code>实现<code>TTransport</code>，阻塞式，侧重建立连接；</li>
+<li><code>TZlibTransport</code>: 基于<code>InflaterInputStream</code>和<code>DeflaterOutputStream(java.util.zip)</code>实现对输入输出流的压缩，通过调用下一层的<code>TTransport</code>实现读写操作，是一个装饰器模式</li>
+<li><code>TNonblockingSocket</code>: 通过<code>NIO</code>包中的<code>SocketChannel</code>实现非阻塞传输，服务于异步客户端实现</li>
+<li><code>TFramedTransport</code>: 利用<code>NIO</code>包的<code>TByteBuffer</code>读写缓存，以栈帧为传输单位的<code>TTransport</code>装饰器实现；帧头部用4个填充字节来存储数据流长度，保障数据的完整性；</li>
+<li><code>TFileTransport</code>: 用于将数据写入文件，JAVA仅支持read操作，不支持write；</li>
+</ul>
+<h3>服务端传输层（TServerTransport）</h3>
+<ul>
+<li><code>TServerSocket</code>: 服务端阻塞式传输层，基于<code>ServerSocket</code>实现；</li>
+<li><code>TNonblockingServerSocket</code>：服务端非阻塞式传输层，基于<code>NIO</code>的<code>ServerSocketChannel</code>实现；</li>
+</ul>
+<h2>Protocol</h2>
+<p><code>Protocol</code>定义了一种将内存数据结构映射为有线格式的机制。换句话说，<code>protocol</code>定义了指定数据类型如何使用底层<code>transport</code>来编解码。因此，<code>protocol</code>实现管理编码方案并负责（反）序列化。常用的<code>protocol</code>有<code>JSON、XML、PLAIN TEXT、COMPACT BINARY</code>等。</p>
+<ul>
+<li><code>TBinaryProtocol</code>: 二进制编码格式的数据传输协议；</li>
+<li><code>TCompactProtocol</code>: 高效率密集的压缩二进制的数据传输协议；</li>
+<li><code>TJSONProtocol</code>: 使用JSON编码格式传输协议，抓包格式可见；</li>
+<li><code>TSimpleJSONProtocol</code>: 简单的JSON格式数据传输协议；仅支持写入，用于脚本语言输出，一般不使用这种</li>
+<li><code>TDebugProtocol</code>: 使用易懂可读的文本格式进行传输，便于debug调试</li>
+</ul>
+<p><code>Thrift</code>中关于<code>protocol</code>的接口有：</p>
+<pre><code class="language-cpp">writeMessageBegin(name, type, seq)
+writeMessageEnd()
+writeStructBegin(name)
+writeStructEnd()
+writeFieldBegin(name, type, id)
+writeFieldEnd()
+writeFieldStop()
+writeMapBegin(ktype, vtype, size)
+writeMapEnd()
+writeListBegin(etype, size)
+writeListEnd()
+writeSetBegin(etype, size)
+writeSetEnd()
+writeBool(bool)
+writeByte(byte)
+writeI16(i16)
+writeI32(i32)
+writeI64(i64)
+writeDouble(double)
+writeString(string)
+
+name, type, seq = readMessageBegin()
+                  readMessageEnd()
+name = readStructBegin()
+       readStructEnd()
+name, type, id = readFieldBegin()
+                 readFieldEnd()
+k, v, size = readMapBegin()
+             readMapEnd()
+etype, size = readListBegin()
+              readListEnd()
+etype, size = readSetBegin()
+              readSetEnd()
+bool = readBool()
+byte = readByte()
+i16 = readI16()
+i32 = readI32()
+i64 = readI64()
+double = readDouble()
+string = readString()
+</code></pre>
+<h2>Processor</h2>
+<p><code>Processor</code>封装了从<code>input</code>读取数据和写入数据到<code>output</code>的能力。输入和输出流通过<code>Protocol</code>对象表示，<code>Thrift</code>通过使用<code>IDL描述文件</code>来自动生成<code>Processor</code>。<code>Processor</code>接口非常简单：</p>
+<pre><code class="language-java">interface TProcessor {
+    bool process(TProtocol in, TProtocol out) throws TException
+}
+</code></pre>
+<pre><code class="language-mermaid">classDiagram
+class TProcessor {
++process(TProtocol in, TProtocol out)
+}
+&lt;&lt;interface&gt;&gt; TProcessor
+class TBaseProcessor
+&lt;&lt;abstract&gt;&gt; TBaseProcessor
+TBaseProcessor..|&gt;TProcessor
+class TMultiplexedProcessor
+TMultiplexedProcessor..|&gt;TProcessor
+class Processor
+Processor..|&gt;TProcessor
+TBaseProcessor&lt;|--Processor
+</code></pre>
+<pre><code class="language-java">//只有在定义Server端的时候用到，客户端不需要关心；示例代码： 
+//PlayerServiceImpl是PlayerService.Iface的实现； 
+private PlayerServiceImpl playerService = new PlayerServiceImpl(); 
+//Server定义
+PlayerService.Processor&lt;PlayerService.Iface&gt; processor = new PlayerService.Processor&lt;&gt;(playerService);
+TServerTransport transport = new TServerSocket(3041); 
+TServer server = new TSimpleServer(newTServer.Args(transport).processor(processor);
+System.out.println(&quot;Starting the simple server...&quot;); 
+server.serve();
+</code></pre>
+<h3>TMultiplexedProcessor</h3>
+<p>上述示例中一个Server只绑定一个Service，实际项目中往往有大量的接口服务，如果把所有接口方法写在一个Service接口文件中，不论是代码的结构优化、可读性还是后续维护都带来很多隐患和不便。 幸好，<code>Thrift</code>提供了<code>TMultiplexedProcessor</code>和<code>TMultiplexedProtocol</code>类来帮助开发者拆分和组装业务接口服务。</p>
+<p>服务端使用<code>TMultiplexedProcessor</code>类注册多个接口的服务实现类</p>
+<pre><code class="language-java">TMultiplexedProcessor multiplexedProcessor = new TMultiplexedProcessor();
+multiplexedProcessor.registerProcessor(ServiceEnum.PLAYER.serviceName, newPlayerService.Processor&lt;PlayerService.Iface&gt;(new PlayerServiceImpl())); multiplexedProcessor.registerProcessor(ServiceEnum.GUILD.serviceName, newGuildService.Processor&lt;GuildService.Iface&gt;(new GuildServiceImpl()));
+</code></pre>
+<p>客户端使用<code>TMultiplexedProtocol</code>类来创建<code>Client</code>实例，帮助区分调用具体的服务接口</p>
+<pre><code class="language-java">TProtocol protocol = new TBinaryProtocol(transport);
+PlayerService.Client playerService = new PlayerService.Client(new TMultiplexedProtocol(protocol, ServiceEnum.PLAYER.serviceName));
+GuildService.Client playerService = newGuildService.Client( new TMultiplexedProtocol(protocol, ServiceEnum.GUILD.serviceName));
+</code></pre>
+<h2>Server</h2>
+<p><code>server</code>将上面所有的特性整合在一起形成最终的服务：</p>
+<ul>
+<li>创建<code>transport</code>实例，建立连接通道</li>
+<li>为<code>transport</code>创建输入输出协议<code>protocol</code></li>
+<li>基于输入输出协议创建<code>processor</code></li>
+<li>等待新建连接并转交给<code>processor</code></li>
+</ul>
+<pre><code class="language-mermaid">classDiagram
+class TServer
+class TSimpleServer
+TSimpleServer--|&gt;TServer
+class TThreadPoolServer
+TThreadPoolServer--|&gt;TServer
+class AbstractNonblockingServer
+&lt;&lt;abstract&gt;&gt; AbstractNonblockingServer
+AbstractNonblockingServer--|&gt;TServer
+class TNonblockingServer
+TNonblockingServer--|&gt;AbstractNonblockingServer
+class THsHaServer
+THsHaServer--|&gt;AbstractNonblockingServer
+class TThreadedSelectorServer
+TThreadedSelectorServer--|&gt;AbstractNonblockingServer
+</code></pre>
+<h3>TSimpleServer</h3>
+<ul>
+<li>该模式下只有一个工作线程，接受请求和处理数据都在一个线程中</li>
+<li>简单的阻塞<code>I/O</code>模式，一次只能处理一个请求，多个客户端请求被串行处理</li>
+</ul>
+<h3>TThreadPoolServer</h3>
+<ul>
+<li>该模式是对<code>TSimpleServer</code>模式的优化，同样是基于阻塞<code>I/O</code>实现，每次只能监听一个请求连接</li>
+<li>采用线程池技术，请求到达后，交给<code>worker</code>线程来处理，多线程并行处理了<code>I/O</code>的读写。</li>
+<li>单个请求的处理不会影响服务端整体的性能，但是连接池的规模决定了该模式的工作能力；</li>
+</ul>
+<h3>TNonblockingServer</h3>
+<ul>
+<li>该模式同样只有一个工作线程，相较于<code>TSimpleServer</code>模式的不同，该模式采用<code>I/O</code>多路复用；</li>
+<li>基于<code>I/O</code>多路复用实现，非阻塞<code>I/O</code>，使用<code>selector</code>可以同时监听多个到达的连接请求；</li>
+<li>虽然同时监听多个请求，但是请求的处理还是串行，无法充分利用多核优势，且某个请求处理被阻塞会直接影响后续请求的处理</li>
+<li>该模式下必须使用<code>TFramedTransport</code></li>
+</ul>
+<h3>THsHaServer</h3>
+<ul>
+<li>该模式可以理解为对<code>TNonblockingServer</code>的优化，基于<code>I/O</code>多路复用实现，非阻塞<code>I/O</code>，采用<code>Half-sync/Half-async</code>的工作模式</li>
+<li><code>Half-aysnc</code>是在处理<code>I/O</code>事件上 (accept/read/write)，<code>Half-sync</code>用于<code>handler</code> 对<code>rpc</code>的同步处理上。</li>
+<li><code>THsHaServer</code> 在完成数据读取之后，将业务处理过程交由一个线程池来完成，主线程直接返回进行下一次循环操作，效率大大提升，但是主线程需要完成所有<code>socket</code>的监听以及数据读写，当请求书较大且发送数据量较多，监听的<code>socket</code>请求不能被及时处理。</li>
+<li>该模式必须使用<code>TFramedTransport</code></li>
+</ul>
+<h3>TThreadedSelectorServer</h3>
+<p><code>THsHaServer</code>缺点是主线程仍然需要完成所有<code>socket</code>的<code>listen</code>和<code>accept</code>、数据读取和数据写入操作(read/write)。当并发请求数较大时，且发送数据量较多时，负责监听的主线程就只有一个。监听socket上新连接请求不能被及时接受。 <code>TThreadedSelectorServer</code>是对<code>THsHaServer</code>的一种扩充与完善，它将<code>selector</code>中的读写<code>I/O</code>事件从主线程中分离出来。交给了多个专门负责读写<code>I/O</code>事件的<code>SelectorThread</code>，同时引入<code>worker</code>工作线程池，负责业务处理。它也是种<code>Half-Sync/Half-Async</code>的服务模型。</p>
+<ul>
+<li>该模式是目前<code>Thrift</code>提供的最高级、最复杂也是最高效的工作模式</li>
+<li>一个<code>AcceptThread</code>线程基于<code>I/O</code>多路复用，专门同时监听并处理多个到达的新连接；并把建立的新连接转交给<code>Selector</code>线程池来进一步处理</li>
+<li>一个<code>Selector</code>线程池对象，同时维护多个<code>Selector</code>来为新连接服务，其他几种非阻塞<code>I/O</code>实现的模式都只有一个Selector工作</li>
+<li>一个负载均衡器<code>SelectorThreadLoadBalancer</code>对象，负责决策并转发新连接到具体的某个<code>Selector</code></li>
+<li>一个<code>ExecutorService</code>工作线程池对象，其中的<code>woker thead</code>完成每个请求对应的逻辑处理</li>
+</ul>
+<h1>IDL(Interface Description Language)</h1>
+<p><code>Thrift</code>采用<code>IDL</code>（Interface Definition Language）来定义通用的服务接口，然后通过<code>Thrift</code>提供的编译器，可以将服务接口编译成不同语言编写的代码，通过这个方式来实现跨语言的功能。</p>
+<h2>注释</h2>
+<p>Thrift支持<code>shell</code>风格、<code>C/C++/Java</code>风格的注释。示例：</p>
+<pre><code class="language-cpp"># shell风格注释.
+// C++/Java 单行注释
+
+/*
+ * 多行注释
+ * 类似C/C++/Java
+ */
+</code></pre>
+<h2>Description</h2>
+<p>Thrift文件的描述跟一般语言一样在文件顶部通过注释来表述服务的内容等信息。</p>
+<h2>Document</h2>
+<p><code>Thrift</code>文档部分包括<code>0</code>个或者多个<code>Header</code>，然后包括<code>0</code>个或多个<code>Definition</code>。</p>
+<h3>HEADER</h3>
+<p><code>HEADER</code>可以是<code>Thrift include</code>、<code>C++ include</code>或<code>namespace</code>声明。</p>
+<h4>Thrift header</h4>
+<p><code>Thrift include</code>可以将所有声明包含的<code>Thrift文档</code>都包含到当前<code>Thrift</code>中。在真正的业务开发中，我们不可能把所有的服务都定义到一个文件中，通常会根据业务模块进行拆分，然后将这些服务<code>include</code>到一个入口文件中，然后在最终服务发布上线的时候，<code>thrift</code>编译器只需要编译入口文件，就能将所有引入的文件都生成对应的代码。</p>
+<pre><code class="language-idl">inlucde &quot;module_a.thrift&quot; 
+include &quot;module_b.thrift&quot;
+</code></pre>
+<h4>C++ inlcude</h4>
+<p>用来为当前的<code>thrift</code>文件生成的代码中添加一个自定义的<code>C++</code> 引入声明</p>
+<pre><code class="language-idl">cpp_include &quot;string&quot;
+</code></pre>
+<h4>Namespace</h4>
+<p>语法：<code>namespace NamespaceScope 标识符</code><br> <code>Namespace</code> 用来声明使用哪种语言来处理当前 <code>thrift</code>文件中定义的各种类型，<code>NamespaceScope</code>就是各种语言的标识，也可以指定为通配符<code>*</code>标识，标识<code>thrift</code>文件中的定义适用于所有的语言。除此之外 Namespace 还有一个作用就是避免不同<code>Identifier</code>定义的命名冲突。如下示例中<code>Namespace</code>声明语句，标识当前的<code>thrift</code>文件适用于<code>java</code>，<code>NamespaceScope</code>后面紧跟着的<code>Identifier</code>在不同语言中会有不一样的表现。
+ </p>
+<pre><code class="language-idl">namespace java cc.shinerio.test
+</code></pre>
+<h3>Definition</h3>
+<p><code>thrift</code>支持的数据类型包括基本类型、结构体类型、容器类型、异常类型和服务类型。</p>
+<h4>基本类型(Special Types)</h4>
+<ul>
+<li>bool: 布尔值</li>
+<li>byte: 8位有符号整数</li>
+<li>i16: 16位有符号整数</li>
+<li>i32: 32位有符号整数</li>
+<li>i64: 64位有符号整数</li>
+<li>double: 64位浮点数</li>
+<li>string: UTF-8编码的字符串</li>
+<li>binary: 二进制串</li>
+</ul>
+<pre><code class="language-idl"># int 类型常量
+i8 count = 100 
+# doubule 类型 
+double money = &#39;13.14&#39;  
+# 使用科学计数法表示0.000012
+double rate = 1.2e-5  
+# 表示 350000000
+double salary = 3.5e8  
+string testStr = &#39;hello thrift&#39;
+</code></pre>
+<h4>Const</h4>
+<p>Const用来声明一个常量，语法为：</p>
+<pre><code class="language-idl">const FieldType Identifier = ConstValue [ListSeparator]
+</code></pre>
+<p>ListSeparator<code>这个分隔符就好比</code>Java<code>中一句话结束后的</code>;<code>，在</code>IDL<code>中分隔符可以是</code>,<code>或者</code>;`。大部分情况下可以忽略不写。</p>
+<pre><code class="language-idl">const i8 count = 100  
+const string strConst = &#39;hello thrift&#39;
+const list&lt;string&gt; names = [ &#39;tom&#39;, &#39;jack&#39;, &#39;peter&#39; ]
+</code></pre>
+<h4>容器类型(Containers)</h4>
+<ul>
+<li>list: 有序元素列表</li>
+<li>set: 无序无重复元素集合</li>
+<li>map: 有序的key/value集合</li>
+</ul>
+<pre><code class="language-idl">struct Grade {  
+1: i32 id,  
+2: string name,  
+3: list%3Ci32%3E scores
+}
+</code></pre>
+<h4>Typedef</h4>
+<p><code>Thrift</code>支持<code>C/C++</code>风格的自定义类型，语法<code>typedef 原类型 自定义类型</code></p>
+<pre><code class="language-idl">typedef i32 integer32 
+</code></pre>
+<h4>Enum</h4>
+<p><code>Thrift</code>枚举类型的值只支持<code>int32</code>，第一个元素如果没有给值那么默认是<code>0</code>，之后的元素如果没有给值，则是在前一个元素基础上加<code>1</code>，语法:</p>
+<pre><code class="language-idl">enum identifier {  
+    key1 = value1,
+    key2 = value2,
+}
+</code></pre>
+<p>如：</p>
+<pre><code class="language-rust">enum Season
+{
+  SPRINT = 1,
+  SUMMER, //值是2
+  AUTUMN,  //值是3
+  WINTER = 5
+}
+</code></pre>
+<h4>Struct</h4>
+<p><code>thrift</code>定义中一个<code>struct</code>等价于<code>OOP</code>编程中的<code>class</code>，不具备继承能力，但是可以嵌套。<code>thrift</code>结构体中的变量还可以存在默认值，直接写在<code>IDL</code>文件中。<code>struct</code>的每个元素包括一个唯一的数字标识、一个数据类型、一个名称和一个可选的默认值。语法如下：</p>
+<pre><code class="language-idl">struct identifier {  
+Field ID: Field Req? type identifier (= value)?  
+}
+</code></pre>
+<p><code>Filed Req</code>是一个可选值，包括required和optional，如果两者都没声明，则是requiredness，三者作用如下：</p>
+<ol>
+<li><code>required</code>代表字段在输入和输出的时候必选，<code>required</code>字段一般不能随着版本删除，否则会带来不兼容问题</li>
+<li><code>optional</code>代表字段是可选的，当字段有值时会被序列化和序列化，否则是空值。</li>
+<li><code>requiredness</code>是一种中间状态，一般代表这个数据输出是必选的，输入是可选的，这是一种非常好的兼容方式。</li>
+</ol>
+<p>示例：</p>
+<pre><code class="language-idl">struct UserProfile {  
+1: i32 uid = 1,  
+2: string name = &quot;User1&quot;,  
+3: required string password,
+4: optional string metadata
+}
+</code></pre>
+<h4>Union</h4>
+<p>类似于<code>C++</code>的<code>union</code>，成员默认全部是<code>optional</code>类型，只会传输多个字段中的一个。</p>
+<pre><code class="language-idl">union UserInfo {
+1: string phone, 
+2: string email
+}
+</code></pre>
+<h4>异常类型(Exceptions)</h4>
+<p>异常在功能上等同于<code>Structs</code>，不同之处在于其会在每种目标编程语言中选择合适的异常基类继承，以便与任何给定语言中的本地异常处理无缝集成。</p>
+<pre><code class="language-idl">exception MyExcepption {
+  1: i32 errorCode,
+  2: string msg
+}
+</code></pre>
+<h4>服务类型</h4>
+<p>服务由一组命名函数组成，每个函数包含一个参数列表和一个返回值类型。 服务的定义在语义上等同于在<code>OOP</code>中定义接口（或<code>abstract</code>类）。<code>Thrift</code>编译器生成实现该接口所有函数的客户端和服务器函数块。</p>
+<p>请注意，除了所有其他已定义的<code>Thrift</code> 类型之外，<code>void</code>也是函数返回的有效类型。 此外，可以将<code>oneway</code> 修饰符关键字添加到<code>void</code> 函数，此时生成的代码将不等待响应。显然这种方式可以提升客户端的性能，适用于客户端并不关键服务端执行结果的情况。但是请注意，<code>void</code> 返回值的意义在于服务端将向客户端返回一个响应，以保证操作已在服务器端完成。 使用<code>oneway</code>调用，客户端只能保证请求在传输层传输成功。 服务器可能会并行或乱序执行同一客户端的<code>oneway</code>方法调用。</p>
+<pre><code class="language-idl">service MyService {
+  void test1();
+  oneway void test2();
+}
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

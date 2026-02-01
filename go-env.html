@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Env - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Go Env</h1>
+        <time datetime="2026-01-03T13:04:29.129Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<pre><code class="language-shell">go env //打印Go所有默认环境变量
+go env GOPATH //打印指定环境变量的值
+</code></pre>
+<h1>1. GOROOT与GOPATH</h1>
+<ul>
+<li>环境变量<code>GOROOT</code>表示 Go 语言的安装目录。在<code>Windows</code>中，<code>GOROOT</code>的默认值是<code>C:/go</code>，而在<code>Mac OS</code>或<code>Linux</code>中<code>GOROOT</code>的默认值是<code>usr/local/go</code>，如果将Go安装在其他目录中，而需要将GOROOT的值修改为对应的目录。另外，<code>GOROOT/bin</code>则包含Go为我们提供的工具链，因此，应该将<code>GOROOT/bin</code>配置到环境变量 PATH 中，方便我们在全局中使用 Go 工具链。<ul>
+<li>Go 的编译器（<code>go</code> 命令）。</li>
+<li><strong>标准库</strong>：Go 官方自带的库，比如 <code>fmt</code> (打印), <code>net/http</code> (网络), <code>os</code> (系统操作) 等。这些代码就在 GOROOT 里。</li>
+<li>文档和工具链。</li>
+</ul>
+</li>
+<li><code>GOPATH</code>的值&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;不能</font>与<code>GOROOT</code>相同。环境变量<code>GOPATH</code>用于指定我们的开发工作区 (workspace)，用于存放<strong>代码</strong>、<strong>下载的第三方包</strong>以及<strong>编译后的工具</strong>。在<code>类Unix</code>(Mac OS 或 Linux) 操作系统中<code>GOPATH</code>的默认值是<code>$home/go</code>。而在 Windows 中 GOPATH 的默认值则为 %USERPROFILE%\go(比如在 Admin 用户，其值为 C:\Users\Admin\go)。当然，我们可以通过修改GOPATH来更换工作区，<code>export GOPATH=/root/gopath</code><ul>
+<li><strong><code>bin/</code></strong>：存放编译后生成的可执行文件（例如安装了 <code>air</code> 或 <code>dlv</code> 工具，它们就在这）</li>
+<li><strong><code>pkg/</code></strong>：存放编译好的库文件，以及最重要的 <strong>Module Cache</strong>（<code>pkg/mod</code>，你 <code>go get</code> 下来的第三方依赖全都在这）。</li>
+<li><strong><code>src/</code></strong>：存放源代码。（<em>注意：在 Go Modules 模式下，你的项目代码不再强制要求放在这里，可以放在电脑任意位置</em>）。</li>
+</ul>
+</li>
+</ul>
+<pre><code class="language-shell">export GOROOT=/usr/local/go
+export PATH=$PATH:$GOROOT/bin
+</code></pre>
+<p>在 Go 1.11 版本之前，<code>GOPATH</code> 的地位非常死板，你写的所有项目代码<strong>必须</strong>放在 <code>%GOPATH%/src</code> 目录下，否则编译器找不到。<br><strong>现在（Go 1.11+ 及 Go Modules 模式）：</strong></p>
+<ol>
+<li><strong>项目位置自由了</strong>：你的项目代码可以放在电脑的任意位置（比如桌面、D盘根目录等），<strong>不再强制</strong>放在 <code>GOPATH/src</code> 下。</li>
+<li><strong>GOPATH 依然重要</strong>：虽然代码不用放里面了，但 <code>GOPATH</code> 依然用于：<ul>
+<li>存储下载的依赖包（在 <code>GOPATH/pkg/mod</code>）。</li>
+<li>存储 <code>go install</code> 安装的命令行工具（在 <code>GOPATH/bin</code>）。<blockquote>
+<p>go 1.11通过设置一个环境变量<code>GO111MODULE=on</code>就可以启用，并且go 1.12正式退出，而环境变量<code>GO111MODULE=on</code>就可以去掉了。</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ol>
+<h1>2. GOOS与GOARCH</h1>
+<p>GOOS 的默认值是我们当前的操作系统， 如果windows，linux，darwin（代表mac os ）。 GOARCH 则表示CPU架构，如 386，amd64，arm等。</p>
+<pre><code class="language-shell"># 获取当前 GOOS 和 GOARCH 的值。
+go env GOOS GOARCH
+</code></pre>
+<h2>2.1. GOOS 和 GOARCH 的取值范围</h2>
+<p>GOOS 和 GOARCH 的值成对出现，而且只能是下面列表对应的值。</p>
+<pre><code class="language-shell">$GOOS	    $GOARCH
+android	    arm
+darwin	    386
+darwin	    amd64
+darwin	    arm
+darwin	    arm64
+dragonfly   amd64
+freebsd	    386
+freebsd	    amd64
+freebsd	    arm
+linux	    386
+linux	    amd64
+linux	    arm
+linux	    arm64
+linux	    ppc64
+linux	    ppc64le
+linux	    mips
+linux	    mipsle
+linux	    mips64
+linux	    mips64le
+linux	    s390x
+netbsd	    386
+netbsd	    amd64
+netbsd	    arm
+openbsd	    386
+openbsd	    amd64
+openbsd	    arm
+plan9	    386
+plan9	    amd64
+solaris	    amd64
+windows	    386
+windows	    amd64
+</code></pre>
+<h2>2.2. 交叉编译</h2>
+<p>编译在64位Linux操作系统上运行的目标程序</p>
+<pre><code class="language-shell">GOOS=linux GOARCH=amd64 go build main.go
+</code></pre>
+<p>编译arm架构Android操作上的目标程序</p>
+<pre><code class="language-shell">GOOS=android GOARCH=arm GOARM=7 go build main.go
+</code></pre>
+<blockquote>
+<p>[!tip]<br>交叉编译，是指在一个平台上就能生成可以在另一个平台运行的代码，例如，我们可以 32 位的 Windows 操作系统开发环境上，生成可以在 64 位 Linux 操作系统上运行的二进制程序。在其他编程语言中进行交叉编译可能要借助第三方工具，但在Go语言进行交叉编译非常简单，最简单只需要设置GOOS和GOARCH这两个环境变量就可以了。</p>
+</blockquote>
+<h1>3. 内网环境适用配置</h1>
+<table>
+<thead>
+<tr>
+<th>变量名</th>
+<th>默认值</th>
+<th>主要功能</th>
+<th>典型使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GOPROXY</td>
+<td><a href="https://proxy.golang.org,direct">https://proxy.golang.org,direct</a></td>
+<td>指定模块代理服务器URL</td>
+<td>1. 加速依赖下载<br>2. 访问缓存仓库<br>3. 企业内网镜像库</td>
+</tr>
+<tr>
+<td>GOSUMDB</td>
+<td>sum.golang.org</td>
+<td>指定校验数据库地址</td>
+<td>模块完整性验证</td>
+</tr>
+<tr>
+<td>GOPRIVATE</td>
+<td>无</td>
+<td>通配符设置私有模块路径</td>
+<td>1. 私有仓库<br>2. 跳过代理和校验</td>
+</tr>
+<tr>
+<td>GONOPROXY</td>
+<td>无</td>
+<td>指定不走代理的模块路径</td>
+<td>企业内网直连的模块</td>
+</tr>
+<tr>
+<td>GONOSUMDB</td>
+<td>无</td>
+<td>指定不校验的模块路径</td>
+<td>私有模块跳过checksum检查</td>
+</tr>
+<tr>
+<td>GOINSECURE</td>
+<td>无</td>
+<td>允许非安全访问的模块路径</td>
+<td>1. 使用HTTP的仓库<br>2. 自签名证书</td>
+</tr>
+</tbody></table>
+<h2>3.1. GOPROXY</h2>
+<ul>
+<li>支持逗号分隔的代理列表（包含关键字<code>direct</code>）</li>
+<li>支持<code>off</code>禁用代理（强制直连）</li>
+<li>支持文件协议（file:///path/to/local/cache）</li>
+</ul>
+<pre><code class="language-shell">go env -w GOPROXY=&quot;https://proxy1,https://proxy2,direct&quot;
+</code></pre>
+<h2>3.2. GONOPROXY</h2>
+<ul>
+<li>明确指定哪些模块不经过GOPROXY代理</li>
+<li>与GOPRIVATE有重叠时，取并集<br>go get → 检查模块路径是否匹配GONOPROXY<br>  是 → 直连下载<br>  否 → 使用GOPROXY代理</li>
+</ul>
+<pre><code class="language-shell">go env -w GONOPROXY=&quot;git.internal.com/*,github.com/team/*&quot;
+</code></pre>
+<h2>3.3. GOINSECURE</h2>
+<ul>
+<li>允许使用HTTP协议访问指定模块</li>
+<li>跳过TLS证书验证</li>
+<li>仍然会进行sumdb校验（除非配合GONOSUMDB）</li>
+</ul>
+<pre><code class="language-shell">go env -w GOINSECURE=&quot;*.corp.com,private.repo/secret&quot;
+</code></pre>
+<h2>3.4. GONOSUMDB</h2>
+<ul>
+<li>跳过指定模块的checksum验证</li>
+<li>安全警告：关闭校验将失去模块完整性验证<br>适用于企业内网私有模块（无法连接sum.golang.org）</li>
+</ul>
+<pre><code class="language-shell">go env -w GONOSUMDB=&quot;gitlab.com/group/*&quot;
+</code></pre>
+<h2>3.5. GOPRIVATE</h2>
+<p>等效于以下三个设置</p>
+<ul>
+<li>GONOPROXY=$GOPRIVATE</li>
+<li>GONOSUMDB=$GOPRIVATE</li>
+<li>GOINSECURE=$GOPRIVATE<br>当与其他变量冲突时，GOPRIVATE的配置会被拆分覆盖</li>
+</ul>
+<pre><code class="language-shell">go -w GOPRIVATE=&quot;*.corp.com,github.com/secret-project&quot;
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250228002207580.png" alt="image.png"></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

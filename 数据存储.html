@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据存储 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>数据存储</h1>
+        <time datetime="2026-01-03T13:04:29.193Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 数据存储格式</h1>
+<p>etcd的数据存储格式主要是基于<strong>键值对</strong>的形式。</p>
+<ul>
+<li><strong>键</strong>：是一个唯一的字符串，用于标识存储的数据，类似于字典中的键。例如，在一个配置管理系统中，键可能是某个服务的名称加上配置项的名称，如<code>service1.timeout</code>。</li>
+<li><strong>值</strong>：可以是任意类型的数据，如字符串、整数、JSON 对象等，这取决于具体的应用场景。例如，对于上述<code>service1.timeout</code>这个键，其对应的值可能是一个整数<code>3000</code>，表示服务1的超时时间为 3000 毫秒；也可能是一个JSON 对象，包含更复杂的配置信息。<br>etcd在底层将这些键值对数据以<strong>B+树</strong>的结构进行存储，这种数据结构可以提供高效的查找、插入和删除操作。同时，etcd还使用了<strong>Raft 算法</strong>来保证数据在分布式环境下的一致性和可靠性，确保每个节点都能保持相同的键值对数据副本。</li>
+</ul>
+<p>etcd中的B+树数据既存储在内存中，也存储在磁盘上，采用了内存与磁盘相结合的存储方式：</p>
+<ul>
+<li><strong>内存存储</strong>：etcd会将一部分经常访问的数据，以B+树的结构缓存在内存中，以加快数据的访问速度。这样，对于频繁读取的键值对，就可以直接从内存中获取，避免了磁盘I/O操作，从而提高系统的性能和响应速度。</li>
+<li><strong>磁盘存储</strong>：etcd会把数据持久化存储到磁盘上，以保证数据的可靠性和持久性。在磁盘上，数据以一定的格式组织成文件进行存储，其中就包含了B+树结构相关的数据。当etcd启动时，会从磁盘中加载数据到内存中，恢复B+树的状态。</li>
+</ul>
+<h1>2. 数据读取</h1>
+<p>etcd获取key(读操作)主要是从内存中完成的，而非直接从磁盘读取。这是etcd高性能读取操作的关键设计。</p>
+<ol>
+<li>etcd将所有活跃的键值对数据保存在内存中，通常使用B树或B+树的变种结构</li>
+<li>读操作直接从这些内存数据结构中获取数据，无需访问磁盘</li>
+<li>内存中不仅存储最新版本，还保留了历史版本，这支持了etcd的事务和历史版本查询功能<blockquote>
+<p>[!note]<br>由于etcd会在内存中存放所有数据，因此不建议使用etcd作为持久化数据库，存储大量用户数据。建议etcd用于存放元数据或配置类数据。</p>
+</blockquote>
+</li>
+</ol>
+<h2>2.1. 内存控制的办法</h2>
+<p>etcd的MVCC(多版本并发控制)机制会为每次修改创建新版本，保留旧版本。这会导致:</p>
+<ol>
+<li><strong>内存持续增长</strong>:<ul>
+<li>每次PUT/DELETE操作都会创建新的版本，而不是覆盖旧版本</li>
+<li>历史版本会占用额外内存，且随操作频率线性增长</li>
+</ul>
+</li>
+<li><strong>无限增长问题</strong>:<ul>
+<li>如不进行版本清理，即使是对同一个key反复修改，也会产生大量版本</li>
+<li>理论上内存使用量会无限增长，最终导致OOM为解决这个问题，etcd提供了几种控制历史版本的机制:</li>
+</ul>
+</li>
+</ol>
+<h3>2.1.1. 压缩(Compaction)</h3>
+<p>etcd的关键机制，用于清理历史版本，压缩后，指定版本之前的历史记录将被删除<br>支持两种模式:</p>
+<ul>
+<li>基于版本号: <code>etcdctl compact 5</code>(清理revision 5之前的所有版本)</li>
+<li>基于时间: 清理特定时间点之前的版本<br>配置etcd定期自动执行压缩，常用配置选项:</li>
+<li><code>--auto-compaction-retention=&#39;1h&#39;</code>: 保留最近1小时的历史</li>
+<li><code>--auto-compaction-mode=&#39;periodic&#39;</code>: 基于时间的周期压缩</li>
+<li><code>--auto-compaction-mode=&#39;revision&#39;</code>: 基于版本号的压缩</li>
+</ul>
+<h3>2.1.2. 租约机制(Lease)</h3>
+<ul>
+<li>为key设置TTL(生存时间)</li>
+<li>过期后自动删除key及其所有版本</li>
+</ul>
+<h1>3. 磁盘存储格式</h1>
+<p>默认情况下，etcd将数据存储在<code>/var/lib/etcd</code>目录下（可通过启动参数<code>--data-dir</code>指定其他位置）。etcd的持久化则使用&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;预写式日志（WAL：Write Ahead Log）</font>进行记录存储。在WAL的体系中，所有的数据在提交之前都会进行日志记录。在etcd的持久化存储目录中，有两个子目录。</p>
+<ul>
+<li>一个是WAL，存储着&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;所有事务的变化记录</font></li>
+<li>另一个则是snapshot，用于存储某一个时刻etcd&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;所有目录的数据</font></li>
+</ul>
+<pre><code class="language-shell"># tree /home/ubuntu/data/
+/home/ubuntu/data/
+└── member
+    ├── snap
+    │   └── db
+    └── wal
+        ├── 0000000000000000-0000000000000000.wal
+        └── 0.tmp
+
+4 directories, 3 files
+</code></pre>
+<h2>3.1. WAL</h2>
+<p>WAL是etcd数据持久化的主要机制，它遵循&quot;先写日志，后应用&quot;的原则。</p>
+<h3>3.1.1. 主要特点</h3>
+<ol>
+<li><strong>追加写入</strong>：所有的写操作都以追加的方式写入WAL文件，确保写入效率</li>
+<li><strong>顺序性</strong>：记录严格按时间顺序存储</li>
+<li><strong>原子性</strong>：每个条目要么完全写入，要么完全不写入</li>
+</ol>
+<h3>3.1.2. 包含的主要信息</h3>
+<ol>
+<li><strong>Entry类型记录</strong>：包含Raft协议的操作如提案(proposals)</li>
+<li><strong>State类型记录</strong>：保存Raft状态信息</li>
+<li><strong>CRC校验</strong>：每个记录都有校验和，确保数据完整性</li>
+<li><strong>元数据</strong>：如term, index等Raft相关信息</li>
+</ol>
+<h3>3.1.3. WAL分段管理</h3>
+<p>etcd将WAL文件按大小分段(默认64MB)，形成一系列有序的WAL文件，命名格式通常为<code>[序号]-[第一个索引].wal</code>。</p>
+<h2>3.2. Snapshot(快照)</h2>
+<p>随着系统运行，WAL文件会不断增长。为了避免在重启时重放过多的WAL条目，etcd会周期性创建状态快照。</p>
+<h3>3.2.1. 特点</h3>
+<ol>
+<li><strong>完整状态</strong>：包含某一时刻etcd的完整状态</li>
+<li><strong>压缩格式</strong>：通常是经过压缩的，减少存储空间</li>
+<li><strong>定期触发</strong>：可基于时间或WAL大小触发</li>
+</ol>
+<h3>3.2.2. Snapshot内容</h3>
+<ol>
+<li><strong>键值数据</strong>：存储区中的所有键值对</li>
+<li><strong>Raft元数据</strong>：如最后应用的日志索引等</li>
+<li><strong>版本信息</strong>：MVCC版本数据</li>
+</ol>
+<h2>3.3. WAL与Snapshot的协作机制</h2>
+<p>WAL和Snapshot协同工作，共同保障etcd的数据一致性和性能：</p>
+<h3>3.3.1. 写入流程</h3>
+<ul>
+<li>所有修改操作首先写入WAL</li>
+<li>成功写入WAL后，修改应用到内存中的状态机</li>
+</ul>
+<h3>3.3.2. 快照触发</h3>
+<ul>
+<li>当WAL累积到一定大小或经过一定时间后</li>
+<li>将当前状态序列化为快照文件</li>
+<li>记录快照对应的最后应用的日志索引</li>
+</ul>
+<h3>3.3.3. WAL清理</h3>
+<ul>
+<li>创建快照后，系统清理已被快照包含的WAL段</li>
+<li>保留最近的几个快照作为冗余备份</li>
+</ul>
+<h3>3.3.4. 恢复流程</h3>
+<p>当etcd节点重启时：</p>
+<ol>
+<li>首先加载最新的快照文件，恢复到快照时刻的状态</li>
+<li>然后从快照的末尾索引开始，重放后续WAL记录</li>
+<li>完成状态恢复后，etcd开始正常服务</li>
+</ol>
+<h3>3.3.5. 协作示例</h3>
+<p>假设etcd具有以下文件：</p>
+<ul>
+<li><code>0000000000000000-0000000000000000.wal</code></li>
+<li><code>0000000000000001-0000000000010000.wal</code></li>
+<li><code>0000000000000002-0000000000020000.wal</code></li>
+<li><code>snapshot.db</code> (包含索引15000的状态)<br>重启时，etcd会：</li>
+</ul>
+<ol>
+<li>加载<code>snapshot.db</code>恢复到索引15000</li>
+<li>从索引15001开始重放第二个WAL文件的后半部分和第三个WAL文件</li>
+<li>重建完整的内存状态</li>
+</ol>
+<h3>3.3.6. 特殊设计考量</h3>
+<ol>
+<li><strong>预写缓冲区</strong>：WAL写入前会使用内存缓冲区提高性能</li>
+<li><strong>fsync策略</strong>：可配置同步策略，平衡性能和可靠性</li>
+<li><strong>压缩算法</strong>：快照通常使用压缩算法减少磁盘使用</li>
+<li><strong>版本控制</strong>：与MVCC机制结合，支持多版本并发控制<br>这种设计使etcd能够在保证数据安全的同时，提供较高的性能，适合作为分布式系统的协调服务和配置中心。</li>
+</ol>
+<h1>4. 数据版本</h1>
+<p>etcd支持数据的版本控制，每个键值对都有一个对应的版本号。当数据发生更新时，版本号会自动递增，这使得用户可以方便地进行数据的回溯和查看历史版本。</p>
+<blockquote>
+<p>[!note]<br>etcd使用的是64位整数(int64)来存储全局版本号。对于int64类型，其最大值约为9.2×10^18。假设etcd每秒处理1百万个写操作(这已经是非常高的吞吐量)，理论上需要大约292,471年才会发生溢出，因此在实际应用中这个问题几乎不需要担心。</p>
+</blockquote>
+<h2>4.1. 原理</h2>
+<p>在 etcd 中，<code>create_revision</code>、<code>mod_revision</code> 和 <code>version</code> 是与键值对数据相关的元数据字段，用于记录数据的版本和修改历史信息。</p>
+<ul>
+<li><strong><code>create_revision</code></strong>：表示键值对创建时的修订版本号。每当一个新的键值对被创建时，etcd 会为其分配一个唯一的修订版本号，这个版本号会随着 etcd 中事务操作的执行而单调递增。通过 <code>create_revision</code> 可以准确地知道某个键值对是在 etcd 的哪个修订版本中被创建的。</li>
+<li><strong><code>mod_revision</code></strong>：代表键值对最后一次修改时的修订版本号。当键值对的 value 被更新或者键被删除时，<code>mod_revision</code> 的值会更新为当前的修订版本号。所以 <code>mod_revision</code> 总是反映键值对最新的修改状态对应的修订版本。</li>
+<li><strong><code>version</code></strong>：表示键值对的版本号。它记录了该键值对被修改的次数，从创建开始计数，每次对键值对进行修改（包括更新值或删除后重新创建），<code>version</code> 都会递增。与 <code>create_revision</code> 和 <code>mod_revision</code> 不同，<code>version</code> 是一个相对的、针对特定键的版本计数，而不是 etcd 全局的修订版本号。<blockquote>
+<p>[!note]<br>创建一个键值对 <code>/app/config/timeout</code>，其 <code>create_revision</code> 可能是100，<code>mod_revision</code> 也是100，<code>version</code> 为 1。如果对该键值对进行了一次更新操作，那么 <code>mod_revision</code> 会更新为一个更大的修订版本号，比如 105，<code>version</code> 会递增为 2，而 <code>create_revision</code> 保持不变仍为100。这些字段有助于实现 etcd 的多版本控制功能，方便用户查询和管理数据的不同版本，以及进行事务处理和一致性检查等操作。</p>
+</blockquote>
+</li>
+</ul>
+<h2>4.2. 示例</h2>
+<pre><code class="language-shell">etcdctl put /app/name myapp1
+# OK
+etcdctl get /app/name -w=json
+# {&quot;header&quot;:{&quot;cluster_id&quot;:14841639068965178418,&quot;member_id&quot;:10276657743932975437,&quot;revision&quot;:36,&quot;raft_term&quot;:2},&quot;kvs&quot;:[{&quot;key&quot;:&quot;L2FwcC9uYW1l&quot;,&quot;create_revision&quot;:36,&quot;mod_revision&quot;:36,&quot;version&quot;:1,&quot;value&quot;:&quot;bXlhcHAx&quot;}],&quot;count&quot;:1}
+etcdctl put /app/name myapp2
+# OK
+etcdctl get /app/name -w=json
+{&quot;header&quot;:{&quot;cluster_id&quot;:14841639068965178418,&quot;member_id&quot;:10276657743932975437,&quot;revision&quot;:37,&quot;raft_term&quot;:2},&quot;kvs&quot;:[{&quot;key&quot;:&quot;L2FwcC9uYW1l&quot;,&quot;create_revision&quot;:36,&quot;mod_revision&quot;:37,&quot;version&quot;:2,&quot;value&quot;:&quot;bXlhcHAy&quot;}],&quot;count&quot;:1}
+etcdctl get /app/name --rev=37
+# /app/name
+# myapp2
+etcdctl get /app/name --rev=36 # 查看之前版本的数据
+# /app/name
+# myapp1
+etcdctl del /app/name
+# 1
+etcdctl get /app/name --rev=36  # 查看删除前的数据
+# /app/name
+# myapp1
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

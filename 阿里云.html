@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿里云 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>阿里云</h1>
+        <time datetime="2026-01-03T13:04:29.113Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 公网NAT</h1>
+<h1>2. 特性</h1>
+<ul>
+<li>支持一键全通</li>
+<li>snat只允许修改eip</li>
+<li><a href="https://help.aliyun.com/document_detail/111908.html?spm=a2c4g.121142.0.0.75fb22e4e4V93t">监控与运维</a></li>
+<li>支持按量计费和带宽包</li>
+</ul>
+<h3>2.1.1. NIS（Network Intelligence Service）</h3>
+<p>支持实例级别的一键诊断，可以检测实例的配置与运行状态，并能根据诊断的异常项提供智能修复建议。诊断内容主要包括：连通性诊断、配置诊断、容量超限诊断和费用诊断，同时可以查看历史诊断详情。</p>
+<ul>
+<li><strong>实例诊断</strong>：检测网元实例配置和运行状态，一键诊断异常智能修复</li>
+<li><strong>路径分析</strong>： 端到端连通和性能分析，网络拓扑和互访关系呈现</li>
+<li><strong>流量分析</strong>：监测各场景流量异常，及时告警并分析根因</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>诊断项分类</strong></th>
+<th><strong>具体诊断项及说明</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>连通性诊断</strong></td>
+<td>- <strong>限速丢包</strong>：检查公网NAT网关实例是否因超规格使用而导致限速丢包。<br>    <br>- <strong>SNAT源端口分配失败检查</strong>：检查公网NAT网关实例的SNAT源端口分配是否成功。</td>
+</tr>
+<tr>
+<td><strong>配置诊断</strong></td>
+<td>- <strong>路由缺失检查</strong>：检查VPC内是否存在指向公网NAT网关实例的路由。<br>    <br>- <strong>实例状态检查</strong>：检查公网NAT网关实例的状态。<br>    <br>- <strong>NAT策略配置检查</strong>：检查公网NAT网关实例是否已经配置SNAT和DNAT规则。<br>    <br>- <strong>EIP绑定状态检查</strong>：检查公网NAT网关实例是否已绑定弹性公网IP（Elastic IP Address，简称EIP）。</td>
+</tr>
+<tr>
+<td><strong>容量超限诊断</strong></td>
+<td>- <strong>NAT实例流量处理率检测</strong>：检查公网NAT网关实例的流量处理率是否正常。<br>    <br>- <strong>NAT实例并发连接利用率监测</strong>：检查公网NAT网关实例并发连接利用率是否正常。</td>
+</tr>
+<tr>
+<td><strong>费用诊断</strong></td>
+<td>- <strong>欠费到期预警</strong>：检查公网NAT网关实例是否处于到期前15天的预警状态。<br>    <br>- <strong>欠费状态告警</strong>：检查公网NAT网关实例是否已经欠费。</td>
+</tr>
+</tbody></table>
+<h2>2.2. 性能</h2>
+<p>公网NAT网关默认的吞吐能力是5 Gbps，可根据使用量弹性扩大至15 Gbps，最大可联系客户经理扩容至100 Gbps。</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>新建连接速率</th>
+<th>并发连接数</th>
+<th>处理流量</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>默认指标</td>
+<td>10万</td>
+<td>200万</td>
+<td>5 Gbps，可自动弹性至15 Gbps</td>
+</tr>
+</tbody></table>
+<h2>2.3. 配额</h2>
+<h3>2.3.1. 网关</h3>
+<ul>
+<li>一个vpc支持5个网关</li>
+<li>一个NAT网关支持绑定20个EIP</li>
+<li>一个公网NAT实例支持20个标签。</li>
+</ul>
+<h3>2.3.2. SNAT</h3>
+<ul>
+<li>一个公网NAT网关默认支持创建40条SNAT条目。</li>
+<li>一个SNAT条目默认支持关联64个EIP，且不支持提升配额。</li>
+</ul>
+<h3>2.3.3. DNAT</h3>
+<ul>
+<li>一个网关100条规则</li>
+</ul>
+<h2>2.4. 其他</h2>
+<h3>2.4.1. snat多eip选择</h3>
+<p>指定多个EIP配置至SNAT IP地址池时，业务连接会通过哈希算法分配到多个EIP，由于每个连接的流量不同，可能会出现多EIP业务流量不均匀的情况，建议您将每个EIP加入到同一个共享带宽中以避免单EIP带宽达到上限导致业务受损。</p>
+<h3>2.4.2. IP占用情况</h3>
+<p>创建网关默认占用一个私网IP，绑定第一个EIP的时候不额外占用私网IP，绑定第二个EIP的时候额外再占用一个私网IP。</p>
+<blockquote>
+<p>从2022年09月19日起，新创建的公网NAT网关绑定一个EIP时将占用NAT网关所在交换机的一个私网IP （已有NAT网关实例不受影响），请确保NAT网关所在交换机内私网IP地址充足，如果NAT网关所在的交换机没有可用的空闲私网地址时，将无法绑定新的EIP。</p>
+</blockquote>
+<h1>3. 私网NAT</h1>
+<h2>3.1. 性能</h2>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>新建连接速率</th>
+<th>并发连接数</th>
+<th>处理流量</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>默认指标</td>
+<td>10万</td>
+<td>200万</td>
+<td>5 Gbps，可自动弹性至15 Gbps</td>
+</tr>
+</tbody></table>
+<h2>3.2. 配额限制</h2>
+<h3>3.2.1. 实例限制</h3>
+<ul>
+<li>一个VPC限制5个</li>
+<li>限制50个地址段，每个地址段50个地址</li>
+<li>一个网关支持20个标签</li>
+</ul>
+<h3>3.2.2. snat</h3>
+<ul>
+<li>一个网关40个</li>
+<li>一个snat规则仅支持绑定1个natIp</li>
+</ul>
+<h3>3.2.3. dnat</h3>
+<ul>
+<li>一个网关100个</li>
+</ul>
+<h2>3.3. 其他</h2>
+<h3>3.3.1. NAT IP段</h3>
+<ul>
+<li>默认创建一个实例所在子网网段的地址段</li>
+<li>网关口IP可以用作NAT IP</li>
+<li>不会占用其他VPC的IP，NAT IP段在网关侧管理，需要对端配置路由下一跳指向连接网关（ER/Peering等）。</li>
+</ul>
+<h3>3.3.2. <a href="https://help.aliyun.com/document_detail/198983.html?spm=a2c4g.187955.0.0.6abd6319FXy3jB">升级普通型公网NAT网关至增强型公网NAT网关</a></h3>
+<h3>3.3.3. DDoS攻击防护</h3>
+<p>NAT网关默认开启DDoS基础防护能力，提供不超过5 Gbps的基础DDoS防护能力。所有来自互联网的流量都要先经过云盾再到达NAT网关实例，云盾会针对常见的攻击进行清洗过滤。</p>
+<h3>3.3.4. 网关和主机要在两个子网，绑定不同路由表</h3>
+<h3>3.3.5. 使用本vpc的ip作为nat ip</h3>
+<p>客户端所在子网路由表配置目的地址为对端的送到私网NAT网关；网关所在子网绑定自定义路由表，设置目的地址为对端的送个CEN（ER），peering等。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202310042200814.png" alt="image.png"><br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202310042202314.png" alt="image.png"></p>
+<h3>3.3.6. 使用自定义ip作为nat ip</h3>
+<p>需要通过路由表的方式将自定义ip段指向nat，自定义网段仅支持10，192.168，172.16网段</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

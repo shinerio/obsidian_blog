@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3. 命名空间 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>3. 命名空间</h1>
+        <time datetime="2026-01-03T13:04:29.122Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>命名空间（namespace）是 C++ 中一项重要的特性，它可以将全局作用域划分为不同的部分，从而避免不同库或者不同模块之间的命名冲突。标准 C++ 库中的所有标识符（像类、函数、对象等）都被定义在了 <code>std</code> 命名空间里。</p>
+<h1>1. using namespace std</h1>
+<p>在没有使用 <code>using namespace std;</code> 时，若要使用标准库中的标识符，就必须明确指定其所属的命名空间，也就是在标识符前面加上 <code>std::</code> 前缀。例如：</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+int main() {
+    std::cout &lt;&lt; &quot;Hello, World!&quot; &lt;&lt; std::endl;
+    return 0;
+}
+</code></pre>
+<p>当使用了 <code>using namespace std;</code> 之后，就无需再每次都写 <code>std::</code> 前缀，代码会变得更加简洁：</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+using namespace std;
+
+int main() {
+    cout &lt;&lt; &quot;Hello, World!&quot; &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
+<p>在代码中频繁使用标准库的标识符时，每次都写 <code>std::</code> 会显得很繁琐。使用 <code>using namespace std;</code> 可以减少重复书写，提高代码的可读性和编写效率。</p>
+<h2>1.1. 潜在的问题</h2>
+<h3>1.1.1. 命名冲突</h3>
+<p>使用 <code>using namespace std;</code> 会将 <code>std</code> 命名空间中的所有标识符引入到当前的全局作用域中，这就可能会和用户自定义的标识符产生命名冲突。例如：</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+using namespace std;
+
+// 自定义一个名为 cout 的函数
+void cout() {
+    std::cout &lt;&lt; &quot;This is a custom cout function.&quot; &lt;&lt; std::endl;
+}
+
+int main() {
+    // 这里会产生命名冲突，因为全局作用域中同时存在 std::cout 和自定义的 cout 函数
+    cout(); 
+    return 0;
+}
+</code></pre>
+<h3>1.1.2. 代码可读性降低</h3>
+<p>在大型项目中，过多使用 <code>using namespace std;</code> 会让代码的可读性变差，因为很难一眼看出某个标识符是来自标准库还是用户自定义的。</p>
+<p><strong>替代方案</strong>: 为了避免上述问题，可以采用更细粒度的方式引入标准库的标识符，比如：</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+// 只引入需要使用的标识符
+using std::cout;
+using std::endl;
+
+int main() {
+    cout &lt;&lt; &quot;Hello, World!&quot; &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
+<p>这种方式既能简化代码书写，又能减少命名冲突的风险。</p>
+<h1>2. 自定义namespace</h1>
+<p>可以使用 <code>namespace</code> 关键字来定义一个自定义的命名空间，其基本语法如下：</p>
+<pre><code class="language-c++">namespace YourNameSpaceName {
+    // 在这里定义变量、函数、类等
+    int variable;
+    void function() {
+        // 函数实现
+    }
+    class ClassName {
+        // 类的定义
+    };
+}
+</code></pre>
+<h2>2.1. 示例</h2>
+<pre><code class="language-c++">// 定义一个名为 MyNamespace 的命名空间
+namespace MyNamespace {
+    int num = 10;
+
+    void printNum() {
+        std::cout &lt;&lt; &quot;MyNamespace 中的 num 值为: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    }
+}
+</code></pre>
+<h3>2.1.1. 使用命名空间中的成员</h3>
+<h4>2.1.1.1. 作用域解析运算符 <code>::</code></h4>
+<p>可以使用作用域解析运算符 <code>::</code> 来指定成员所属的命名空间。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace MyNamespace {
+    int num = 10;
+
+    void printNum() {
+        std::cout &lt;&lt; &quot;MyNamespace 中的 num 值为: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    }
+}
+
+int main() {
+    // 使用作用域解析运算符访问命名空间中的成员
+    std::cout &lt;&lt; &quot;直接访问 MyNamespace 中的 num: &quot; &lt;&lt; MyNamespace::num &lt;&lt; std::endl;
+    MyNamespace::printNum();
+
+    return 0;
+}
+</code></pre>
+<h4>2.1.1.2. <code>using</code> 声明</h4>
+<p>使用 <code>using</code> 声明可以让特定的命名空间成员在当前作用域内直接使用，无需每次都指定命名空间。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace MyNamespace {
+    int num = 10;
+
+    void printNum() {
+        std::cout &lt;&lt; &quot;MyNamespace 中的 num 值为: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    }
+}
+
+int main() {
+    // 使用 using 声明引入特定成员
+    using MyNamespace::num;
+    using MyNamespace::printNum;
+
+    std::cout &lt;&lt; &quot;使用 using 声明访问 num: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    printNum();
+
+    return 0;
+}
+</code></pre>
+<h4>2.1.1.3. <code>using</code> 指令</h4>
+<p>使用 <code>using</code> 指令可以将整个命名空间的所有成员引入到当前作用域，但要注意可能会引发命名冲突。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace MyNamespace {
+    int num = 10;
+
+    void printNum() {
+        std::cout &lt;&lt; &quot;MyNamespace 中的 num 值为: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    }
+}
+
+int main() {
+    // 使用 using 指令引入整个命名空间
+    using namespace MyNamespace;
+
+    std::cout &lt;&lt; &quot;使用 using 指令访问 num: &quot; &lt;&lt; num &lt;&lt; std::endl;
+    printNum();
+
+    return 0;
+}
+</code></pre>
+<h1>3. 嵌套命名空间</h1>
+<p>命名空间可以嵌套，即在一个命名空间内部再定义另一个命名空间。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace OuterNamespace {
+    int outerVar = 20;
+
+    namespace InnerNamespace {
+        int innerVar = 30;
+
+        void printVars() {
+            std::cout &lt;&lt; &quot;OuterNamespace::outerVar: &quot; &lt;&lt; outerVar &lt;&lt; std::endl;
+            std::cout &lt;&lt; &quot;InnerNamespace::innerVar: &quot; &lt;&lt; innerVar &lt;&lt; std::endl;
+        }
+    }
+}
+
+int main() {
+    // 访问嵌套命名空间中的成员
+    std::cout &lt;&lt; &quot;访问 OuterNamespace 中的 outerVar: &quot; &lt;&lt; OuterNamespace::outerVar &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;访问 InnerNamespace 中的 innerVar: &quot; &lt;&lt; OuterNamespace::InnerNamespace::innerVar &lt;&lt; std::endl;
+    OuterNamespace::InnerNamespace::printVars();
+
+    return 0;
+}
+</code></pre>
+<h1>4. 匿名命名空间</h1>
+<p>C++ 还支持匿名命名空间，其中定义的成员只在当前文件中可见，类似于使用 <code>static</code> 关键字修饰的全局变量和函数。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+// 匿名命名空间
+namespace {
+    int secretNum = 42;
+
+    void secretFunction() {
+        std::cout &lt;&lt; &quot;匿名命名空间中的 secretNum: &quot; &lt;&lt; secretNum &lt;&lt; std::endl;
+    }
+}
+
+int main() {
+    // 直接使用匿名命名空间中的成员
+    std::cout &lt;&lt; &quot;访问匿名命名空间中的 secretNum: &quot; &lt;&lt; secretNum &lt;&lt; std::endl;
+    secretFunction();
+
+    return 0;
+}
+</code></pre>
+<h1>5. 跨多文件</h1>
+<p>可以在不同的源文件（<code>.cpp</code> 文件）和头文件（<code>.h</code> 或 <code>.hpp</code> 文件）中对同一个命名空间进行定义和扩展。</p>
+<p>m_ns1.h</p>
+<pre><code class="language-c++">// my_namespace.h
+&lt;span class=&quot;tag&quot;&gt;#ifndef&lt;/span&gt; MY_NAMESPACE1_H
+&lt;span class=&quot;tag&quot;&gt;#define&lt;/span&gt; MY_NAMESPACE1_H
+
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace MyNamespace {
+    // 声明一个函数
+    void printMessage1();
+    // 声明一个变量
+    extern int myVariable1; 
+}
+
+&lt;span class=&quot;tag&quot;&gt;#endif&lt;/span&gt;
+</code></pre>
+<p>m_ns1.cpp</p>
+<pre><code class="language-c++">// my_namespace.cpp
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &quot;m_ns1.h&quot;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace MyNamespace {
+    int myVariable1 = 10;
+
+    void printMessage1() {
+        std::cout &lt;&lt; &quot;This is a message from MyNamespace1. myVariable = &quot; &lt;&lt; myVariable1 &lt;&lt; std::endl;
+    }
+}
+</code></pre>
+<p>m_ns2.h</p>
+<pre><code class="language-c++">// my_namespace.h
+&lt;span class=&quot;tag&quot;&gt;#ifndef&lt;/span&gt; MY_NAMESPACE2_H
+&lt;span class=&quot;tag&quot;&gt;#define&lt;/span&gt; MY_NAMESPACE2_H
+
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace MyNamespace {
+    // 声明一个函数
+    void printMessage2();
+    // 声明一个变量
+    extern int myVariable2; 
+}
+
+&lt;span class=&quot;tag&quot;&gt;#endif&lt;/span&gt;
+</code></pre>
+<p>m_ns2.cpp</p>
+<pre><code class="language-c++">// my_namespace.cpp
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &quot;m_ns2.h&quot;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+
+namespace MyNamespace {
+    int myVariable2 = 20;
+
+    void printMessage2() {
+        std::cout &lt;&lt; &quot;This is a message from MyNamespace2. myVariable = &quot; &lt;&lt; myVariable2 &lt;&lt; std::endl;
+    }
+}
+</code></pre>
+<p>ns_test.cpp</p>
+<pre><code class="language-c++">// main.cpp
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &quot;m_ns1.h&quot;
+# 5.1. &lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &quot;m_ns2.h&quot;
+
+int main() {
+    // 使用作用域解析运算符访问命名空间中的成员
+    MyNamespace::printMessage1();
+    MyNamespace::printMessage2();
+    std::cout &lt;&lt; &quot;Accessing myVariable1 from main: &quot; &lt;&lt; MyNamespace::myVariable1&lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;Accessing myVariable2 from main: &quot; &lt;&lt; MyNamespace::myVariable2&lt;&lt; std::endl;
+    return 0;
+}
+</code></pre>
+<h2>5.1. 编译和运行</h2>
+<p>修改vscode task.json如下</p>
+<pre><code class="language-json">{
+    &quot;tasks&quot;: [
+        {
+            &quot;type&quot;: &quot;cppbuild&quot;,
+            &quot;label&quot;: &quot;C/C++: clang++ 生成活动文件&quot;,
+            &quot;command&quot;: &quot;/usr/bin/clang++&quot;,
+            &quot;args&quot;: [
+                &quot;-fcolor-diagnostics&quot;,
+                &quot;-fansi-escape-codes&quot;,
+                &quot;-g&quot;,
+                &quot;${workspaceFolder}/*ns*.cpp&quot;,
+                &quot;-o&quot;,
+                &quot;${fileDirname}/${fileBasenameNoExtension}&quot;
+            ],
+            &quot;options&quot;: {
+                &quot;cwd&quot;: &quot;${fileDirname}&quot;
+            },
+            &quot;problemMatcher&quot;: [
+                &quot;$gcc&quot;
+            ],
+            &quot;group&quot;: {
+                &quot;kind&quot;: &quot;build&quot;,
+                &quot;isDefault&quot;: true
+            },
+            &quot;detail&quot;: &quot;调试器生成的任务。&quot;
+        }
+    ],
+    &quot;version&quot;: &quot;2.0.0&quot;
+}
+</code></pre>
+<p>也可以通过命令行进行手动编译并执行</p>
+<pre><code class="language-shell">/usr/bin/clang++ -std=gnu++14 -fcolor-diagnostics -fansi-escape-codes -g /Users/shinerio/WorkSpace/c_learn/ns_test.cpp /Users/shinerio/WorkSpace/c_learn/m_ns1.cpp /Users/shinerio/WorkSpace/c_learn/m_ns2.cpp -o /Users/shinerio/WorkSpace/c_learn/ns_test
+
+./ns_test
+This is a message from MyNamespace1. myVariable = 10
+This is a message from MyNamespace2. myVariable = 20
+Accessing myVariable1 from main: 10
+Accessing myVariable2 from main: 20
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

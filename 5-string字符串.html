@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5. String字符串 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>5. String字符串</h1>
+        <time datetime="2026-01-03T13:04:29.125Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>c++包含两种风格的字符串</p>
+<ul>
+<li>C 风格字符串</li>
+<li>C++ 引入的 string 类类型</li>
+</ul>
+<h1>1. char类型</h1>
+<p>C风格的字符串起源于C语言，并在C++中继续得到支持。字符串实际上是使用<strong>null</strong>字符\0终止的一维字符数组。因此，一个以null结尾的字符串，包含了组成字符串的字符。</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+using namespace std;
+int main() {
+    char site1[7] = {&#39;R&#39;, &#39;U&#39;, &#39;N&#39;, &#39;O&#39;, &#39;O&#39;, &#39;B&#39;, &#39;\0&#39;};
+    char site2[] = &quot;RUNOOB&quot;;
+    char site3[8] = &quot;RUNOOB&quot;;
+    cout &lt;&lt; &quot;site1:&quot; &lt;&lt; site1 &lt;&lt; &quot; ,size:&quot; &lt;&lt; sizeof(site1) &lt;&lt; endl;
+    cout &lt;&lt; &quot;site2:&quot; &lt;&lt; site2 &lt;&lt; &quot; ,site:&quot; &lt;&lt; sizeof(site2) &lt;&lt; endl;
+    cout &lt;&lt; &quot;site3:&quot; &lt;&lt; site3 &lt;&lt; &quot; ,site:&quot; &lt;&lt; sizeof(site3) &lt;&lt; endl;
+    cout &lt;&lt; &quot;site1:&quot; &lt;&lt; site1 &lt;&lt; &quot; ,len:&quot; &lt;&lt; strlen(site1) &lt;&lt; endl;
+    cout &lt;&lt; &quot;site2:&quot; &lt;&lt; site2 &lt;&lt; &quot; ,len:&quot; &lt;&lt; strlen(site2) &lt;&lt; endl;
+    cout &lt;&lt; &quot;site3:&quot; &lt;&lt; site3 &lt;&lt; &quot; ,len:&quot; &lt;&lt; strlen(site3) &lt;&lt; endl;
+}
+&quot;&quot;&quot;
+site1:RUNOOB ,size:7
+site2:RUNOOB ,site:7
+site3:RUNOOB ,site:8
+site1:RUNOOB ,len:6
+site2:RUNOOB ,len:6
+site3:RUNOOB ,len:6
+&quot;&quot;&quot;
+</code></pre>
+<h1>2. 字符串函数</h1>
+<table>
+<thead>
+<tr>
+<th>函数 &amp; 目的</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>strcpy(s1, s2);</strong>  <br>复制字符串 s2 到字符串 s1。</td>
+</tr>
+<tr>
+<td><strong>strcat(s1, s2);</strong>  <br>连接字符串 s2 到字符串 s1 的末尾。连接字符串也可以用 + 号，例如:  <br><br>string str1 = &quot;runoob&quot;;<br>string str2 = &quot;google&quot;;<br>string str = str1 + str2;</td>
+</tr>
+<tr>
+<td><strong>strlen(s1);</strong>  <br>返回字符串 s1 的长度。</td>
+</tr>
+<tr>
+<td><strong>strcmp(s1, s2);</strong>  <br>如果 s1 和 s2 是相同的，则返回 0；如果 s1&lt;s2 则返回值小于 0；如果 s1&gt;s2 则返回值大于 0。</td>
+</tr>
+<tr>
+<td><strong>strchr(s1, ch);</strong>  <br>返回一个指针，指向字符串 s1 中字符 ch 的第一次出现的位置。</td>
+</tr>
+<tr>
+<td><strong>strstr(s1, s2);</strong>  <br>返回一个指针，指向字符串 s1 中字符串 s2 的第一次出现的位置。</td>
+</tr>
+</tbody></table>
+<h1>3. string类型</h1>
+<p>string类型需要添加<code>&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;</code></p>
+<h2>3.1. 声明和初始化</h2>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+using namespace std
+
+int main() {
+    // 默认初始化，创建一个空字符串
+    string str1; 
+    // 使用字符串字面量初始化
+    string str2 = &quot;Hello&quot;; 
+    // 拷贝初始化
+    string str3(str2); 
+    // 直接初始化，指定重复次数和字符
+    string str4(5, &#39;A&#39;); 
+
+    std::cout &lt;&lt; &quot;str1: &quot; &lt;&lt; str1 &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;str2: &quot; &lt;&lt; str2 &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;str3: &quot; &lt;&lt; str3 &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;str4: &quot; &lt;&lt; str4 &lt;&lt; std::endl;
+    return 0;
+}
+&quot;&quot;&quot;
+str1: 
+str2: Hello
+str3: Hello
+str4: AAAAA
+&quot;&quot;&quot;
+</code></pre>
+<h2>3.2. 字符串操作</h2>
+<h3>3.2.1. 字符串拼接</h3>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+
+int main() {
+    std::string str1 = &quot;Hello&quot;;
+    std::string str2 = &quot; World&quot;;
+    // 使用 + 进行拼接
+    std::string result1 = str1 + str2; 
+
+    // 使用 += 进行拼接
+    str1 += str2; 
+
+    std::cout &lt;&lt; &quot;result1: &quot; &lt;&lt; result1 &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;str1: &quot; &lt;&lt; str1 &lt;&lt; std::endl;
+
+    return 0;
+}
+&quot;&quot;&quot;
+result1: Hello World
+str1: Hello World
+&quot;&quot;&quot;
+</code></pre>
+<h3>3.2.2. 字符串长度</h3>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+using namespace std;
+
+int main() {
+    std::string str = &quot;Hello&quot;;
+    std::cout &lt;&lt; &quot;字符串长度: &quot; &lt;&lt; str.size() &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;字符串长度: &quot; &lt;&lt; str.length() &lt;&lt; std::endl;
+    return 0;
+}
+&quot;&quot;&quot;
+字符串长度: 5
+字符串长度: 5
+&quot;&quot;&quot;
+</code></pre>
+<h3>3.2.3. 访问字符元素</h3>
+<p>可以使用下标运算符 <code>[]</code> 或 <code>at()</code> 成员函数访问字符串中的单个字符串元素</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+
+int main() {
+    std::string str = &quot;Hello&quot;;
+    // 使用下标运算符访问
+    std::cout &lt;&lt; &quot;第一个字符: &quot; &lt;&lt; str[0] &lt;&lt; std::endl; 
+    // 使用 at() 函数访问
+    std::cout &lt;&lt; &quot;第二个字符: &quot; &lt;&lt; str.at(1) &lt;&lt; std::endl; 
+    return 0;
+}
+&quot;&quot;&quot;
+第一个字符: H
+第二个字符: e
+&quot;&quot;&quot;
+</code></pre>
+<h3>3.2.4. 字符串比较</h3>
+<p>可以使用 <code>&quot;==、!=、&lt;、&gt;&quot;</code> 等比较运算符进行字符串比较</p>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+
+int main() {
+    std::string str1 = &quot;apple&quot;;
+    std::string str2 = &quot;banana&quot;;
+
+    if (str1 &lt; str2) {
+        std::cout &lt;&lt; str1 &lt;&lt; &quot; 在字典序上小于 &quot; &lt;&lt; str2 &lt;&lt; std::endl;
+    }
+
+    return 0;
+}
+&quot;&quot;&quot;
+apple 在字典序上小于 banana
+&quot;&quot;&quot;
+</code></pre>
+<h3>3.2.5. 查找字符串</h3>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+
+int main() {
+    std::string str = &quot;Hello World&quot;;
+    size_t pos = str.find(&quot;World&quot;);
+    if (pos != std::string::npos) {
+        std::cout &lt;&lt; &quot;子字符串 &#39;World&#39; 的位置: &quot; &lt;&lt; pos &lt;&lt; std::endl;
+    } else {
+        std::cout &lt;&lt; &quot;未找到子字符串&quot; &lt;&lt; std::endl;
+    }
+
+    return 0;
+}
+// 子字符串 &#39;World&#39; 的位置: 6
+</code></pre>
+<h3>3.2.6. 截取子字符串</h3>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+
+int main() {
+    std::string str = &quot;Hello World&quot;;
+    // 从位置 6 开始截取长度为 5 的子字符串
+    std::string subStr = str.substr(6, 5); 
+    std::cout &lt;&lt; &quot;截取的子字符串: &quot; &lt;&lt; subStr &lt;&lt; std::endl;
+
+    return 0;
+}
+// 截取的子字符串: World
+</code></pre>
+<h3>3.2.7. 字符串替换</h3>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+
+int main() {
+    std::string str = &quot;Hello World&quot;;
+    // 从位置 6 开始，替换长度为 5 的子字符串为 &quot;Universe&quot;
+    str.replace(6, 5, &quot;Universe&quot;); 
+    std::cout &lt;&lt; &quot;替换后的字符串: &quot; &lt;&lt; str &lt;&lt; std::endl;
+
+    return 0;
+}
+// 替换后的字符串: Hello Universe
+</code></pre>
+<h1>4. c和c++风格字符串互转</h1>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;iostream&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;cstdio&gt;
+
+int main() {
+    std::string str = &quot;Hello&quot;;
+    const char* cStr = str.c_str();
+    std::printf(&quot;C 风格字符串: %s\n&quot;, cStr);
+    std::string str2(cStr);
+    std::cout &lt;&lt; &quot;std::string 对象: &quot; &lt;&lt; str2 &lt;&lt; std::endl;
+
+    return 0;
+}
+&quot;&quot;&quot;
+C 风格字符串: Hello
+std::string 对象: Hello
+&quot;&quot;&quot;
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

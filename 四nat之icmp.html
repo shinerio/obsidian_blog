@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAT之ICMP - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>NAT之ICMP</h1>
+        <time datetime="2023-02-19T00:00:00.000Z">2023年2月19日</time>
+        <div class="tags">
+            
+            <span class="tag">network</span>
+            
+            <span class="tag">nat</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><code>PING</code>报文没有类似于<code>TCP</code>或<code>UDP</code>的端口信息，而正常NAT为了内网的安全性和IP地址的高利用率，一般都使用了五元组来匹配NAT会话。为了对ICMP的请求报文进行NAT映射，又要确保网络的安全性，只允许合法的ICMP响应报文进入内网，就必须对其进行特殊的处理。</p>
+<!--more-->
+
+<h1>1. ICMP请求和应答报文</h1>
+<p>ICMP的request和reply报文中包含两字节的ID，用于区分不同的ICMP进程。对于unix以及类unix系统来说，就是ping进程号。ID仅适用于回显请求和应答ICMP报文，对于目标不可达ICMP报文和超时ICMP报文等，该字段的值为0。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200426202102.png" alt=""></p>
+<p>根据<a href="二nat会话.html" class="internal-link">(二)NAT会话</a>一文我们可以知道，<code>TCP</code>或<code>UDP</code>通过五元组<code>(srcIp,srcPort,dstIp,dstPort,protocol)</code>来表示一条唯一的流，而对于ICMP报文来说，一条流的唯一性可以由<code>(srcIp,dstIp,ID)</code>确认。我们可以为ICMP报文生成特殊的会话格式和会话管理，但显然一个更简单的办法是沿用<code>TCP</code>或<code>UDP</code>的会话管理模式。<code>ICMP</code>协议和<code>TCP</code>以及<code>UDP</code>协议主要区别在于少了源端口和目的端口。观察到ICMP协议中ID是用来参与标识一条流的，我们很容易想到可以将ID当做是其中一个端口处理，比如源端口（当然目的端口也是可以的，这里只是为了方便会话标记，本身并没有任何协议上的意义）。此外，我们可以将ICMP当成是一种特殊的&quot;服务&quot;，监听在服务器的某个特殊端口，比如端口0，当然我们也可以认为是1或10000或任意的一个数，这个数并不重要，只是用来补齐icmp协议中的目的端口。这样，ICMP便也有了五元组信息，可以像<code>TCP</code>和<code>UDP</code>一样来进行会话管理。记：</p>
+<pre><code class="language-c">upKey=(internalIp,icmp_id,externalIp,0,protocol_icmp)
+downKey=(externalIp,0,transitIp,icmp_id,protocol)
+</code></pre>
+<h1>2. 差错报文</h1>
+<p>内网主机通过TFTP协议从外网的主机下载文件，但是外网主机并没有开启TFTP服务，这时外网主机会向内网回应ICMP端口不可达的差错报文。对于源地址转换的NAT来说，外网的报文要想顺利进入内网，就必须五元组匹配设备上的NAT会话表项，内网访问外网时使用的是UDP协议，而ICMP差错报文是ICMP协议，这并不符合NAT设备的映射规则。同时ICMP差错报文也并没有像请求和应答报文一样的ID号可供区分。通过抓包可知，icmp差错报文是根据icmp差错报文数据段中的原始IP数据包进行NAT转换的。</p>
+<p>内网主机访问外网主机时，设备上会生成一个会话表项，内网主机使用的是UDP协议，源IP和源端口为192.168.200.2/2428，目的IP和目的端口为218.197.70.2/69，NAT设备进行NAT转换后的源IP和源端口为218.197.70.12/1048。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/icmp%E6%9F%A5%E9%94%99%E6%8A%A5%E6%96%87%E5%8E%9F%E5%A7%8B%E6%8A%A5%E6%96%87.png" alt=""></p>
+<p>外网发到内网的icmp差错报文（NAT前），可以看到原始的UDP报文（经过NAT后的）被封装在了ICMP差错报文的载荷部分。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/icmp%E6%9F%A5%E9%94%99%E6%8A%A5%E6%96%87_NAT%E5%89%8D.jpg" alt=""></p>
+<p>外网发到内网的icmp差错错报（NAT后），根据内层的UDP报文匹配会话信息，进行NAT转换：</p>
+<ol>
+<li>替换外层的目的ip为内网主机的内网地址</li>
+<li>替换icmp内层ip报文，源地址替换为原始报文ip，源端口替换为原始报文端口。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/icmp%E5%B7%AE%E9%94%99%E6%8A%A5%E6%96%87_NAT%E5%90%8E.jpg" alt=""></li>
+</ol>
+<p>同时收到ICMP差错报文后可以对NAT会话进行加速老化，节省NAT设备的资源。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

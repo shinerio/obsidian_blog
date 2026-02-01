@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP开发原理 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>MCP开发原理</h1>
+        <time datetime="2026-01-03T13:04:29.180Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. MCP Server开发</h1>
+<h2>1.1. 注意事项</h2>
+<ul>
+<li>使用stdio作为transport layer的时候，不要进行任何控制台输出</li>
+</ul>
+<h2>1.2. 交互过程</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507271508874.png" alt="image.png"><br><strong>INITIALIZE = &quot;initialize&quot;</strong></p>
+<ul>
+<li>协商协议版本</li>
+<li>primitives支持情况，如tools、resources、prompts等features</li>
+<li>是否支持notifications</li>
+</ul>
+<p><strong>LIST_TOOLS = &quot;tools/list&quot;</strong></p>
+<ul>
+<li>用于获取可用工具的列表</li>
+<li>客户端调用此方法来发现服务端提供了哪些工具</li>
+<li>返回工具的名称、描述、参数定义等元数据信息</li>
+</ul>
+<p><strong>CALL_TOOL = &quot;tools/call&quot;</strong></p>
+<ul>
+<li>执行具体的工具调用</li>
+<li>客户端通过此方法调用特定工具，传递必要的参数</li>
+<li>服务端执行工具逻辑并返回结果</li>
+</ul>
+<p><strong>PING = &quot;ping&quot;</strong></p>
+<ul>
+<li>连接保活和健康检查</li>
+<li>用于测试连接是否正常，服务端是否响应</li>
+<li>通常返回简单的确认消息<br>这些方法构成了MCP协议的基础通信框架，使得AI模型能够动态发现和调用外部工具，实现功能扩展。典型的交互流程是：初始化 → 列出工具 → 调用工具，期间穿插ping检查连接状态，更多信息可以参考<a href="https://modelcontextprotocol.io/docs/learn/architecture">https://modelcontextprotocol.io/docs/learn/architecture</a></li>
+</ul>
+<h2>1.3. 标准错误码</h2>
+<pre><code>enum ErrorCode {
+  // Standard JSON-RPC error codes
+  ParseError = -32700,
+  InvalidRequest = -32600,
+  MethodNotFound = -32601,
+  InvalidParams = -32602,
+  InternalError = -32603,
+}
+</code></pre>
+<p>SDKs and applications can define their own error codes above -32000.</p>
+<h2>1.4. tools发现</h2>
+<p>tool/list的响应需要包含以下关键部分</p>
+<ul>
+<li><strong><code>name</code></strong>: A unique identifier for the tool within the server’s namespace. This serves as the primary key for tool execution and should be URI-like for better namespacing (e.g., <code>com.example.calculator/arithmetic</code> rather than just <code>calculate</code>)</li>
+<li><strong><code>title</code></strong>: A human-readable display name for the tool that clients can show to users</li>
+<li><strong><code>description</code></strong>: Detailed explanation of what the tool does and when to use it</li>
+<li><strong><code>inputSchema</code></strong>: A JSON Schema that defines the expected input parameters, enabling type validation and providing clear documentation about required and optional parameters<br>AI应用从所有已连接的MCP服务器中获取可用工具，并将它们整合到一个统一的工具注册表中，供语言模型访问。这使得大语言模型（LLM）能够了解自己可以执行哪些操作，并在对话过程中自动生成相应的工具调用指令。</li>
+</ul>
+<pre><code class="language-python"># Pseudo-code using MCP Python SDK patterns
+available_tools = []
+for session in app.mcp_server_sessions():
+    tools_response = await session.list_tools()
+    available_tools.extend(tools_response.tools)
+conversation.register_available_tools(available_tools)
+</code></pre>
+<h2>1.5. [官方weather示例](<a href="https://modelcontextprotocol.io/quickstart/server">https://modelcontextprotocol.io/quickstart/server</a><span class="tag">#windows</span>)</h2>
+<p><a href="https://github.com/modelcontextprotocol/quickstart-resources/tree/main/weather-server-python">完整代码</a></p>
+<h3>1.5.1. 辅助函数</h3>
+<ol>
+<li>调用天气API接口</li>
+<li>格式化alert输出</li>
+</ol>
+<pre><code class="language-python">async def make_nws_request(url: str) -&gt; dict[str, Any] | None:
+    &quot;&quot;&quot;Make a request to the NWS API with proper error handling.&quot;&quot;&quot;
+    headers = {
+        &quot;User-Agent&quot;: USER_AGENT,
+        &quot;Accept&quot;: &quot;application/geo+json&quot;
+    }
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(url, headers=headers, timeout=30.0)
+            response.raise_for_status()
+            return response.json()
+        except Exception:
+            return None
+
+def format_alert(feature: dict) -&gt; str:
+    &quot;&quot;&quot;Format an alert feature into a readable string.&quot;&quot;&quot;
+    props = feature[&quot;properties&quot;]
+    return f&quot;&quot;&quot;
+Event: {props.get(&#39;event&#39;, &#39;Unknown&#39;)}
+Area: {props.get(&#39;areaDesc&#39;, &#39;Unknown&#39;)}
+Severity: {props.get(&#39;severity&#39;, &#39;Unknown&#39;)}
+Description: {props.get(&#39;description&#39;, &#39;No description available&#39;)}
+Instructions: {props.get(&#39;instruction&#39;, &#39;No specific instructions provided&#39;)}
+&quot;&quot;&quot;
+</code></pre>
+<h3>1.5.2. tools实现</h3>
+<pre><code class="language-python">@mcp.tool()
+async def get_alerts(state: str) -&gt; str:
+    &quot;&quot;&quot;Get weather alerts for a US state.
+
+    Args:
+        state: Two-letter US state code (e.g. CA, NY)
+    &quot;&quot;&quot;
+    url = f&quot;{NWS_API_BASE}/alerts/active/area/{state}&quot;
+    data = await make_nws_request(url)
+
+    if not data or &quot;features&quot; not in data:
+        return &quot;Unable to fetch alerts or no alerts found.&quot;
+
+    if not data[&quot;features&quot;]:
+        return &quot;No active alerts for this state.&quot;
+
+    alerts = [format_alert(feature) for feature in data[&quot;features&quot;]]
+    return &quot;\n---\n&quot;.join(alerts)
+
+@mcp.tool()
+async def get_forecast(latitude: float, longitude: float) -&gt; str:
+    &quot;&quot;&quot;Get weather forecast for a location.
+
+    Args:
+        latitude: Latitude of the location
+        longitude: Longitude of the location
+    &quot;&quot;&quot;
+    # First get the forecast grid endpoint
+    points_url = f&quot;{NWS_API_BASE}/points/{latitude},{longitude}&quot;
+    points_data = await make_nws_request(points_url)
+
+    if not points_data:
+        return &quot;Unable to fetch forecast data for this location.&quot;
+
+    # Get the forecast URL from the points response
+    forecast_url = points_data[&quot;properties&quot;][&quot;forecast&quot;]
+    forecast_data = await make_nws_request(forecast_url)
+
+    if not forecast_data:
+        return &quot;Unable to fetch detailed forecast.&quot;
+
+    # Format the periods into a readable forecast
+    periods = forecast_data[&quot;properties&quot;][&quot;periods&quot;]
+    forecasts = []
+    for period in periods[:5]:  # Only show next 5 periods
+        forecast = f&quot;&quot;&quot;
+{period[&#39;name&#39;]}:
+Temperature: {period[&#39;temperature&#39;]}°{period[&#39;temperatureUnit&#39;]}
+Wind: {period[&#39;windSpeed&#39;]} {period[&#39;windDirection&#39;]}
+Forecast: {period[&#39;detailedForecast&#39;]}
+&quot;&quot;&quot;
+        forecasts.append(forecast)
+
+    return &quot;\n---\n&quot;.join(forecasts)
+</code></pre>
+<h3>1.5.3. mcp配置</h3>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;weather&quot;: {
+      &quot;command&quot;: &quot;uv&quot;,
+      &quot;args&quot;: [
+        &quot;--directory&quot;,
+        &quot;D:\\workspace\\proj\\weather&quot;,
+        &quot;run&quot;,
+        &quot;weather.py&quot;
+      ]
+    }
+  }
+}
+</code></pre>
+<h2>1.6. 交互过程</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507112301213.png" alt="image.png"></p>
+<ol>
+<li>The client(Claude desktop) sends your question to Claude</li>
+<li>Claude analyzes the available tools and decides which one(s) to use</li>
+<li>The client executes the chosen tool(s) through the MCP server</li>
+<li>The results are sent back to Claude</li>
+<li>Claude formulates a natural language response</li>
+<li>The response is displayed to you!</li>
+</ol>
+<h1>2. MCP Client开发</h1>
+<h2>2.1. <a href="https://modelcontextprotocol.io/quickstart/client">官网client示例</a></h2>
+<h2>2.2. 交互过程</h2>
+<ol>
+<li>The client gets the list of available tools from the server</li>
+<li>Your query is sent to Claude along with tool descriptions</li>
+<li>Claude decides which tools (if any) to use</li>
+<li>The client executes any requested tool calls through the server</li>
+<li>Results are sent back to Claude</li>
+<li>Claude provides a natural language response</li>
+<li>The response is displayed to you</li>
+</ol>
+<h1>3. ref</h1>
+<ol>
+<li><a href="https://github.com/liaokongVFX/MCP-Chinese-Getting-Started-Guide">https://github.com/liaokongVFX/MCP-Chinese-Getting-Started-Guide</a></li>
+<li><a href="https://modelcontextprotocol.io/docs/concepts/architecture">https://modelcontextprotocol.io/docs/concepts/architecture</a><span class="tag">#python</span></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

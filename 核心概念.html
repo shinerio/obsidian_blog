@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心概念 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>核心概念</h1>
+        <time datetime="2026-01-03T13:04:29.286Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>通用模型<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250306230257902.png" alt="image.png"><br>NAT网关模型<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20250308225342750.png" alt="image.png"></p>
+<h1>1. 领域</h1>
+<p>汉语词典的解释：领域是从事一种专门活动或事业的<strong>范围</strong> 、部类或部门。<br>百度百科的解释：领域具体指一种特定的<strong>范围</strong>或区域。<br><strong>两个解释有一个共同点——范围</strong>，领域的核心重点落在&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;”域”</font>字上，用来确定范围的，&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;范围即边界</span> ，这也是DDD在设计中不断强调边界的原因。</p>
+<ol>
+<li>DDD按照一定的规则<strong>将业务领域进行细分</strong>，&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;分而治之</font>。</li>
+<li>当领域细分到一定的程度后，DDD会将问题范围<strong>限定在特定的边界内</strong>。</li>
+<li>在这个<strong>边界内</strong>建立领域模型，进而用代码实现该领域模型，解决相应的业务问题。<blockquote>
+<p>[!tip]<br>DDD的领域就是这个边界内要解决的业务问题域。举个例子，网络服务域解决的就是各类网络可达性和不可达性问题，计算服务域解决的是计算资源的分配与调度问题；存储服务域解决的就是数据存储和读取的问题。</p>
+</blockquote>
+</li>
+</ol>
+<h1>2. 子域</h1>
+<p>既然领域是用来限定业务边界和范围的，那么就会有大小之分，领域越大，业务范围就越大，反之则相反。</p>
+<p>DDD的研究方法与自然科学的研究方法类似。当人们在自然科学研究中遇到复杂问题时，通常的做法就是将问题一步一步地&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;细分</span>，再针对细分出来的问题域，&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;逐个深入研究 </span>，探索和建立所有子域的知识体系 。当所有问题子域完成研究时，我们就建立了全部领域的完整知识体系了。</p>
+<p>领域可以进一步划分为子领域。我们把划分出来的&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;多个子领域</span>称为子域，每个子域对应一个更小的问题域或更小的业务范围。对于子域来说还可以继续划分为”子子域“，直到划分为，我们熟悉的、能够快速处理的最小问题集合。这个划分到最小问题集合其实就是&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;聚合</span>，聚合之上就是限界上下文，根据限界上下文建立领域模型，然后设计微服务。</p>
+<blockquote>
+<p>[!note]<br>贯穿软件设计始终的思想：&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;分而治之</font></p>
+</blockquote>
+<p>在领域不断划分的过程中，领域会细分为不同的子域，子域可以根据自身&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;重要性</span>和&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;功能属性</span>划分为三类子域</p>
+<ul>
+<li>核心域</li>
+<li>通用域</li>
+<li>支撑域</li>
+</ul>
+<h3>2.1.1. 核心域</h3>
+<p>决定产品和公司&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;核心竞争力</font>的子域是核心域，它是业务成功的主要因素和公司的核心竞争力。</p>
+<blockquote>
+<p>[!note]<br>网络域的核心域——VPC、EIP、ELB、VPCEP、NAT、DC、CC</p>
+</blockquote>
+<h3>2.1.2. 通用域</h3>
+<p>没有太多个性化的诉求，同时被多个子域使用的&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;通用功能</span>子域是通用域。</p>
+<blockquote>
+<p>[!note]<br>十统一：用户认证、权限管理（IAM）；标签管理</p>
+</blockquote>
+<h3>2.1.3. 支撑域</h3>
+<p>还有一种功能子域是必需的，但既不包含决定产品和公司核心竞争力的功能，也&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;不包含通用功能</span>的子域，它就是支撑域。简单来说就是从用户功能上不会直观体现，但是却必不可少。</p>
+<blockquote>
+<p>[!note]<br>网络域的通用域——CETUS、 NGP</p>
+</blockquote>
+<h1>3. 限界上下文</h1>
+<p>简单理解就是领域所处的&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;环境以及邻域处理问题的边界</span>。理论上，限界上下文的边界就是&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;微服务的边界</span>，因此，限界上下文在DDD设计中一个非常重要的概念。</p>
+<blockquote>
+<p>[!note]<br>网络域关于微服务拆分的优秀实践，包括CNOS和CETUS两个服务</p>
+</blockquote>
+<p>我们讨论一个问题，通常是在一个限界上下文内去讨论的。对于同一个概念，不同上下文会有不同的理解。</p>
+<blockquote>
+<p>[!note]<br>如在SNAT规则中，我们通常所说的”后端“是指NAT前的源地址（源主机）；而在DNAT规则中，我们通常所说的”后端“是指NAT后的目的地址（目的real server）</p>
+</blockquote>
+<h1>4. 实体</h1>
+<ul>
+<li><strong>特征</strong>：拥有&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;唯一标识符</span>，且标识符在历经各种状态变更后仍能保持一致。</li>
+<li><strong>对象识别方法</strong>：通过唯一标识符识别。</li>
+<li><strong>生命周期</strong>：对象的&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;延续性和标识</span>会跨越甚至超出软件的生命周期。</li>
+<li><strong>可变性</strong>：通常是可变的，除了唯一标识符外，其它属性都可以随时间变化。<blockquote>
+<p>[!note]<br>在NAT网关这个领域下面，网关实例就是一种实体，其本身具有唯一ID，标识了一个NAT实例，这个NAT实例可以有port(网关口)、session_configuration(自定义会话属性)、TAG、名称、描述等等属性。</p>
+</blockquote>
+</li>
+</ul>
+<p>与传统数据模型设计优先不同，DDD是针对实际业务场景构建实体对象和行为，&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;先构建领域模型，再将实体对象映射到数据持久化对象</span>。一个实体可以对应0个、1个或者多个PO对象模型。代码的具体实践中，实体又可以具体分为充血模型和贫血模型两种。</p>
+<h2>4.1. 贫血模型</h2>
+<p>贫血模型是指&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;数据和业务逻辑分离</span>。领域对象除了对象属性外，只有get和set方法（POJO）。所有的业务逻辑都不包含在内而是放在Service层。<br>缺点：</p>
+<ol>
+<li>所有逻辑都被抽象到了service层，包括对象最简单的CURD操作，不够OO(面向对象)。<br>优点：</li>
+<li>分层清晰，结构清楚</li>
+<li>设计简单，领域模型对象非常稳定<br>典型三层设计方法</li>
+</ol>
+<ul>
+<li>Controller + VO</li>
+<li>Service + BO</li>
+<li>Repository + PO</li>
+</ul>
+<h2>4.2. 充血模型</h2>
+<p>充血模型是指&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;数据和对应的业务逻辑</span>被封装到同一个类中。因此，这种充血模型满足面向对象的封装特性，是典型的OO（面向对象）编程风格。<br>优点：</p>
+<ol>
+<li>符合面向对象设计，对象属性和对象行为绑定<br>缺点</li>
+<li>如何划分业务逻辑不够清楚，什么样的逻辑应该放在<strong>Domain Object</strong>中，什么样的业务逻辑应该放在<strong>Service</strong>中，这是很含糊的。<blockquote>
+<p>[!note]<br>在实践中，我们常用贫血模型，并把对象原生具有的行为、且会被多次重用的行为方法抽象成domain service，以此来和一般的service(usecase)做区分。当然，这个domain service要能够做到不依赖具体基础设施层的实现，不依赖于领域对象外的其他对象模型。在Spring架构中，我们通常可以通过依赖倒置，让domainService依赖repository的接口来实现解耦。</p>
+</blockquote>
+</li>
+</ol>
+<h1>5. 值对象</h1>
+<ol>
+<li><strong>特征</strong>：无唯一标识，完全由其属性值定义</li>
+<li><strong>对象识别方法</strong>：通过对象属性值来识别的对象，它将多个相关属性组合为一个概念整体</li>
+<li><strong>生命周期</strong>：没有独立的生命周期，通常作为实体的一部分<blockquote>
+<p>[!note]<br>如NAT网关示例中TCP超时老化时间、UDP超时老化时间、ICMP超时老化时间、非SYN包是否RST、非SYN包是否建链等等一系列相关属性。如果这些属性单独来看，都会显得很碎，如果我们把这一系列属性组合成一个session_configuration集合来看，那这个集合就是值对象。</p>
+</blockquote>
+</li>
+</ol>
+<h2>5.1. 值对象的存储方式</h2>
+<ul>
+<li>如果值对象<strong>属性有被查询过滤</strong>的诉求，那么，值对象的每个属性都需要在数据库里单独成为一列；</li>
+<li>相反，如果值对象作为<strong>一个整体</strong>，不会存在单独过滤值对象某个属性的场景，则可以将值对象作为一个大的json直接序列化到数据库中。</li>
+</ul>
+<h1>6. 聚合</h1>
+<p>在事件风暴中，我们抽象出我们领域需要的<strong>实体</strong>和<strong>值对象</strong>  ==&gt; 进而将业务关联紧密的实体和值对象<strong>进行组合</strong>，形成聚合 ==&gt; 再根据业务语义将多个聚合划定到同一个限定上下文。聚合其实就位于限定上下文和实体之间的一个概念。</p>
+<p>聚合就是由业务和逻辑紧密关联的实体和值对象组合而成的。</p>
+<ul>
+<li>一个聚合只有一个聚合根，聚合根是可以独立存在的</li>
+<li>聚合中其他实体或值对象依赖于聚合根</li>
+<li>只有聚合根才能被外部访问到，聚合根维护聚合的内部一致性</li>
+</ul>
+<p>聚合有一个&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;聚合根和上下文边界</span>，这个边界根据业务单一职责和高内聚原则，定义了聚合内部应该包含哪些实体和值对象，而聚合之间的边界是松耦合的。按照这种方式设计出来的微服务很自然就是“&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;高内聚、低耦合</font>”的。</p>
+<p>聚合是位于限界上下文和实体中间的一个概念，一个限界上下文中可能会有多个聚合。一个限界上下文一般对应着一个微服务，随着微服务规模的不断扩大，可能面临进一步拆分的问题，这时候就可以以聚合为单位进行。</p>
+<blockquote>
+<p>[!note]<br>NAT业务有NAT网关（公网和私网）、NETWORKEP两个聚合，未来可以根据聚合规模的发展情况，将聚合升级为限界上下文，从而完成微服务的进一步拆分。ELB服务有L4和L7两个聚合。</p>
+</blockquote>
+<h2>6.1. 聚合原则</h2>
+<ol>
+<li>聚合用来封装<strong>真正的不变性</strong>，而不是简单地将对象组合在一起。聚合内有一套不变的业务规则，各实体和值对象按照统一的业务规则运行，实现对象数据的一致性，&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;边界之外的任何东西都与该聚合无关</span>，这就是聚合能实现业务&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;高内聚</span>的原因。</li>
+<li><strong>设计小聚合</strong>。如果聚合设计得过大，聚合会因为包含过多的实体，导致&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;实体之间的管理过于复杂</span>，高频操作时会出现并发冲突或者数据库锁，最终导致系统可用性变差。而小聚合设计则可以降低由于业务过大导致聚合重构的可能性，让领域模型更能适应业务的变化。</li>
+<li>通过<strong>唯一标识引用其他聚合</strong>。聚合之间是通过&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;关联外部聚合根ID</font>的方式引用，而不是直接对象引用的方式。外部聚合的对象放在聚合边界内管理，容易导致聚合的边界不清晰，也会增加聚合之间的耦合度。</li>
+<li>在<strong>边界之外使用最终一致性</strong>。&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;聚合内数据强一致性，而聚合之间数据最终一致性</span>。在一次事务中，最多只能更改一个聚合的状态。如果一次业务操作涉及多个聚合状态的更改，应采用<strong>领域事件</strong>的方式异步修改相关的聚合，实现聚合之间的解耦。</li>
+<li>通过<strong>应用层实现跨聚合的服务调用</strong>。为实现微服务内聚合之间的解耦，以及未来以聚合为单位的微服务组合和拆分，应避免跨聚合的领域服务调用和跨聚合的数据库表关联。</li>
+</ol>
+<h1>7. 聚合根</h1>
+<p>如果把聚合比作组织，那聚合根就是这个组织的负责人。聚合根也称为&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;根实体，它不仅是实体，还是聚合的管理者</span>。</p>
+<ol>
+<li>首先它作为实体本身，拥有实体的属性和业务行为，实现自身的业务逻辑。</li>
+<li>其次它作为聚合的管理者，在聚合内部负责协调实体和值对象按照固定的业务规则协同完成共同的业务逻辑。</li>
+<li>最后在聚合之间，它还是聚合对外的接口人，以聚合根ID关联的方式接受外部任务和请求，在上下文内实现聚合之间的业务协同。<br>也就是说，聚合之间通过聚合根ID关联引用，如果需要访问其它聚合的实体，就要先访问聚合根，再导航到聚合内部实体，外部对象不能直接访问聚合内实体。<blockquote>
+<p>[!note]<br>如果简单直白来说，聚合根一般会以&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;一级模型</font>的形式出现。在NAT模型领域，NAT网关实例就是NAT业务的聚合根，SNAT和DNAT是聚合内的其他实体，要访问SNAT或DNAT，需要先找到网关实例，再找到SNAT和DNAT</p>
+</blockquote>
+</li>
+</ol>
+<h1>8. 领域事件</h1>
+<p>领域事件是领域模型中非常重要的一部分，用来表示领域中发生的事件。一个领域事件将导致进一步的业务操作，在实现业务解耦的同时，还有助于形成完整的业务闭环。</p>
+<h2>8.1. 识别方法</h2>
+<p>在做用户旅程或者场景分析时，我们要捕捉业务、需求人员或领域专家口中的关键词：</p>
+<ul>
+<li>如果发生……，则……</li>
+<li>当做完……的时候，请通知……</li>
+<li>发生……时，则……<br>在这些场景中，如果发生某种事件后，会触发进一步的操作，那么这个事件很可能就是领域事件<blockquote>
+<p>[!note]<br>PORT已删除 -&gt; DNAT规则失效<br>EIP已冻结 -&gt; SNAT EIP池刷新<br>用户已欠费 -&gt; 网关冻结</p>
+</blockquote>
+</li>
+</ul>
+<p>领域事件驱动设计可以&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;切断领域模型之间的强依赖关系</span>。事件发布完成后，发布方不必关心后续订阅方事件处理是否成功，这样可以实现领域模型的解耦，维护领域模型的独立性和数据的一致性。在领域模型映射到微服务系统架构时，领域事件可以&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;解耦微服务</span>，<u>微服务之间的数据不必要求强一致性，而是基于事件的最终一致性。</u></p>
+<h2>8.2. 微服务内</h2>
+<ul>
+<li>过程调用 -&gt; sk，任务流</li>
+<li>事件总线 -&gt; cetus，kafka自发自收</li>
+</ul>
+<h2>8.3. 微服务间</h2>
+<ul>
+<li>API调用（TCC，try-confirm-concel）</li>
+<li>消息中间件</li>
+<li>事件总线（Event-Bus）</li>
+</ul>
+<h1>9. 领域服务</h1>
+<p>领域中的服务表示一个无状态的操作，它用于实现特定于某个领域的任务。当某个操作不适合放在聚合和值对象上时，最好的方式便是使用领域服务了。可以使用领域服务的情况：</p>
+<ul>
+<li>执行一个显著的业务操作</li>
+<li>对领域对象进行转换</li>
+<li>以多个领域对象作为输入参数进行计算，结果产生一个值对象</li>
+</ul>
+<h1>10. 应用服务</h1>
+<p>应用层作为视图层领域层的桥梁，是用来表达用例（usecase）和用户故事的主要手段。</p>
+<p>应用层通过应用服务接口来暴露系统的全部功能。在应用服务的实现中，它负责<strong>编排和转发</strong>，它将要实现的功能委托给一个或多个领域对象来实现，它本身只&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;负责处理业务用例的执行顺序以及结果的拼装</span>。通过这样一种方式，它隐藏了领域层的复杂性及其内部实现机制。</p>
+<p>应用层相对来说是较“薄”的一层，除了定义应用服务之外，在该层我们可以进行安全认证，权限校验，持久化事务控制，或者向其他系统发生基于事件的消息通知，另外还可以用于创建邮件以发送给客户等。</p>
+<blockquote>
+<p>[!note]<br>领域服务和应用服务的区别在于：</p>
+<ol>
+<li>领域服务侧重于实现对一个或多个领域对象进行操作、计算的执行动作</li>
+<li>应用服务侧重于编排，本身不应该包含复杂的执行动作</li>
+</ol>
+</blockquote>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

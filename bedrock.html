@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bedrock - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Bedrock</h1>
+        <time datetime="2026-01-11T16:01:57.934Z">2026年1月12日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. Model catalog</h1>
+<ul>
+<li>Amazon Bedrock Foundation Models</li>
+<li>Amazon Bedrock Marketplace</li>
+<li>Bedrock Custom Model Import</li>
+</ul>
+<h2>1.1. 区别对比</h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Foundation Models</th>
+<th>Marketplace</th>
+<th>Custom Model Import</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>模型来源</strong></td>
+<td>AWS 托管的精选模型</td>
+<td>第三方提供商模型</td>
+<td>自定义训练/微调模型</td>
+</tr>
+<tr>
+<td><strong>托管方式</strong></td>
+<td>AWS 全托管</td>
+<td>第三方托管/市场交易</td>
+<td>自主部署</td>
+</tr>
+<tr>
+<td><strong>成本模式</strong></td>
+<td>按使用量付费</td>
+<td>可能需订阅/许可费</td>
+<td>自带许可成本</td>
+</tr>
+<tr>
+<td><strong>可用性</strong></td>
+<td>立即可用，高 SLA</td>
+<td>依赖提供商</td>
+<td>自行维护</td>
+</tr>
+<tr>
+<td><strong>定制程度</strong></td>
+<td>标准模型</td>
+<td>专业/领域模型</td>
+<td>完全自定义</td>
+</tr>
+<tr>
+<td><strong>数据隐私</strong></td>
+<td>AWS 标准</td>
+<td>依赖提供商</td>
+<td>完全控制</td>
+</tr>
+</tbody></table>
+<h3>1.1.1. Foundation Models (基础模型库)</h3>
+<ul>
+<li><strong>定义</strong>: AWS 原生提供、完全托管的精选模型集合</li>
+<li><strong>特点</strong>:<ul>
+<li>由 AWS 直接托管和维护，高可用性保证</li>
+<li>经过严格测试和优化</li>
+<li>按实际使用量付费，无基础设施成本</li>
+<li>开箱即用，无需部署</li>
+</ul>
+</li>
+<li><strong>模型来源</strong>:<ul>
+<li>Amazon 自研 (Nova, Titan 系列)</li>
+<li>顶级 AI 公司 (Anthropic Claude, Meta Llama, Mistral, Cohere)</li>
+</ul>
+</li>
+<li><strong>适用场景</strong>: 快速上线、通用任务、成本优化</li>
+</ul>
+<h3>1.1.2. Marketplace (模型市场)</h3>
+<ul>
+<li><strong>定义</strong>: 第三方模型提供商的模型交易平台</li>
+<li><strong>特点</strong>:<ul>
+<li>扩展可选模型范围</li>
+<li>包含专业领域、特定任务模型</li>
+<li>可能需要额外订阅或许可费用</li>
+<li>部分模型需要特殊配置</li>
+</ul>
+</li>
+<li><strong>模型来源</strong>: 各种 AI 公司、研究机构</li>
+<li><strong>适用场景</strong>: 特定专业领域、需要最新研究成果</li>
+</ul>
+<h3>1.1.3. Custom Model Import (自定义模型导入)</h3>
+<ul>
+<li><strong>定义</strong>: 导入和部署自己训练或微调的模型</li>
+<li><strong>特点</strong>:<ul>
+<li>完全控制模型选择和训练</li>
+<li>支持基于开源模型微调/持续预训练</li>
+<li>数据完全自主可控</li>
+<li>需要处理模型生命周期</li>
+</ul>
+</li>
+<li><strong>模型来源</strong>: 自行训练或微调的模型</li>
+<li><strong>适用场景</strong>:<ul>
+<li>特定行业知识</li>
+<li>数据隐私要求高</li>
+<li>需要完全定制化</li>
+</ul>
+</li>
+</ul>
+<h2>1.2. model choice</h2>
+<h3>1.2.1. Amazon Models</h3>
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>参数大小</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Nova Micro</strong></td>
+<td>~11B</td>
+<td>快速文本生成、对话</td>
+</tr>
+<tr>
+<td><strong>Nova Lite</strong></td>
+<td>~20B</td>
+<td>多模态理解(文本/图像/视频)</td>
+</tr>
+<tr>
+<td><strong>Nova Pro</strong></td>
+<td>~90B</td>
+<td>多模态复杂推理</td>
+</tr>
+<tr>
+<td><strong>Nova Premier</strong></td>
+<td>~470B</td>
+<td>最强多模态能力</td>
+</tr>
+<tr>
+<td><strong>Nova Canvas</strong></td>
+<td>-</td>
+<td>图像生成</td>
+</tr>
+<tr>
+<td><strong>Nova Reel</strong></td>
+<td>-</td>
+<td>视频生成</td>
+</tr>
+<tr>
+<td><strong>Nova Sonic</strong></td>
+<td>-</td>
+<td>语音交互</td>
+</tr>
+<tr>
+<td><strong>Titan Text Express</strong></td>
+<td>-</td>
+<td>通用文本生成</td>
+</tr>
+<tr>
+<td><strong>Titan Text Lite</strong></td>
+<td>-</td>
+<td>轻量级文本任务</td>
+</tr>
+<tr>
+<td><strong>Titan Text Premier</strong></td>
+<td>-</td>
+<td>高级文本理解</td>
+</tr>
+<tr>
+<td><strong>Titan Embeddings G1</strong></td>
+<td>-</td>
+<td>文本向量化</td>
+</tr>
+<tr>
+<td><strong>Titan Image Generator</strong></td>
+<td>-</td>
+<td>图像生成</td>
+</tr>
+</tbody></table>
+<h3>1.2.2. Anthropic Claude Models</h3>
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>参数大小</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Claude 3 Haiku</strong></td>
+<td>~20B</td>
+<td>快速响应、简单任务</td>
+</tr>
+<tr>
+<td><strong>Claude 3 Sonnet</strong></td>
+<td>~70B</td>
+<td>平衡性能与速度</td>
+</tr>
+<tr>
+<td><strong>Claude 3 Opus</strong></td>
+<td>~2T</td>
+<td>复杂推理、高质量输出</td>
+</tr>
+<tr>
+<td><strong>Claude 3.5 Haiku</strong></td>
+<td>~20B</td>
+<td>成本优化多模态</td>
+</tr>
+<tr>
+<td><strong>Claude 3.5 Sonnet</strong></td>
+<td>~70B</td>
+<td>多模态理解与编程</td>
+</tr>
+<tr>
+<td><strong>Claude 3.7 Sonnet</strong></td>
+<td>~70B</td>
+<td>扩展上下文、复杂任务</td>
+</tr>
+<tr>
+<td><strong>Claude Sonnet 4</strong></td>
+<td>~70B</td>
+<td>最新平衡型</td>
+</tr>
+<tr>
+<td><strong>Claude Opus 4</strong></td>
+<td>~2T</td>
+<td>最强推理能力</td>
+</tr>
+<tr>
+<td><strong>Claude Haiku 4.5</strong></td>
+<td>~20B</td>
+<td>快速响应、简单任务</td>
+</tr>
+<tr>
+<td><strong>Claude Sonnet 4.5</strong></td>
+<td>~70B+</td>
+<td>智能体、编程、工具使用</td>
+</tr>
+<tr>
+<td><strong>Claude Opus 4.5</strong></td>
+<td>~2T+</td>
+<td>自主推理、规划执行</td>
+</tr>
+</tbody></table>
+<h3>1.2.3. Meta Llama Models</h3>
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>参数大小</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Llama 3 8B</strong></td>
+<td>8B</td>
+<td>轻量级部署</td>
+</tr>
+<tr>
+<td><strong>Llama 3 70B</strong></td>
+<td>70B</td>
+<td>高性能推理</td>
+</tr>
+<tr>
+<td><strong>Llama 3.1 8B</strong></td>
+<td>8B</td>
+<td>优化轻量任务</td>
+</tr>
+<tr>
+<td><strong>Llama 3.1 70B</strong></td>
+<td>70B</td>
+<td>通用高性能</td>
+</tr>
+<tr>
+<td><strong>Llama 3.1 405B</strong></td>
+<td>405B</td>
+<td>超大规模推理</td>
+</tr>
+<tr>
+<td><strong>Llama 3.2 1B</strong></td>
+<td>1B</td>
+<td>极速响应、边缘设备</td>
+</tr>
+<tr>
+<td><strong>Llama 3.2 3B</strong></td>
+<td>3B</td>
+<td>轻量级应用</td>
+</tr>
+<tr>
+<td><strong>Llama 3.2 11B</strong></td>
+<td>11B</td>
+<td>多模态视觉理解</td>
+</tr>
+<tr>
+<td><strong>Llama 3.2 90B</strong></td>
+<td>90B</td>
+<td>多模态复杂任务</td>
+</tr>
+<tr>
+<td><strong>Llama 3.3 70B</strong></td>
+<td>70B</td>
+<td>优化推理性能</td>
+</tr>
+<tr>
+<td><strong>Llama 4 Maverick 17B</strong></td>
+<td>17B</td>
+<td>多模态智能体</td>
+</tr>
+<tr>
+<td><strong>Llama 4 Scout 17B</strong></td>
+<td>17B</td>
+<td>快速多模态</td>
+</tr>
+</tbody></table>
+<h3>1.2.4. Mistral AI Models</h3>
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>参数大小</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Mistral 7B</strong></td>
+<td>7.3B</td>
+<td>高效开源模型</td>
+</tr>
+<tr>
+<td><strong>Mixtral 8x7B</strong></td>
+<td>46.7B</td>
+<td>MoE架构、高质量输出</td>
+</tr>
+<tr>
+<td><strong>Mistral Small</strong></td>
+<td>7.3B</td>
+<td>快速响应</td>
+</tr>
+<tr>
+<td><strong>Mistral Large (24.02)</strong></td>
+<td>123B</td>
+<td>复杂推理</td>
+</tr>
+<tr>
+<td><strong>Mistral Large (24.07)</strong></td>
+<td>123B</td>
+<td>最新推理能力</td>
+</tr>
+<tr>
+<td><strong>Pixtral Large</strong></td>
+<td>~123B</td>
+<td>多模态理解</td>
+</tr>
+</tbody></table>
+<h3>1.2.5. DeepSeek Models</h3>
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>参数大小</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>DeepSeek-R1</strong></td>
+<td>671B (37B激活)</td>
+<td>高级推理</td>
+</tr>
+</tbody></table>
+<h3>1.2.6. Google Gemma Models</h3>
+<table>
+<thead>
+<tr>
+<th>模型名称</th>
+<th>参数大小</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Gemma 3 270M</strong></td>
+<td>270M</td>
+<td>文本嵌入</td>
+</tr>
+<tr>
+<td><strong>Gemma 3 1B</strong></td>
+<td>1B</td>
+<td>轻量级部署</td>
+</tr>
+<tr>
+<td><strong>Gemma 3 4B</strong></td>
+<td>4B</td>
+<td>平衡性能与速度</td>
+</tr>
+<tr>
+<td><strong>Gemma 3 12B</strong></td>
+<td>12B</td>
+<td>多模态理解</td>
+</tr>
+<tr>
+<td><strong>Gemma 3 27B</strong></td>
+<td>27B</td>
+<td>高级推理</td>
+</tr>
+</tbody></table>
+<h3>1.2.7. Other Models</h3>
+<table>
+<thead>
+<tr>
+<th>提供商</th>
+<th>模型名称</th>
+<th>参数大小</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>AI21 Labs</strong></td>
+<td>Jamba 1.5 Large</td>
+<td>398B (94B激活)</td>
+<td>长文本处理</td>
+</tr>
+<tr>
+<td><strong>AI21 Labs</strong></td>
+<td>Jamba 1.5 Mini</td>
+<td>52B (12B激活)</td>
+<td>快速生成</td>
+</tr>
+<tr>
+<td><strong>Cohere</strong></td>
+<td>Command R+</td>
+<td>104B</td>
+<td>RAG、工具调用</td>
+</tr>
+<tr>
+<td><strong>Cohere</strong></td>
+<td>Command R</td>
+<td>~35B</td>
+<td>企业应用</td>
+</tr>
+<tr>
+<td><strong>Cohere</strong></td>
+<td>Command</td>
+<td>-</td>
+<td>通用文本生成</td>
+</tr>
+<tr>
+<td><strong>Cohere</strong></td>
+<td>Embed English/Multilingual</td>
+<td>-</td>
+<td>向量嵌入</td>
+</tr>
+<tr>
+<td><strong>Cohere</strong></td>
+<td>Rerank 3.5</td>
+<td>-</td>
+<td>搜索重排序</td>
+</tr>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td>gpt-oss-20b</td>
+<td>20B</td>
+<td>代码与推理</td>
+</tr>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td>gpt-oss-120b</td>
+<td>120B</td>
+<td>高级代码分析</td>
+</tr>
+<tr>
+<td><strong>Stability AI</strong></td>
+<td>Stable Diffusion 3.5 Large</td>
+<td>-</td>
+<td>图像生成</td>
+</tr>
+<tr>
+<td><strong>Stability AI</strong></td>
+<td>Stable Image Core/Ultra</td>
+<td>-</td>
+<td>高质量图像</td>
+</tr>
+<tr>
+<td><strong>Luma AI</strong></td>
+<td>Ray v2</td>
+<td>-</td>
+<td>视频生成</td>
+</tr>
+<tr>
+<td><strong>TwelveLabs</strong></td>
+<td>Marengo/Pegasus</td>
+<td>-</td>
+<td>视频理解</td>
+</tr>
+<tr>
+<td><strong>Writer</strong></td>
+<td>Palmyra X4/X5</td>
+<td>-</td>
+<td>企业写作</td>
+</tr>
+</tbody></table>
+<h1>2. knowledge base(知识向量数据库)</h1>
+<p>datasource:</p>
+<ul>
+<li><strong>S3 (Simple Storage Service)</strong>: 对象存储服务</li>
+<li>web crawler</li>
+<li>confluence</li>
+<li>sharePoint</li>
+<li>Custom data sources</li>
+</ul>
+<h1>3. evaluation</h1>
+<p>被评测模型<br>评测模型<br>数据集<br>评测指标</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

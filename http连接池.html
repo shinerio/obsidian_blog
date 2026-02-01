@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Http连接池 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Http连接池</h1>
+        <time datetime="2026-01-03T13:04:29.159Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 长连接</h1>
+<p>长连接利用keep-alive技术实现，能在多次 HTTP 之间重用同一个 TCP 连接，从而<strong>减少创建/关闭多个 TCP 连接的开销（包括响应时间、CPU 资源、减少拥堵等）</strong>。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241218234752650.png" alt="image.png"></p>
+<p>然而长连接并非没有弊端，天下没有免费的午餐，如果客户端在接收完所有的信息之后还没有关闭连接，则服务端相应的资源还在被占用（尽管已经没用了）。例如Tomcat的BIO实现中，未关闭的连接会占用对应的处理线程，如果一个长连接实际上已经处理完毕，但关闭的超时时间未到，则该线程会一直被占用（使用NIO的实现没有该问题）。显然，<strong>如果客户端和服务端的确需要进行多次通信，则开启 keep-alive 是更好的选择</strong>，例如在微服务架构中，通常微服务的使用方和提供方会长期有交流。在一些 TPS/QPS 很高的 REST 服务中，如果使用的是短连接（即没有开启keep-alive），则很可能发生客户端端口被占满的情形。这是由于短时间内会创建大量TCP 连接，而在 TCP 四次挥手结束后，客户端的端口会处于TIME_WAIT一段时间(2MSL，linux系统中大概<code>60*2=120</code>秒)，这期间端口不会被释放，从而导致端口被占满。这种情况下最好使用长连接。</p>
+<h2>1.1. 开启方法</h2>
+<ul>
+<li>在 HTTP1.0中，若要使用长连接，需要在请求头中明确添加 “Connection: keep-alive”。只有当客户端和服务器都设置了该字段时，才会建立长连接。客户端发出带有 “Connection: keep-alive” 头的请求；服务端接收到这个请求后，根据 HTTP 1.0 和该头信息判断出这是一个长连接，会在响应头中也增加 “Connection: keep-alive”，并且不会关闭已建立的 TCP 连接；客户端收到服务端的响应后，发现其中包含 “Connection: keep-alive”，就认为是一个长连接，不关闭这个连接。</li>
+<li>HTTP 1.1 默认支持长连接，无需额外设置 “Connection: keep-alive”。</li>
+</ul>
+<h2>1.2. LB长连接</h2>
+<p>LB的前后端连接是独立的，长连接的维护也是独立的，会有前后端两个独立的连接池。即使客户端与LB在一个长连接会话中发起多次请求，这些请求也会被负载均衡到多个LB与后端server的连接中完成。</p>
+<h2>1.3. http1.0长连接测试</h2>
+<p>server端代码</p>
+<pre><code class="language-python">from http.server import HTTPServer, BaseHTTPRequestHandler
+import time
+
+class LongConnectionHandler(BaseHTTPRequestHandler):
+    protocol_version = &quot;HTTP/1.0&quot;
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header(&#39;Content-type&#39;, &#39;text/html&#39;)
+        self.send_header(&#39;Connection&#39;, &#39;keep-alive&#39;)  # 设置响应头，表明支持长连接
+        self.end_headers()
+        self.wfile.write(b&quot;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello, World!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    server_address = (&#39;&#39;, 8000)
+    httpd = HTTPServer(server_address, LongConnectionHandler)
+    print(&#39;Starting server, use &lt;Ctrl-C&gt; to stop&#39;)
+    httpd.serve_forever()
+</code></pre>
+<p>client端代码(这里裸写的socket编程，真正的HTTP client需要看响应头中是否携带keep-alive来决定要不要保持长连接，使用如下代码后是否保持长连接就只取决于服务端行为了)</p>
+<pre><code class="language-python">import socket
+import time
+
+def http_1_0_client():
+    host = &quot;localhost&quot;
+    port = 8000
+    buffer_size = 10240
+
+    # 创建套接字并连接到服务器
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((host, port))
+
+    # 构造HTTP 1.0请求消息，设置长连接头部
+    request = &quot;GET / HTTP/1.0\r\n&quot;
+    request += &quot;Host: localhost\r\n&quot;
+    request += &quot;Connection: Keep-Alive\r\n\r\n&quot;
+
+    # 发送第一次请求
+    client_socket.send(request.encode())
+    # 等待服务端响应
+    time.sleep(1)
+    response = client_socket.recv(buffer_size).decode()
+    print(&quot;第一次响应:&quot;)
+    print(response)
+
+    time.sleep(10)
+
+    # 构造并发送第二次请求（可以多次重复类似操作体现长连接持续交互）
+    second_request = &quot;GET / HTTP/1.0\r\n&quot;
+    second_request += &quot;Host: localhost\r\n&quot;
+    second_request += &quot;Connection: Keep-Alive\r\n\r\n&quot;
+    client_socket.send(second_request.encode())
+    # 等待服务端响应
+    time.sleep(1)
+    second_response = client_socket.recv(buffer_size).decode()
+    print(&quot;第二次响应:&quot;)
+    print(second_response)
+    client_socket.close()
+
+if __name__ == &quot;__main__&quot;:
+    http_1_0_client()
+</code></pre>
+<p>可以看到在此期间连接一直处于established状态，客户端的两次请求复用了同一个tcp连接。</p>
+<pre><code class="language-shell">➜  ~ netstat -anv|grep 8000
+tcp4       0      0  127.0.0.1.8000         127.0.0.1.64622        ESTABLISHED 408241 146988  48143      0 0x0002 0x00000004
+tcp4      48      0  127.0.0.1.64622        127.0.0.1.8000         ESTABLISHED 408160 146988  48145      0 0x0002 0x00000000
+tcp4       0      0  *.8000                 *.*                    LISTEN      131072 131072  48143      0 0x0000 0x00000006
+</code></pre>
+<h2>1.4. http1.1长连接测试</h2>
+<p>http1.1下不需要携带keep-alive头，默认使用长连接。Client或者Server都可以通过设置请求头或响应头<code>&quot;Connection&quot;: &quot;close&quot;</code>方式强制关闭。</p>
+<p>server端代码</p>
+<pre><code class="language-python">from http.server import HTTPServer, BaseHTTPRequestHandler
+import time
+
+class LongConnectionHandler(BaseHTTPRequestHandler):
+    protocol_version = &quot;HTTP/1.1&quot;
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header(&#39;Content-type&#39;, &#39;text/html&#39;)
+        self.end_headers()
+        self.wfile.write(b&quot;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello, World!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    server_address = (&#39;&#39;, 8000)
+    httpd = HTTPServer(server_address, LongConnectionHandler)
+    print(&#39;Starting server, use &lt;Ctrl-C&gt; to stop&#39;)
+    httpd.serve_forever()
+</code></pre>
+<p>client端代码</p>
+<pre><code class="language-python">import socket
+import time
+
+def http_1_0_client():
+    host = &quot;localhost&quot;
+    port = 8000
+    buffer_size = 10240
+
+    # 创建套接字并连接到服务器
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((host, port))
+
+    # 构造HTTP 1.1请求消息，默认长连接
+    request = &quot;GET / HTTP/1.1\r\n&quot;
+    request += &quot;Host: localhost\r\n\r\n&quot;
+
+    # 发送第一次请求
+    client_socket.send(request.encode())
+    # 等待服务端响应
+    time.sleep(1)
+    response = client_socket.recv(buffer_size).decode()
+    print(&quot;第一次响应:&quot;)
+    print(response)
+
+    time.sleep(10)
+
+    # 构造并发送第二次请求（可以多次重复类似操作体现长连接持续交互）
+    second_request = &quot;GET / HTTP/1.1\r\n&quot;
+    second_request += &quot;Host: localhost\r\n\r\n&quot;
+    client_socket.send(second_request.encode())
+    # 等待服务端响应
+    time.sleep(1)
+    second_response = client_socket.recv(buffer_size).decode()
+    print(&quot;第二次响应:&quot;)
+    print(second_response)
+    client_socket.close()
+
+if __name__ == &quot;__main__&quot;:
+    http_1_0_client()
+</code></pre>
+<h2>1.5. 长链接超时设置</h2>
+<ul>
+<li>客户端和服务端都可以独立声明连接的生命周期</li>
+<li>客户端超时时间建议设置比服务端短</li>
+<li>客户端到服务端中间有可能会有7层LB，此时LB前后端的连接是独立的。==建议客户端超时时间&lt;lb超时时间&lt;后端server超时时间==</li>
+</ul>
+<h1>2. http常见问题</h1>
+<h3>2.1.1. reactor.netty.http.client.PrematureCloseException: Connection prematurely closed BEFORE response</h3>
+<p>客户端发起请求的过程中server端正好超时fin了。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/IMG_2680.JPG" alt=""></p>
+<h3>2.1.2. Connection reset by peer</h3>
+<ol>
+<li><strong>写异常</strong> 如果一端的Socket被关闭（或主动关闭，或因为异常退出而引起的关闭），另一端仍发送数据，发送的第一个数据包引发该异常(Connect reset by peer)。Socket默认连接60秒，60秒之内没有进行心跳交互，即读写数据，就会自动关闭连接。</li>
+<li><strong>读异常</strong> 一端退出但退出时并未关闭该连接，另一端如果在从连接中读数据则抛出该异常。</li>
+</ol>
+<p>可以通过python pdb的方式调试server端代码，在<code>self.wfile.write(b&quot;&lt;html&gt;&lt;body&gt;&lt;h1&gt;Hello, World!&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;&quot;)</code>处断点，然后执行client代码，等待server执行的断点处时，强制kill client端，此时继续执行server端代码输出响应体，server端就会报错<code>ConnectionResetError: [Errno 54] Connection reset by peer</code><br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241219224340496.png" alt="image.png"></p>
+<h3>2.1.3. Broken pipe</h3>
+<p>Broken pipe实际上是一个不应该出现的错误，甚至可以理解为是一个bug，表明了你在往一个已经关闭的socket中写数据。当对端因为种种原因需要强制关闭连接的时候会发送RST，这时候应用捕获会报错Connection reset by peer，而当你不顾这个错误，继续写的时候，就会报错Broken pipe。</p>
+<h3>2.1.4. Connection refused</h3>
+<ol>
+<li><strong>服务未启动</strong>：比如你尝试访问一个Web服务器，但Web服务器软件没有运行起来，那么在它对应的端口（如80端口用于HTTP服务）就没有服务在监听，此时客户端就会收到“Connection refused”的反馈。</li>
+<li><strong>防火墙阻止</strong>：防火墙规则可能会阻止客户端对特定端口的访问。即使服务器在正常运行并且监听了相应端口，但防火墙设置可能会导致连接请求被拒绝，客户端同样会收到“Connection refused”的消息。<br>在不启动server的情况下，直接启动client发送请求，可以发现tcp第一次握手后，直接被server发送RST拒绝了，此时客户端会报错<code>ConnectionRefusedError: [Errno 61] Connection refused</code>。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241219224619720.png" alt="image.png"></li>
+</ol>
+<h3>2.1.5. 502 Bad Gateway</h3>
+<p>不建议多个LB挂相同的后端节点，对于客户端来说，看到的是不同的目的IP，此时可能源端口会复用。第二个请求发送的syn包对服务端来说是不可接受的，因此server端发送rst将连接中断，从而导致两个请求都失败（也有请求是，发送syn后立马收到了server对于第一个连接的ack或者psh报文，这时候client也会认为异常，从而发送rst到服务端）。这种情况下，LB都无法与后端服务建立正常连接，因此会报错返回502。</p>
+<p>LB节点超时时间比后端Server超时时间要长，有概率导致LB使用了已经被后端关闭的连接，此时也会建链失败，从而报错502。</p>
+<h1>3. 连接池</h1>
+<p>HttpClient中使用了连接池来管理持有连接，同一条 TCP 链路上，连接是可以复用的。HttpClient 通过连接池的方式进行连接持久化。其实“池”技术是一种通用的设计，其设计思想并不复杂：</p>
+<ol>
+<li>当有连接第一次使用的时候建立连接</li>
+<li>结束时对应连接不关闭，归还到池中</li>
+<li>下次同个目的的连接可从池中获取一个可用连接</li>
+<li>定期清理过期连接</li>
+</ol>
+<h1>4. reference</h1>
+<p><a href="https://blog.csdn.net/rickiyeat/article/details/107900585?sharetype=blogdetail&shareId=107900585&sharerefer=APP&sharesource=jstxzhangrui&sharefrom=link">https://blog.csdn.net/rickiyeat/article/details/107900585?sharetype=blogdetail&amp;shareId=107900585&amp;sharerefer=APP&amp;sharesource=jstxzhangrui&amp;sharefrom=link</a></p>
+<p>!<a href="http协议解析.html" class="internal-link">HTTP协议解析</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

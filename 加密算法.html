@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加密算法 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>加密算法</h1>
+        <time datetime="2020-04-07T00:00:00.000Z">2020年4月7日</time>
+        <div class="tags">
+            
+            <span class="tag">网络安全</span>
+            
+            <span class="tag">加密</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>本文主要介绍密码学中常见的两种加密算法—对称加密和非对称加密。</p>
+<h1>1. 散列（摘要）算法</h1>
+<p>在学习加密算法之前，我们先来了解一下散列算法（散列不是加密）。散列算法是通过一定方式对原文进行计算，产生一个哈希值，不管原始数据是什么样的，得到的哈希值都是固定长度的，其作用只是为了验证数据的完整性和唯一性，无法通过摘要解密得到原始数据。而对于加密算法来说，我们可以通过“秘钥”或者“解密算法”将加密后的结果还原成原文。</p>
+<blockquote>
+<p>[!note]<br>常见的散列算法有：SM3、MD5、SHA-1</p>
+</blockquote>
+<h2>1.1. Example1</h2>
+<p>我们可以设计一个简单的对整数进行散列的算法</p>
+<pre><code class="language-python">def integer_hash(x):
+    return x % 16
+
+if __name__ == &quot;__main__&quot;:
+    print(integer_hash(16), integer_hash(17), integer_hash(32))
+
+&gt;&gt;&gt; 0 1 0
+</code></pre>
+<p>我们采用对16取余的方案，可以看到对16和17进行hash后得到的摘要是不一样的。在实际传输过程中，我们可以通过同时传输原文和散列后的摘要，接收方通过对原文进行相同散列，比较得到的摘要和接收的摘要是否相同来验证文本的正确性。但是通过hash后的结果“0”或“1”并不能得到原文，而且不同的原文hash后的结果也可能相同，如16和32的hash结果都是0。当然，我们这里的hash算法过于简单，一个优秀的hash算法应该保证散列的随机性，尽量减少冲突。</p>
+<h2>1.2. Example2</h2>
+<pre><code class="language-python">import hashlib
+
+str = &quot;This text is hashed via md5&quot;
+
+hl = hashlib.md5()
+hl.update(str.encode(encoding=&#39;utf-8&#39;))
+
+print(&quot;MD5散列前：&quot; + str)
+print(&quot;MD5散列后：&quot; + hl.hexdigest())
+&gt;&gt;&gt; MD5散列前：This text is hashed via md5
+&gt;&gt;&gt; MD5散列后：5d3a325f6a7fd4c8e4d4dad3879cfcdd
+</code></pre>
+<p>我们常常可以看到网上有工具可以对MD5算法加密后的结果进行还原，那是由于MD5算法设计足够优秀，可以保证无冲突，因此我们可以保留很多&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;“摘要-原文”字典</span>，通过hash值来暴力求取原文。由于是通过字典暴力求解，所以一般缓存的都是常用的、较短的字符串，本例中的文本较长且不常见，因此将本例中的摘要通过工具进行解密往往不能成功。如果加“hello”的MD5结果加以解密，则很快能得到结果。很多网站常常用MD5来保存散列后的密码来避免明文存储，这时候可以通过加盐的方式进一步提高安全性。所谓加盐就是通过特定的方法将某一个固定的字符串或随机的字符串（需要保存）插入到原文中去，对原文进行改造。</p>
+<h1>2. 对称加密</h1>
+<p>对称加密指的是加、解密使用的同是一串秘钥，所以被称作对称加密。</p>
+<blockquote>
+<p>[!note]<br>常见的对称加密算法有<strong>DES、AES</strong>等</p>
+</blockquote>
+<p>对称算法又可分为两类：</p>
+<ul>
+<li><strong>序列算法或序列密码</strong>：一次只对明文中的单个位（有时对字节）运算的算法。</li>
+<li><strong>分组算法或分组密码</strong>：对明文的一组位进行运算，这些位组称为分组</li>
+</ul>
+<p>现代计算机密码算法的典型分组长度为64位――这个长度既考虑到分析破译密码的难度，又考虑到使用的方便性。后来，随着破译能力的发展，分组长度又提高到128位或更长。</p>
+<ul>
+<li>优点：加解密效率高，加密速度快。</li>
+<li>缺点：秘钥保管困难，网络传输秘钥不安全</li>
+</ul>
+<pre><code class="language-python">import binascii
+from pyDes import des, CBC, PAD_PKCS5
+
+def des_encrypt(str, secret_key):
+
+    k = des(secret_key, CBC, secret_key, pad=None, padmode=PAD_PKCS5)
+    en = k.encrypt(str, padmode=PAD_PKCS5)
+    return binascii.b2a_hex(en)
+
+def des_descrypt(str, secret_key):
+
+    k = des(secret_key, CBC, secret_key, pad=None, padmode=PAD_PKCS5)
+    de = k.decrypt(binascii.a2b_hex(str), padmode=PAD_PKCS5)
+    return de
+
+if __name__ == &quot;__main__&quot;:
+
+    str_en = des_encrypt(&#39;hello world&#39;, &quot;20200407&quot;)
+    print(str_en.decode(&#39;utf-8&#39;))
+    str_de = des_descrypt(str_en, &quot;20200407&quot;)
+    print(&quot;正确的key解密结果：&quot; + str_de.decode(&#39;utf-8&#39;))
+    str_de = des_descrypt(str_en, &quot;20210407&quot;)
+    print(&quot;错误的key解密结果：&quot; + str_de.decode(&#39;utf-8&#39;))
+
+&gt;&gt;&gt; 886a9aca4d78c90016a81d3a296544ca
+&gt;&gt;&gt; 正确的key解密结果：hello world
+&gt;&gt;&gt; 错误的key解密结果：helmo world
+</code></pre>
+<h1>3. 非对称加密</h1>
+<p>非对称加密指的是加、解密使用不同的秘钥，一把作为公钥、另一把作为私钥。公钥加密的信息，只有私钥才能解密，且私钥加密的信息，只有公钥才能解密。</p>
+<ul>
+<li>优点：比较安全</li>
+<li>缺点：效率较低</li>
+</ul>
+<blockquote>
+<p>[!note]<br>常见非对称加密算法有：RSA、ECC（椭圆曲线加密算法）</p>
+</blockquote>
+<h2>3.1. RSA与ECC</h2>
+<ul>
+<li><strong>ECC（椭圆曲线密码学）</strong>：是一种基于椭圆曲线数学理论实现的非对称加密算法。它通过椭圆曲线上的点运算来构建公钥和私钥，其安全性基于椭圆曲线上的离散对数难题，即给定椭圆曲线上的一个点和一个倍数，很难计算出这个倍数。</li>
+<li><strong>RSA</strong>：同样是一种非对称加密算法，由 Ron Rivest、Adi Shamir 和 Leonard Adleman 在 1977 年提出。它的安全性基于大整数分解难题，也就是将一个大的合数分解为两个质数的乘积是非常困难的。</li>
+</ul>
+<p>ECC优势</p>
+<ul>
+<li><strong>性能优势</strong>：在相同安全强度下，ECC 密钥长度比 RSA 短很多，例如 256 位的 ECC 密钥与 3072 位的 RSA 密钥具有相当的安全性。这使得 ECC 在加密和解密操作时速度更快，尤其是在移动设备和物联网等资源受限的环境中，ECC 能更好地适应，减少计算资源和能源的消耗。</li>
+<li><strong>安全特性</strong>：ECC 基于椭圆曲线上的离散对数难题，数学结构复杂，在面对量子计算机攻击时，被认为可能比 RSA 更具抵抗力。随着量子计算技术的发展，这一特性使 ECC 在未来的信息安全领域具有重要的战略意义。<br>RSA优势</li>
+<li><strong>历史悠久</strong>：RSA 是最早提出的非对称加密算法之一，在信息安全领域应用时间长，许多现有系统和标准都是基于 RSA 构建的，具有广泛的兼容性。</li>
+<li><strong>理解和实现相对容易</strong>：RSA 的数学原理相对直观，基于大整数的乘法和分解，在一些对安全性要求不是极高、资源较为充足且追求简单实现的场景中，仍然被广泛使用。</li>
+</ul>
+<h2>3.2. 密钥交换</h2>
+<ul>
+<li><strong>ECDH（椭圆曲线 Diffie - Hellman）</strong>：基于ECC的密钥交换协议，用于在&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;不安全的通信信道上，让双方安全地交换共享密钥</span>。双方通过各自的私钥和对方的公钥，在椭圆曲线上进行计算，最终得到相同的共享密钥。</li>
+<li>RSA也可以用于密钥交换。</li>
+</ul>
+<h3>3.2.1. ECDH协商简要过程</h3>
+<ol>
+<li><strong>参数选择</strong>：通信双方（如 A 和 B）首先需要选择一个共同的椭圆曲线参数，包括椭圆曲线方程、基点G以及曲线的阶n等。这些参数是公开的，可通过标准组织或预定义的方式获取。</li>
+<li><strong>密钥生成</strong><ul>
+<li>参与者A随机选择一个整数a作为自己的私钥，计算$A=aG$作为自己的公钥，其中G是椭圆曲线的基点。</li>
+<li>参与者B同样随机选择一个整数b作为自己的私钥，计算$B=bG$作为自己的公钥。</li>
+</ul>
+</li>
+<li><strong>公钥交换</strong>：A和B通过不安全的信道交换各自的公钥A和B。</li>
+<li><strong>共享密钥计算</strong><ul>
+<li>参与者 A 使用自己的私钥a和收到的B的公钥 B，计算共享密钥 K=aB。</li>
+<li>参与者 B 使用自己的私钥b和收到的A的公钥 A，计算共享密钥 K=bA。<br>  由于 aB=a(bG)=b(aG)=bA，所以双方计算得到的共享密钥是相同的。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>[!note]</p>
+<ol>
+<li>密钥协商过程中，私钥是本地随机生成的，私钥没有参与过网络传输，没有被窃取的可能。</li>
+<li>私钥是每次通信临时生成（通过随机数a、b）的，用完即销毁，也不用担心后面私钥会泄露的问题！</li>
+<li>加密使用的对称秘钥也是各自本地计算得到的，没有在网络中传输</li>
+</ol>
+</blockquote>
+<h3>3.2.2. 随机生成非对称密钥的必要性</h3>
+<p>如果仅使用服务端证书中的公钥来加密对称密钥（如TLS早期的<strong>RSA 密钥交换模式</strong>），那么这种方式无法提供<strong>前向安全性</strong>（Forward Secrecy，FS）。</p>
+<ul>
+<li>如果未来某个攻击者获取了服务器的私钥（比如通过黑客攻击、量子计算等方式破解），则所有过去的通信数据都可以被解密。</li>
+<li>但如果使用 <strong>ECDH</strong>（或者传统的 DH），每次通信的密钥都是临时协商的，服务器的私钥即使泄露，也无法解密过去的通信数据。<blockquote>
+<p>[!note]<br>现代的HTTPS协议（如 TLS 1.2 及 TLS 1.3）广泛采用 <strong>ECDHE（Ephemeral ECDH）</strong> 来保证前向安全性，使得每次通信都有独立的临时密钥，即使私钥泄露也不会影响之前的会话。在 TLS 1.3 中，RSA 密钥交换已经被移除，所有密钥交换必须使用 <strong>ECDHE 或 DHE</strong>，原因正是 <strong>前向安全性</strong> 和 <strong>更高效的加密性能</strong>。</p>
+</blockquote>
+</li>
+</ul>
+<blockquote>
+<p>[!note]<br>可以使用临时会话级RSA密钥来实现前向安全性，但它有以下缺点：</p>
+<ol>
+<li><strong>计算开销过大</strong>（临时 RSA 密钥的生成和解密计算成本高，影响服务器性能）</li>
+<li><strong>额外的公钥传输成本</strong>（临时 RSA 公钥较长，导致握手数据增加）。</li>
+</ol>
+</blockquote>
+<h2>3.3. 签名</h2>
+<ul>
+<li><strong>ECDSA（椭圆曲线数字签名算法）</strong>：基于ECC的数字签名算法，用于对消息进行签名和验证签名的有效性。签名者使用自己的私钥对消息进行签名，验证者使用签名者的公钥来验证签名是否有效。</li>
+<li>RSA也可以用于签名</li>
+</ul>
+<h2>3.4. 应用示例</h2>
+<h3>3.4.1. 应用场景一（加密）</h3>
+<p>（1）乙方生成两把密钥（公钥和私钥）。公钥是公开的，任何人都可以获得，私钥则是保密的。<br>（2）甲方获取乙方的公钥，然后用它对信息加密。<br>（3）乙方得到加密后的信息，用私钥解密。</p>
+<h3>3.4.2. 应用场景二（验证签名）</h3>
+<p>（1）甲方生成两把秘钥（公钥和私钥）。公钥是公开的，任何人都可以获得，私钥则是保密的。<br>（2）甲方用散列算法生成文件摘要，然后用私钥对摘要进行加密生成签名。<br>（3）乙方拿到文件文件后，用相同的散列算法生成摘要，用公钥对签名进行解密，比较两份摘要是否相同</p>
+<blockquote>
+<p>[!tip]<br>数字签名可以保证甲方发给乙方的文件是完整的、没有被篡改过的。由于只有甲方拥有私钥，篡改者无法通过私钥进行加密，也就无法篡改签名。因此接收方如果通过公钥对签名进行解密得到的摘要与在接收方对原文进行散列得到的摘要不相同的话，就可以断定原文已经被修改过了。</p>
+</blockquote>
+<p>示例：</p>
+<pre><code class="language-python">import rsa
+import hashlib
+
+def create_keys():
+
+    &quot;&quot;&quot;
+    生成秘钥对
+    &quot;&quot;&quot;
+
+    (pubkey, prikey) = rsa.newkeys(1024)
+    pub = pubkey.save_pkcs1()
+    pri = prikey.save_pkcs1()
+
+    with open(&#39;rsa.pub&#39;, &#39;wb+&#39;) as f:
+        f.write(pub)
+
+    with open(&#39;rsa.pri&#39;, &#39;wb+&#39;) as f:
+        f.write(pri)
+
+def encrypt(original_text):
+    &quot;&quot;&quot;
+    公钥加密
+    &quot;&quot;&quot;
+    with open(&#39;rsa.pub&#39;, &#39;rb&#39;) as f:
+        pub = f.read()
+    pubkey = rsa.PublicKey.load_pkcs1(pub)
+    encrypted_text = rsa.encrypt(original_text.encode(&#39;utf-8&#39;), pubkey)
+    return encrypted_text
+
+def decrypt(encrypted_text):
+    &quot;&quot;&quot;
+    私钥解密
+    &quot;&quot;&quot;
+    with open(&#39;rsa.pri&#39;, &#39;rb&#39;) as f:
+        pri = f.read()
+    prikey = rsa.PrivateKey.load_pkcs1(pri)
+    original_text = rsa.decrypt(encrypted_text, prikey).decode(&quot;utf-8&quot;)
+    return original_text
+
+def sign(message):
+    &quot;&quot;&quot;
+    私钥签名
+    &quot;&quot;&quot;
+    with open(&#39;rsa.pri&#39;, &#39;rb&#39;) as f:
+        pri = f.read()
+    prikey = rsa.PrivateKey.load_pkcs1(pri)
+    # 使用MD5所有散列算法生成摘要
+    signed_message = rsa.sign(message.encode(&#39;utf-8&#39;), prikey, hash_method=&#39;MD5&#39;)
+    return signed_message
+
+def verify(message, signed_message):
+    &quot;&quot;&quot;
+    公钥验证
+    &quot;&quot;&quot;
+    with open(&#39;rsa.pub&#39;, &#39;rb&#39;) as f:
+        pub = f.read()
+    pubkey = rsa.PublicKey.load_pkcs1(pub)
+    return rsa.verify(message.encode(&#39;utf-8&#39;), signed_message, pubkey)
+
+if __name__ == &quot;__main__&quot;:
+    text = &quot;This is encrypted by rsa&quot;
+    create_keys()
+    text = encrypt(text)
+    print(&quot;加密结果：&quot;, text)
+    text = decrypt(text)
+    print(&quot;解密结果：&quot;, text)
+    signed_message = sign(text)
+    print(&quot;签名结果：&quot;, signed_message)
+    print(&quot;验签结果：&quot;, verify(text, signed_message))
+
+&gt;&gt;&gt; MD5加密前：This text is hashed via md5
+&gt;&gt;&gt; MD5加密后：5d3a325f6a7fd4c8e4d4dad3879cfcdd
+&gt;&gt;&gt; 签名结果： b&#39;\x10^\xa53\x8a\xda\xf0&quot;e}\x7f\x8dtg\x0f\x96\x08\xd2\xa2L\x16&lt;span class=&quot;tag&quot;&gt;#c&lt;/span&gt;\xc6\xad*C\xa6\x84\x11A\xe9\t\xf9\\\xce\x03\x99\xf1\xb4\xfa\xdf\x83\xa4[\x1d\xbff\x9eO\x08\x92\xf4\x05E4&quot;&amp;v\xcfTD\xbbq\x87\x9f\xdb\xc0u\x9b(\x13\\\x0b&lt;j*Y\x15\x97!\x0b\x17q1h\xcd\xb8\xe0\x98\xbb\xe7\xbb3\xbc\xb8\xef\xbf\xe1\xda$0:\xa0z\xbdP\xd9\xe65\xf4\x17X\xf5H\xc3\x15\x8f\xc67\xbb\x8e&lt;span class=&quot;tag&quot;&gt;#Ba&lt;/span&gt;\xd8\&#39;\x7f&#39;
+&gt;&gt;&gt; 验签结果：MD5
+</code></pre>
+<h1>4. 对称加密与非对称加密对比</h1>
+<ul>
+<li>对称加密多用户通信秘钥管理困难，N个人两两之间需要保管一个秘钥，共$C_N^2$个秘钥对。</li>
+<li>非对称加密，N个用户，共有N个私钥和N个公钥。</li>
+<li>在实际运用中可以将两种加密方式混合使用，将对称加密的密钥使用非对称加密的公钥进行加密，然后发送出去，接收方使用私钥进行解密得到对称加密的密钥，然后双方可以使用对称加密来进行沟通。</li>
+</ul>
+<h1>5. 参考文献</h1>
+<ol>
+<li><a href="https://juejin.im/post/5a7d11be5188257a5e5738c3">摘要与加密的区别</a></li>
+<li><a href="https://www.jianshu.com/p/c44a8a1b7c38">DES加密算法原理</a></li>
+<li><a href="https://www.liaoxuefeng.com/wiki/1252599548343744/1304227873816610">非对称加密算法</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

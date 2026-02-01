@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nginx使用 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Nginx使用</h1>
+        <time datetime="2026-01-03T13:04:29.108Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. nginx常用命令</h1>
+<p>Nginx的命令在控制台中输入<code>nginx -h</code>就可以看到完整的命令，这里列举几个常用的命令：</p>
+<ul>
+<li>nginx -s reload  # 向主进程发送信号，重新加载配置文件，热重启</li>
+<li>nginx -s reopen	 # 重启 Nginx</li>
+<li>nginx -s stop    # 快速关闭</li>
+<li>nginx -s quit    # 等待工作进程处理完成后关闭</li>
+<li>nginx -T         # 查看当前 Nginx 最终的配置</li>
+<li>nginx -t -c     # 检查配置是否有问题，如果已经在配置目录，则不需要-c</li>
+</ul>
+<p>systemctl是Linux系统应用管理工具systemd的主命令，用于管理系统，我们也可以用<br>它来对 Nginx 进行管理，相关命令如下：</p>
+<ul>
+<li>systemctl start nginx    # 启动 Nginx</li>
+<li>systemctl stop nginx     # 停止 Nginx</li>
+<li>systemctl restart nginx  # 重启 Nginx</li>
+<li>systemctl reload nginx   # 重新加载 Nginx，用于修改配置后</li>
+<li>systemctl enable nginx   # 设置开机启动 Nginx</li>
+<li>systemctl disable nginx  # 关闭开机启动 Nginx</li>
+<li>systemctl status nginx   # 查看 Nginx 运行状态</li>
+</ul>
+<h1>2. nginx配置语法</h1>
+<p>nginx主配置文件是<code>/etc/nginx/sites-available/default</code>或者<code>/etc/nginx/nginx.conf</code>，结构图可以概括为：</p>
+<pre><code class="language-conf">main        # 全局配置，对全局生效
+├── events  # 配置影响Nginx服务器或与用户的网络连接
+├── http    # 配置代理，缓存，日志定义等绝大多数功能和第三方模块的配置
+│   ├── upstream # 配置后端服务器具体地址，负载均衡配置不可或缺的部分
+│   ├── server   # 配置虚拟主机的相关参数，一个http块中可以有多个 server 块
+│   ├── server
+│   │   ├── location  # server 块可以包含多个 location 块，location 指令用于匹配 uri
+│   │   ├── location
+│   │   └── ...
+│   └── ...
+└── ...
+</code></pre>
+<p>配置文件的语法规则：</p>
+<ul>
+<li>配置文件由指令与指令块构成；</li>
+<li>每条指令以 ; 分号结尾，指令与参数间以空格符号分隔；</li>
+<li>指令块以 {} 大括号将多条指令组织在一起；</li>
+<li>include 语句允许组合多个配置文件以提升可维护性；</li>
+<li>使用 # 符号添加注释，提高可读性；</li>
+<li>使用$符号使用变量；</li>
+<li>部分指令的参数支持正则表达式；<br>一个典型的配置如下</li>
+</ul>
+<pre><code class="language-conf">user www-data;               # 运行用户，默认即是nginx，可以不进行设置
+worker_processes auto;       # Nginx 进程数，一般设置为和CPU核数一样
+pid /run/nginx.pid;            # Nginx服务启动时master进程的pid存放位置
+error_log /var/log/nginx/error.log;     # Nginx 的错误日志存放目录
+include /etc/nginx/modules-enabled/*.conf; # 把指定文件都包含到当前配置中
+
+events {
+        worker_connections 768;
+        # multi_accept on;
+}
+
+# 配置使用最频繁的部分，代理、缓存、日志定义等绝大多数功能和第三方模块的配置都在这里设置
+http {  
+    # 设置日志模式
+    log_format  main  &#39;$remote_addr - $remote_user [$time_local] &quot;$request&quot; &#39;
+                      &#39;$status $body_bytes_sent &quot;$http_referer&quot; &#39;
+                      &#39;&quot;$http_user_agent&quot; &quot;$http_x_forwarded_for&quot;&#39;;
+
+    access_log  /var/log/nginx/access.log  main;   # Nginx访问日志存放位置
+
+    sendfile            on;   # 开启高效传输模式
+    tcp_nopush          on;   # 减少网络报文段的数量
+    tcp_nodelay         on;
+    keepalive_timeout   65;   # 保持连接的时间，也叫超时时间，单位秒
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;      # 文件扩展名与类型映射表
+    default_type        application/octet-stream;   # 默认文件类型
+
+    include /etc/nginx/conf.d/*.conf;   # 加载子配置项
+    
+    server {
+        listen       80;       # 配置监听的端口
+        server_name  localhost;    # 配置的域名
+        
+        location / {
+            root   /usr/share/nginx/html;  # 网站根目录
+            index  index.html index.htm;   # 默认首页文件
+            deny 172.168.22.11;   # 禁止访问的ip地址，可以为all
+            allow 172.168.33.44； # 允许访问的ip地址，可以为all
+        }
+        
+        error_page 500 502 503 504 /50x.html;  # 默认50x对应的访问页面
+        error_page 400 404 error.html;   # 配置40x对应的访问页面
+    }
+}
+</code></pre>
+<h2>2.1. location配置</h2>
+<p>server 块可以包含多个 location 块，location 指令用于匹配 uri，语法：</p>
+<pre><code class="language-conf">location [修饰符] uri {
+    # 配置指令
+}
+</code></pre>
+<p>Nginx 按以下表格顺序检查并选择匹配的 <code>location</code>：</p>
+<table>
+<thead>
+<tr>
+<th>修饰符</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>=</code></td>
+<td>精确匹配（优先级最高）</td>
+</tr>
+<tr>
+<td><code>^~</code></td>
+<td>前缀匹配（一旦匹配成功则停止搜索其他匹配项）</td>
+</tr>
+<tr>
+<td><code>~</code></td>
+<td>正则匹配（区分大小写）</td>
+</tr>
+<tr>
+<td><code>~*</code></td>
+<td>正则匹配（不区分大小写）</td>
+</tr>
+<tr>
+<td>无</td>
+<td>前缀匹配（继续搜索其他匹配项）</td>
+</tr>
+<tr>
+<td>示例；</td>
+<td></td>
+</tr>
+</tbody></table>
+<pre><code class="language-conf">location = /exact { ... }           # 精确匹配 /exact
+location ^~ /static/ { ... }        # 前缀匹配 /static/ 及其子路径
+location ~ \.(jpg|png|gif)$ { ... } # 正则匹配图片文件
+location / { ... }                # 通用匹配（兜底）
+</code></pre>
+<h2>2.2. nginx变量</h2>
+<p>在一个完整的请求过程中，会产生很多数据，nginx将这些数据以变量的形式提供给使用者。</p>
+<ul>
+<li>所有的<code>nginx</code>变量在<code>nginx</code>配置文件中引用时都必须带上<code>$</code>前缀；</li>
+<li>在<code>nginx</code>配置文件中，变量只能存放一种类型的值，那就是<code>字符串</code>类型；</li>
+<li><code>nginx</code>使用变量来简化配置和提高配置灵活性，所有的变量值都以<code>$变量名</code>的形式引用；</li>
+</ul>
+<h3>2.2.1. 自定义变量</h3>
+<p>可以在<code>http</code>、<code>server</code>、<code>location</code>等标签中使用<code>set</code>命令声明变量，语法<code>set $变量名 变量值</code></p>
+<p>在不同层级标签中，声明变量可见性规则如下：</p>
+<ul>
+<li><code>location</code>标签中声明的变量对这个<code>location块</code>可见</li>
+<li><code>server</code>标签中声明的变量对<code>server块</code>以及<code>server块中的所有子块</code>可见</li>
+<li><code>http</code>标签中声明的变量对<code>http块</code>以及<code>http块中的所有子块</code>可见</li>
+</ul>
+<h3>2.2.2. 内置预定义变量</h3>
+<p>访问地址 <code>http://test.com/foo?pid=123&amp;sid=abc</code></p>
+<table>
+<thead>
+<tr>
+<th>参数名</th>
+<th>参数值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>request_filename</td>
+<td>/usr/share/nginx/html/foo</td>
+<td>磁盘文件系统待访问文件的完整路径</td>
+</tr>
+<tr>
+<td>document_root</td>
+<td>/usr/share/nginx/html</td>
+<td>由 <code>URI</code> 和 <code>root/alias</code> 规则生成的文件夹路径</td>
+</tr>
+<tr>
+<td>fastcgi_script_name</td>
+<td>/foo</td>
+<td>当前请求的脚本名称</td>
+</tr>
+<tr>
+<td>uri</td>
+<td>/foo</td>
+<td>请求的<code>URL</code>，不包含参数</td>
+</tr>
+<tr>
+<td>document_uri</td>
+<td>/foo</td>
+<td>与<code>$uri</code>相同</td>
+</tr>
+<tr>
+<td>request_uri</td>
+<td>/foo?pid=123&amp;sid=abc</td>
+<td>请求的<code>URL</code>，包含参数</td>
+</tr>
+<tr>
+<td>args</td>
+<td>pid=123&amp;sid=abc</td>
+<td>全部参数字符串</td>
+</tr>
+<tr>
+<td>arg_参数名</td>
+<td>arg_pid:123 arg_sid:abc</td>
+<td>获取特定参数值</td>
+</tr>
+<tr>
+<td>query_string</td>
+<td>pid=123&amp;sid=abc</td>
+<td>与 <code>args</code> 相同</td>
+</tr>
+<tr>
+<td>is_args</td>
+<td>?</td>
+<td><code>URL</code> 中是否有参数，有的话返回 <code>?</code> ，否则返回空</td>
+</tr>
+<tr>
+<td>request_method</td>
+<td>GET</td>
+<td>请求方法</td>
+</tr>
+<tr>
+<td>request_time</td>
+<td>0.000</td>
+<td>处理请求已消耗的时间</td>
+</tr>
+<tr>
+<td>request_length</td>
+<td>444</td>
+<td>全部请求的长度，包含请求行、请求头、请求体</td>
+</tr>
+<tr>
+<td>http_user_agent</td>
+<td>Mozilla/5.0.....</td>
+<td>用户浏览器</td>
+</tr>
+<tr>
+<td>http_referer</td>
+<td>空</td>
+<td>从哪些链接过来的请求</td>
+</tr>
+<tr>
+<td>remote_addr</td>
+<td>客户端<code>IP</code></td>
+<td>客户端<code>IP</code></td>
+</tr>
+<tr>
+<td>remote_port</td>
+<td>客户端端口</td>
+<td>客户端端口</td>
+</tr>
+<tr>
+<td>server_addr</td>
+<td>服务端 <code>IP</code> 地址</td>
+<td>服务端 <code>IP</code> 地址</td>
+</tr>
+<tr>
+<td>server_port</td>
+<td>80</td>
+<td>服务端端口</td>
+</tr>
+<tr>
+<td>server_protocol</td>
+<td>HTTP/1.1</td>
+<td>服务端协议</td>
+</tr>
+<tr>
+<td>scheme</td>
+<td>http</td>
+<td>协议名， <code>http</code> 或 <code>https</code></td>
+</tr>
+<tr>
+<td>http_via</td>
+<td>空</td>
+<td>每经过一层代理服务器，都会添加相应的信息</td>
+</tr>
+<tr>
+<td>http_cookie</td>
+<td>空</td>
+<td>获取用户 <code>cookie</code></td>
+</tr>
+<tr>
+<td>https</td>
+<td>空</td>
+<td>是否开启了<code>https</code>，是则返回 <code>on</code> ，否则返回空</td>
+</tr>
+<tr>
+<td>limit_rate</td>
+<td>空</td>
+<td>返回响应时的速度上限值</td>
+</tr>
+<tr>
+<td>content_length</td>
+<td>空</td>
+<td>请求头中的<code>Content-length</code>字段</td>
+</tr>
+<tr>
+<td>content_type</td>
+<td>空</td>
+<td>请求头中的<code>Content-Type</code>字段</td>
+</tr>
+<tr>
+<td>request_body_file</td>
+<td>空</td>
+<td>客户端请求主体信息的临时文件名</td>
+</tr>
+<tr>
+<td>remote_user</td>
+<td>空</td>
+<td>已经经过Auth Basic Module验证的用户名</td>
+</tr>
+<tr>
+<td>host</td>
+<td>test</td>
+<td>请求信息中的 <code>Host</code> ，如果请求中没有 <code>Host</code>  行，则在请求头中找，最后使用 <code>nginx</code> 中设置的 <code>server_name</code> 。</td>
+</tr>
+</tbody></table>
+<h1>3. 域名配置</h1>
+<p>由于默认配置文件<code>/etc/nginx/nginx.conf</code>的 http 模块中有一句<code>include /etc/nginx/conf.d/*.conf</code>也就是说<code>conf.d</code>文件夹下的所有<code>*.conf</code>文件都会作为子配置项被引入配置文件中。可以新建一个<code>/etc/nginx/conf.d/home.shinerio.site.conf</code>文件用于存储home.shinerio.site域名提供的服务。</p>
+<pre><code class="language-conf">server {
+  listen 8080;
+    server_name home.shinerio.site;
+
+    location / {
+        # 默认网址重定向到最大学习网站Bilibili的proxy_pass配置🤓 ：
+        proxy_pass http://www.bilibili.com;
+    }
+}
+</code></pre>
+<p>服务只监听了localhost:8080端口，可以通过nginx把115.190.78.70:8000请求转发到本地8080端口</p>
+<pre><code class="language-conf">server {
+        listen 8000;
+        server_name 115.190.78.70;
+        location / {
+                proxy_pass http://127.0.0.1:8080/;
+                proxy_http_version 1.1;
+                proxy_set_header X-Forwarded-Host $http_host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                http2_push_preload on;
+        }
+}
+</code></pre>
+<p>实际使用中，可以将请求转发到本机另一个服务器上，也可以根据访问的路径跳转到不同端口的服务中。</p>
+<ul>
+<li>把访问 <a href="http://home.shinerio.site:8080/edu">http://home.shinerio.site:8080/edu</a> 的请求转发到 <a href="http://127.0.0.1:8080">http://127.0.0.1:8080</a></li>
+<li>把访问 <a href="http://home.shinerio.site:8080/vod">http://home.shinerio.site:8080/vod</a> 的请求转发到 <a href="http://127.0.0.1:8081">http://127.0.0.1:8081</a></li>
+</ul>
+<pre><code class="language-conf">server {
+  listen 8080;
+  server_name home.shinerio.site;
+
+  location ~ /edu/ {
+    proxy_pass http://127.0.0.1:8080;
+  }
+  
+  location ~ /vod/ {
+    proxy_pass http://127.0.0.1:8081;
+  }
+}
+</code></pre>
+<p>反向代理还有一些其他的指令</p>
+<ul>
+<li>proxy_set_header：在将客户端请求发送给后端服务器之前，更改来自客户端的请求头信息；</li>
+<li>proxy_connect_timeout：配置 Nginx 与后端代理服务器尝试建立连接的超时时间；</li>
+<li>proxy_read_timeout：配置 Nginx 向后端服务器组发出 read 请求后，等待相应的超时时间；</li>
+<li>proxy_send_timeout：配置 Nginx 向后端服务器组发出 write 请求后，等待相应的超时时间；</li>
+<li>proxy_redirect：用于修改后端服务器返回的响应头中的 Location 和 Refresh。</li>
+</ul>
+<h1>4. 负载均衡</h1>
+<pre><code class="language-conf">http {
+  upstream myserver {
+      # ip_hash;  # ip_hash 方式
+    # fair;   # fair 方式
+    server 127.0.0.1:8081;  # 负载均衡目的服务地址
+    server 127.0.0.1:8080;
+    server 127.0.0.1:8082 weight=10;  # weight方式，不写默认为 1
+  }
+ 
+  server {
+    location / {
+        proxy_pass http://myserver;
+        proxy_connect_timeout 10;
+    }
+  }
+}
+</code></pre>
+<p>Nginx 提供了好几种分配方式，默认为轮询，就是轮流来。</p>
+<ul>
+<li>轮询，默认方式，每个请求按时间顺序逐一分配到不同的后端服务器，如果后端服务挂了，能自动剔除；</li>
+<li>weight，权重分配，指定轮询几率，权重越高，在被访问的概率越大，用于后端服务器性能不均的情况；</li>
+<li>ip_hash，每个请求按访问IP的 hash 结果分配，这样每个访客固定访问一个后端服务器，可以解决动态网页 session 共享问题。负载均衡每次请求都会重新定位到服务器集群中的某一个，那么已经登录某一个服务器的用户再重新定位到另一个服务器，其登录信息将会丢失，这样显然是不妥的；</li>
+<li>fair（第三方），按后端服务器的响应时间分配，响应时间短的优先分配，依赖第三方插件 nginx-upstream-fair，需要先安装；</li>
+</ul>
+<h1>5. ref</h1>
+<p><a href="https://www.nginx.org.cn/article/detail/545">https://www.nginx.org.cn/article/detail/545</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka高可靠 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Kafka高可靠</h1>
+        <time datetime="2026-01-03T13:04:29.189Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 生产可靠</h1>
+<p>为保证Producer发送的数据，能可靠地发送到指定的Topic，Topic的每个Partition收到Producer发送的数据后，都需要向Producer发送ACK（ACKnowledge 确认收到）。如果Producer收到ACK，就会进行下一轮的发送，否则重新发送数据。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202410131811443.png" alt="image.png"></p>
+<h2>1.1. 副本同步策略</h2>
+<p>何时发送ACK？确保有Follower与Leader同步完成，Leader再发送ACK，这样才能保证Leader挂掉之后，能在Follower中选举出新的Leader而不丢数据。多少个Follower同步完成后发送 ACK？全部Follower同步完成，再发送ACK。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202410131812226.png" alt="image.png"><br>采用第二种方案，所有Follower完成同步，Producer才能继续发送数据，设想有一个Follower因为某种原因出现故障，那Leader就要一直等到它完成同步。这个问题怎么解决？Leader维护了一个动态的in-sync replica set（ISR）：和Leader保持同步的Follower集合。当ISR集合中的Follower完成数据的同步之后，Leader 就会给 Follower 发送 ACK。如果 Follower 长时间未向 Leader 同步数据，则该 Follower 将被踢出 ISR 集合，该时间阈值由<code>replica.lag.time.max.ms</code>参数设定。Leader发生故障后，就会从ISR中选举出新的 Leader。</p>
+<p>对于某些不太重要的数据，对数据的可靠性要求不是很高，能够容忍数据的少量丢失，所以没必要等ISR中的Follower全部接受成功。所以 Kafka 为用户提供了三种可靠性级别，用户根据可靠性和延迟的要求进行权衡，选择以下的配置。</p>
+<ul>
+<li>0：Producer不等待Broker的ACK，这提供了最低延迟，Broker一收到数据还没有写入磁盘就已经返回，当Broker故障时有可能丢失数据。</li>
+<li>1：Producer等待Broker的ACK，Partition的Leader落盘成功后返回 ACK，如果在Follower同步成功之前 Leader 故障，那么将会丢失数据。</li>
+<li>-1（all）：Producer 等待 Broker 的 ACK，Partition 的 Leader 和 Follower 全部落盘成功后才返回 ACK。但是在 Broker 发送 ACK 时，Leader 发生故障，则会造成数据重复。<blockquote>
+<p>-1的时候能够保证at least once，但不能保证exactly once</p>
+</blockquote>
+</li>
+</ul>
+<h2>1.2. 故障处理细节</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202410132028418.png" alt="image.png"></p>
+<ul>
+<li>LEO：每个副本最大的Offset。</li>
+<li>HW：消费者能见到的最大的Offset，ISR队列中最小的 LEO。</li>
+</ul>
+<p><strong>Follower 故障</strong>：Follower发生故障后会被临时踢出ISR集合，待该Follower恢复后，Follower会读取本地磁盘记录的上次的 HW，并将 log 文件高于 HW 的部分截取掉，从HW开始向 Leader 进行同步数据操作。等该 Follower的LEO大于等于该Partition的HW，即Follower追上Leader后，就可以重新加入ISR了。</p>
+<p><strong>Leader 故障</strong>：Leader发生故障后，会从ISR中选出一个新的 Leader，之后，为保证多个副本之间的数据一致性，其余的 Follower 会先将各自的 log 文件高于 HW 的部分截掉，然后从新的 Leader 同步数据。</p>
+<blockquote>
+<p>HW和数据的同步是独立的，HW只能保证数据的一致性，无法保证不丢数据。</p>
+</blockquote>
+<h1>2. 消费可靠</h1>
+<p>由于Consumer在消费过程中可能会出现断电宕机等故障，Consumer恢复后，需要从故障前的位置继续消费。所以Consumer需要实时记录自己消费到了哪个Offset，以便故障恢复后继续消费。<br>Kafka 0.9 版本之前，Consumer默认将Offset保存在 Zookeeper 中，从 0.9 版本开始，Consumer 默认将Offset 保存在Kafka 一个内置的Topic中，该Topic为 <code>__consumer_offsets</code>。</p>
+<p>Kafka 使用特定的哈希算法来确定消费者组的偏移量存储在<code>__consumer_offsets</code>主题的哪个分区中。通常，这个算法会考虑消费者组 ID、主题名称和分区编号等因素进行哈希计算，然后根据计算结果确定存储分区。<code>__consumer_offsets</code>主题的每个分区中存储了多个键值对，其中键通常由消费者组 ID、主题名称和分区编号组成，值则是具体的偏移量数值以及其他相关的元数据信息。</p>
+<h1>3. controller和zookeeper</h1>
+<p><a href="https://www.51cto.com/article/754629.html">https://www.51cto.com/article/754629.html</a></p>
+<h2>3.1. Zookeeper</h2>
+<h3>3.1.1. 存储元数据</h3>
+<ul>
+<li>Zookeeper 主要负责存储和管理 Kafka 集群的元数据信息，如broker列表、主题列表、分区分配等。在副本的leader选举过程中，controller需要从Zookeeper中获取这些元数据信息，以便确定哪些分区需要进行领导者选举。</li>
+</ul>
+<h3>3.1.2. Controller和coodinator的选举（如果当前 controller 宕机）</h3>
+<ul>
+<li>在 Kafka 集群中，当前 controller 宕机时，其他brokers会竞争成为新的controller。</li>
+<li>这个过程依赖于Zookeeper。Brokers会在Zookeeper中注册一个临时节点，用于竞选 controller。Brokers 通过在Zookeeper中创建临时节点来竞争controller角色，Zookeeper会保证只有一个节点能够成功创建，第一个成功创建临时节点的broker成为新的controller。</li>
+</ul>
+<p>详细过程如下：</p>
+<ol>
+<li>注册Controller节点当Kafka集群启动时，每个Broker都会尝试在Zookeeper中的/controller路径下创建一个临时节点。因为同一时刻只能存在一个/controller 节点，所以只有一个 Broker 成功创建节点并成为Controller。其他 Broker 会收到节点创建失败的通知，然后转为观察者（Observer）状态，监视Controller节点路径的变化。</li>
+<li>监听 Controller 节点所有非Controller的 Broker 都会在 Zookeeper 中对 /controller 路径设置一个 Watcher 事件。这样当Controller节点发生变化时（例如，Controller失效），所有非Controller就会收到一个 Watcher 事件。</li>
+<li>选举新的Controller当某个Broker接收到Controller节点变化的通知后，它会再次尝试在 Zookeeper 中的/controller 路径下创建一个临时节点。与启动时的过程类似，只有一个 Broker 能够成功创建节点并成为新的Controller。新Controller会在选举成功后接管集群元数据的管理工作。</li>
+<li>更新集群元数据新Controller在选举成功后需要更新集群元数据，包括分区状态、副本状态等。同时，新控制器会通知所有相关的 Broker 更新它们的元数据信息。这样，集群中的所有 Broker 都能够知道新Controller的身份，并进行协同工作。<blockquote>
+<p>注意：临时节点的特点是在创建它的客户端（即 Broker节点）断开连接时，它会自动被 Zookeeper 删除。这种机制保证了只有一个Broker节点能够成为控制器，以避免多个控制器同时对集群元数据进行操作引发的问题。</p>
+</blockquote>
+</li>
+</ol>
+<h2>3.2. Controller</h2>
+<h3>3.2.1. 存储数据</h3>
+<ul>
+<li>分区的leader和ISR信息</li>
+<li>跟踪正在进行的leader选举和重分配的分区列表</li>
+<li>副本状态变化等动态信息</li>
+</ul>
+<h3>3.2.2. 作用</h3>
+<p>Controller是Kafka集群中的一个特殊broker，它负责管理整个集群的状态。它承担着主题创建、分区分配、副本选举等关键任务，直接参与到 Kafka 的核心业务流程中。Controller能够快速响应集群中的各种变化，并及时做出相应的调整，以保证集群的高可用性和稳定性。</p>
+<ol>
+<li>Broker状态管理：Controller会跟踪集群中所有Broker的在线状态，并在Broker宕机或者恢复时更新集群的状态。</li>
+<li>分区状态管理：当新的Topic被创建，或者已有的Topic被删除时，Controller会负责管理这些变化，并更新集群的状态。</li>
+<li>分区领导者选举：当一台Broker节点宕机时，并且宕机的机器上包含分区领导者副本时，Controller会负责对其上的所有Partition进行新的领导者选举。</li>
+<li>副本状态管理：Controller负责管理Partition的ISR列表，当Follower副本无法及时跟随Leader副本时，Controller会将其从ISR列表中移除。</li>
+<li>分区重平衡：当添加或删除Broker节点时，Controller会负责对Partition的分布进行重平衡，以确保数据的均匀分布。</li>
+<li>存储集群元数据：Controller保存了集群中最全的元数据信息，并通过发送请求同步到其他Broker上面。</li>
+</ol>
+<h1>4. broker</h1>
+<ol>
+<li>数据存储：每个非Controller节点都存储一部分数据，这部分数据是由Topic的Partition组成的。这意味着，每个Broker都保存了特定Partition的所有数据，不论这个Partition是Leader还是Follower。</li>
+<li>数据复制：为了保证数据的可靠性，Kafka系统通过数据复制机制在多个Broker之间备份数据。每个Topic的Partition都有一个Leader和多个Follower。Leader负责处理所有的客户端读写请求，而Follower负责从Leader复制数据。在这个过程中，非Controller节点既可以是Leader也可以是Follower。</li>
+<li>处理客户端请求：非Controller节点（leader节点）负责处理来自Producer和Consumer的请求。对于Producer的写请求，Broker会将数据写入对应的Partition。对于Consumer的读请求，Broker会从对应的Partition读取数据。</li>
+<li>参与Leader选举：当Partition的Leader节点出现故障时，非Controller节点可能被选举为新的Leader节点。虽然Leader选举过程由Controller节点协调，但所有的非Controller节点都需要参与这个过程。</li>
+<li>故障恢复：当某个Broker宕机时，Kafka会自动重新分配其上的Partition的Leader角色给其他的Broker，这也是非Controller节点的重要职责之一。</li>
+</ol>
+<h1>5. coordinator</h1>
+<h2>5.1. 分类</h2>
+<h3>5.1.1. consumer group coordinator</h3>
+<p>负责协调和管理消费者组，本质上是由broker充当的，每个consumer group都会有一个对应的broker充当其coordinator，主要负责以下功能：</p>
+<ol>
+<li>coordinator负责接收这个consumer group里面的所有consumer的心跳，如果发现某个consumer失联了，coordinator就会触发rebalance。</li>
+<li>维护消费者组的成员信息，包括消费者ID，消费进度，还会处理消费者的joinGroup和leave Group请求并触发rebalance。</li>
+<li>根据消费者组中消费者的数量以及topic对应的分区数量，制定消息分配方案，哪个消费者应该消费哪个分区，以确保负载均衡和高效消费。Kafka中的一个partition只会被一个consumer消费。</li>
+</ol>
+<h3>5.1.2. transaction coordinator</h3>
+<p>负责事务协调，每个事务型producer都要和transaction coordinator交互</p>
+<ol>
+<li>确保事务的原子性，即所有消息要不全部写入成功，要不全部不写入</li>
+<li>处理事务的开始、提交、回滚等操作，确保消息的一致性和可靠性</li>
+</ol>
+<h4>5.1.2.1. 确保事务性消息的原子性操作的基本原理</h4>
+<ol>
+<li><strong>事务的开始：</strong> 生产者启动事务时，它向事务 Coordinator 发送一个事务的起始请求。在这个阶段，事务 Coordinator 会为该事务分配一个唯一的事务 ID。  </li>
+<li><strong>事务性生产：</strong> 在事务启动后，生产者可以发送一批消息，并在发送的消息中关联这个事务 ID。这确保了这批消息属于同一个事务。  </li>
+<li><strong>事务的提交：</strong> 如果在事务期间一切正常，生产者将向事务 Coordinator 发送提交请求。在接收到提交请求后，事务 Coordinator 将事务的状态设置为提交，并将相关消息持久化到 Kafka 服务器。  </li>
+<li><strong>事务的回滚：</strong> 如果在事务期间发生错误或者生产者决定回滚事务，生产者将向事务 Coordinator 发送回滚请求。事务 Coordinator 将事务的状态设置为回滚，并丢弃相关消息。  </li>
+<li><strong>消费者的参与：</strong> 消费者也可以参与到事务中，以确保在消费消息时能够参与到相同的事务中，保持消息的一致性。  </li>
+<li><strong>幂等性：</strong> Kafka 还支持幂等性生产者，这意味着即使生产者在发送消息时失败，重试时也不会引入重复的消息。这与事务性生产者结合使用，可以提供更强的消息传递保障。</li>
+</ol>
+<h2>5.2. 选举与切换</h2>
+<h3>5.2.1. Coordinator 的选举过程：</h3>
+<p>coordinator选举机制确保了当前活跃的coordinator出现故障时，集群能够选举出一个新的coordinator来接管协调工作，从而保证整个系统的高可用性。kafka 2.8版本以下支持通过zookeeper进行选举，2.8版本以上新增了基于Kraft算法的选举机制。<br>基于zookeeper的Kafka Coordinator选举过程可以概括为以下几个步骤:</p>
+<ol>
+<li><strong>Coordinator的注册</strong><br> 每个Broker启动时，都会先在Zookeeper中注册自己有资格竞选哪些Coordinator。不同的Coordinator有不同的注册路径，如/controller，/admin等。</li>
+<li><strong>选举触发</strong><br> 当没有活跃的Coordinator时，集群中剩余的Broker会开始发起新一轮的选举程序。常见的触发情况包括: 活跃Coordinator宕机、大多数Broker重启导致原Coordinator失去集群大多数票数等。每个broker会定期向zookeeper发送心跳来证明自己活着，如果长时间没有心跳，zookeeper就认为该broker已经故障。</li>
+<li><strong>选举过程</strong><br> 所有参与选举的Broker会先在Zookeeper上创建临时节点,节点路径格式为<code>/${COORDINATOR_TYPE}/candidate/control_path_${CONTROL_PATH_VERSION}_${BROKER_ID}-${GENERATED_ID}</code>。 然后各Broker按照节点路径的字典序排列，字典序最小的临时节点所对应的Broker就是被选举为新的Coordinator。</li>
+<li><strong>胜出通知</strong><br> 被选为新Coordinator的Broker会收到来自Zookeeper的通知,它会创建<code>${COORDINATOR_TYPE}/controller_epoch</code>持久节点，并写入自己的BrokerID和纪元值(epoch)，其它Broker发现这个节点后就知道新Coordinator是谁了。</li>
+<li><strong>Coordinator上线</strong><br> 新选举产生的Coordinator会先从Zookeeper获取所需的元数据信息,如分区副本分配方案等。之后它会开始发送请求给各个Broker，接管整个集群的协调工作。<br><a href="https://developer.aliyun.com/article/1479596">https://developer.aliyun.com/article/1479596</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

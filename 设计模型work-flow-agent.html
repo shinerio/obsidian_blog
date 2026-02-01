@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设计模型(Work Flow & Agent) - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>设计模型(Work Flow & Agent)</h1>
+        <time datetime="2026-01-03T13:04:29.174Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 工作流模式(Predefined Workflow)</h1>
+<h2>1.1. 流水线</h2>
+<p>流水线是最简单直接的工作流编排，通过编排一个<strong>顺序处理</strong>的流程，让模型逐步执行和推理。<br><strong>场景示例：</strong><br>文档处理系统：文档上传 → 格式转换 → 内容提取 → 语义分析 → 结果存储</p>
+<h2>1.2. 路由分发</h2>
+<p>路由分发是将输入分类（LLM意图识别）并引导到专门的子流程中，每个子流程可以执行一个特定的任务流。<br><strong>场景示例：</strong><br>智能客服系统：接收用户问题 → 意图识别 → 路由到FAQ检索/人工客服/知识库查询</p>
+<h2>1.3. 并行处理</h2>
+<p>将任务分解为可并行执行的子任务，同时处理多个子任务以提高整体效率。<br><strong>场景示例</strong>：<br>图像批量处理：将100张图片分成10个批次，每批10张图片同时进行AI识别处理</p>
+<h2>1.4. 迭代决策模式</h2>
+<p>基于上一步的结果决定下一步操作，通过多轮迭代逐步逼近最终答案。一般工作流会设定一个目标，然后通过迭代循环最终完成任务。<br><strong>场景示例：</strong><br>代码生成助手：<br>目标：运行通过，输出目标结果<br>迭代过程：生成初始代码 → 运行测试 → 分析错误 → 修改代码 → 重新测试，直到通过所有测试</p>
+<h2>1.5. 流程嵌套</h2>
+<p>在主流程中嵌套子流程，子流程可以是完整的独立workflow，支持递归调用。</p>
+<ol>
+<li>模块化</li>
+<li>重用</li>
+</ol>
+<h2>1.6. 人工干预</h2>
+<p>任务执行过程中需要用户介入干预，可以通过一定的状态记忆方法去恢复状态</p>
+<h1>2. 自规划模式</h1>
+<h2>2.1. ReAct</h2>
+<p><a href="https://zhuanlan.zhihu.com/p/717760746">ReAct</a>是一种最简单的自规划Agent设计模式，概念来自论文《ReAct: Synergizing Reasoning and Acting in Language Models》，这篇论文提出了一种新的方法，通过结合语言模型中的推理（reasoning）和行动（acting）来解决多样化的语言推理和决策任务。ReAct 提供了一种更易于人类理解、诊断和控制的决策和推理过程。</p>
+<p><strong>Reason Only</strong>：仅依赖大模型的推理能力，高度依赖对话上下文信息的丰富度和有效性。在上下文信息不足，同时缺乏执行能力，不能获取外部额外有效信息时，LLM容易造成幻觉。</p>
+<p>在每步思考和规划中，ReAct同时包含了推理（Reason）和执行（Action），通过大语言模型的思考和规划，既输出由自然语言描述的思考过程，也输出格式化的工具指令，而论文中设计的工具是可以对维基百科进行关键词检索的API，因此执行大语言模型输出的工具指令可以获取外部信息，<strong>将外部信息作为观察结果，和思考过程、工具指令合并，作为大语言模型下一步思考和规划的上下文</strong>。论文通过组合推理和执行，能够有效获取外部信息作为大语言模型的知识补充，从而在知识问答（HotpotQA）和事实验证（FEVER）等任务上取得较好的效果，而ReAct的命名即“Reason”（推理）和“Action”（执行）的组合、缩写。</p>
+<h3>2.1.1. 典型流程</h3>
+<p>它的典型流程如下所示，可以用一个有趣的循环来描述：<br>思考（Thought）→ 行动（Action）→ 观察（Observation），简称<strong>TAO循环</strong>。</p>
+<ul>
+<li>思考（Thought）：面对一个问题，LLM需要进行深入的思考。这个思考过程是关于问题是什么、如何拆解的过程，思考过后通常会决定下一步调用什么工具。</li>
+<li>行动（Action）：确定了任务的方向后，Agent会根据LLM的指示来进行工具的调用，推动子任务的完成。</li>
+<li>观察（Observation）：行动之后，LLM会学习工具的输出，以判断问题是否得到解决。</li>
+</ul>
+<p>通过提示工程让大语言模型对复杂问题分步思考和规划，每步思考和规划按以下格式进行推理和执行：</p>
+<pre><code class="language-text">Thought:[思考过程]
+Action:[工具指令]
+Observation:[观察结果]
+</code></pre>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202508062219339.png" alt="image.png"><br>上图是论文中的例子，React过程如下：</p>
+<ol>
+<li>原问题是“Aside from the Apple Remote, what other device can control the program Apple Remote was originally designed to interact with?”，即“除了苹果遥控器之外，还有哪些设备可以实现App Remote类似功能，控制最初设计用于和App Remote交互的程序”</li>
+<li>大语言模型第一步思考和规划给出的思考过程和工具指令分别是&quot;I need to search App Remote and find the program it was originally designed to interact with.”和“Search[Apple Remote]&quot;，即检索和&quot;Apple Remote&quot;相关的语句，查找和其交互的程序，因此Agent调用工具的API获取相关信息，<strong>拼接到“Observation”的后面</strong>，和第一步的思考过程、工具指令合并，作为大语言模型第二步思考和规划的上下文</li>
+<li>大语言模型第二步思考和规划给出的思考过程和工具指令分别是&quot;Apple Remote was originally designed to control the Front Row media center program. I need to search Front Row next and find what other device can control it.”和&quot;Search[Front Row]&quot;，即检索和“Front Row”相关的语句，查找可控制“Front Row”的设备，如此经过共4步的思考和规划过程，最终大语言模型输出正确的答案&quot;keyword function keys&quot;，即&quot;keyword function keys&quot;也可以控制最初设计用于和苹果遥控器交互的程序。</li>
+</ol>
+<h3>2.1.2. <a href="https://zhuanlan.zhihu.com/p/717760746">实现过程</a></h3>
+<h4>2.1.2.1. 提示词模板</h4>
+<p>在实现ReAct模式的时候，首先需要设计一个清晰的Prompt模板，主要包含以下几个元素：  </p>
+<ul>
+<li>思考（Thought）：这是推理过程的文字展示，阐明我们想要LLM帮我们做什么，为了达成目标的前置条件是什么  </li>
+<li>行动（Action）：根据思考的结果，生成与外部交互的指令文字，比如需要LLM进行外部搜索  </li>
+<li>行动参数（Action Input）：用于展示LLM进行下一步行动的参数，比如LLM要进行外部搜索的话，行动参数就是搜索的关键词。主要是为了验证LLM是否能提取准确的行动参数  </li>
+<li>观察（Observation）：和外部行动交互之后得到的结果，比如LLM进行外部搜索的话，那么观察就是搜索的结果。</li>
+</ul>
+<pre><code>Answer the following questions as best you can. You have access to the following tools:
+
+{tool_names}
+
+Use the following format:
+
+Question: the input question you must answer
+Thought: you should always think about what to do
+Action: the action to take, should be one of [{tool_names}]
+Action Input: the input to the action
+Observation: the result of the action
+... (this Thought/Action/Action Input/Observation can be repeated zero or more times)
+Thought: I now know the final answer
+Final Answer: the final answer to the original input question
+
+Begin!
+
+Question: {query}&quot;&quot;&quot;
+</code></pre>
+<h4>2.1.2.2. 构建agent</h4>
+<p>一个ReAct Agent需要定义好以下元素</p>
+<ul>
+<li>llm：背后使用的LLM大模型</li>
+<li>tools：后续会用到的Tools集合</li>
+<li>stop：什么情况下ReAct Agent停止循环</li>
+</ul>
+<pre><code class="language-typescript">class LLMSingleActionAgent {
+  llm: AzureLLM
+  tools: StructuredTool[]
+  stop: string[]
+  private _prompt: string = &#39;{input}&#39;
+  constructor({ llm, tools = [], stop = [] }: LLMSingleActionAgentParams) {
+    this.llm = llm
+    this.tools = tools
+    if (stop.length &gt; 4)
+      throw new Error(&#39;up to 4 stop sequences&#39;)
+    this.stop = stop
+  }
+ }
+</code></pre>
+<h4>2.1.2.3. 定义tools</h4>
+<p>Tools有两个最重要的参数，name和description。<br>Name就是函数名，description是工具的自然语言描述，LLM 根据description来决定是否需要使用该工具。工具的描述应该非常明确，说明工具的功能、使用的时机以及不适用的情况。</p>
+<h4>2.1.2.4. 循环执行</h4>
+<p>Agent会始终进行如下事件循环直到目标被解决了或者思考迭代次数超过了最大次数：</p>
+<ul>
+<li>根据之前已经完成的所有步骤（Thought、Action、Observation）和目标（用户的问题），规划出接下来的Action（使用什么工具以及工具的输入）</li>
+<li>检测是否已经达成目标，即Action是不是ActionFinish。是的话就返回结果，不是的话说明还有行动要完成。</li>
+<li>根据Action，执行具体的工具，等待工具返回结果。工具返回的结果就是这一轮步骤的Observation。</li>
+<li>保存当前步骤到记忆上下文，如此反复</li>
+</ul>
+<pre><code class="language-typescript">async call(input: promptInputs): Promise&lt;AgentFinish&gt; {
+    const toolsByName = Object.fromEntries(
+      this.tools.map(t =&gt; [t.name, t]),
+    )
+
+    const steps: AgentStep[] = []
+    let iterations = 0
+
+    while (this.shouldContinue(iterations)) {
+      const output = await this.agent.plan(steps, input)
+      console.log(iterations, output)
+
+      // Check if the agent has finished
+      if (&#39;returnValues&#39; in output)
+        return output
+
+      const actions = Array.isArray(output)
+        ? output as AgentAction[]
+        : [output as AgentAction]
+
+      const newSteps = await Promise.all(
+        actions.map(async (action) =&gt; {
+          const tool = toolsByName[action.tool]
+
+          if (!tool)
+            throw new Error(`${action.tool} is not a valid tool, try another one.`)
+
+          const observation = await tool.call(action.toolInput)
+
+          return { action, observation: observation ?? &#39;&#39; }
+        }),
+      )
+
+      steps.push(...newSteps)
+
+      iterations++
+    }
+
+    return {
+      returnValues: { output: &#39;Agent stopped due to max iterations.&#39; },
+      log: &#39;&#39;,
+    }
+  }
+</code></pre>
+<p>循环终止条件</p>
+<ol>
+<li><code>&#39;returnValues&#39; in output</code>，获得预期结果</li>
+<li>达到最大循环次数</li>
+</ol>
+<h2>2.2. Plan and solve</h2>
+<ol>
+<li><strong>plan</strong>：将任务拆解为多个步骤</li>
+<li><strong>Solve</strong>：按步骤执行任务，上一步执行的结果会影响下一步任务的执行，可以动态调整plan</li>
+</ol>
+<h2>2.3. Plan and Replan</h2>
+<p>ReAct的一种高阶版本，包括Planner和Executor两种角色，Planner和Executor分别使用不同的提示词，Planner负责提出任务的执行计划，这个计划可能包含多个复杂的步骤。Executor负责执行任务执行。Execurot的执行结果会给Replanner进行判断，决定是输出还是重新规划。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

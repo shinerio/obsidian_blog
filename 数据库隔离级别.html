@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据库隔离级别 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>数据库隔离级别</h1>
+        <time datetime="2023-01-23T00:00:00.000Z">2023年1月23日</time>
+        <div class="tags">
+            
+            <span class="tag">database</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>本文主要目的是阐明数据库的四种隔离级别以及在mysql下实现隔离的原理。</p>
+<!--more-->
+
+<h1>1. 隔离级别</h1>
+<p>数据库事务隔离级别从低到高分别是：read uncommitted、read committed、retpeatable read、serializable，依次解决了数据库脏读、不可重复读、幻读问题。</p>
+<ul>
+<li><strong>脏读</strong>：一个事务读到了另一个事务未提交的数据</li>
+<li><strong>不可重复读</strong>：在一个事务中多次读取数据过程中发生了另一个事务对数据进行了<strong>更新</strong>，导致前后两次查询数据结果不同，主要体现在数据库数据前后数据内容的不一致。</li>
+<li> <strong>幻读</strong>：一个事务在执行过程中读取到了另一个事务已提交的插入数据；即在第一个事务开始时读取到一批数据，但此后另一个事务又插入了新数据并提交，此时第一个事务又读取这批数据但发现多了一条，即好像发生幻觉一样。主要体现在数据库数据数目不一致的情况（serializable解决了这个问题，需要锁住满足条件的所有记录以及相近的记录）</li>
+</ul>
+<h1>2. 隔离原理</h1>
+<p>Mysql的默认隔离级别是可重复读，是读已提交。数据库的隔离级别其实是依赖锁实现的。</p>
+<h2>2.1. 读未提交</h2>
+<p>读未提交其实就是数据库操作不会加锁，其实就是没有隔离。B事务能看到A事务已经修改但没有提交的数据，这时候如果A事务回滚，B事务看到的其实就是脏数据，一般情况下我们不会选用这种级别。</p>
+<h2>2.2. 读已提交</h2>
+<p>这个是pg、oracle等数据库的默认隔离级别。一个事务只能读到另一个事务已经提交的数据。在mysql中可重复读和读已提交都是通过<code>MVCC</code>进行实现的，区别在于可重读是事务启动的时候就生成read view整个事务结束都一直使用这个read view，而在读已提交中则是每执行一条语句就重新生成最新的read view。</p>
+<h2>2.3. 可重复读</h2>
+<p>mysql通过MVCC解决了不可重复读的问题，本质上是一种快照读。在事务开启的时候生成快照，后续读到的都是当时的快照数据，即使当前数据已经其他事务修改并提交。具体规则如下：</p>
+<ol>
+<li>当前事务内的更新可以读到</li>
+<li>其实事务未提交的不能读到</li>
+<li>其他事务在快照创建后提交的不能读到</li>
+<li>其他事务在快照创建前提交的可以读到（这种其实另一个事务已经结束了）</li>
+</ol>
+<p>如下，可以看到虽然B事务对数据进行了修改并提交，但是事务A第二次读到的只还是10。</p>
+<p>!<a href="mysql可重复读.html" class="internal-link">mysql可重复读</a></p>
+<p>我们在<code>postgre</code>下进行相同的测试就可以发现<code>postgre</code> 默认隔离级别是读已提交。</p>
+<p>!<a href="postgresql不可重复读.html" class="internal-link">postgresql不可重复读</a></p>
+<p>可以通过命令行设置当前事务隔离级别，即可以得到和mysql相同的预期。</p>
+<pre><code class="language-shell">postgres=# show default_transaction_isolation;
+ default_transaction_isolation 
+-------------------------------
+ read committed
+(1 row)
+postgres=# begin;
+BEGIN
+postgres=*# set default_transaction_isolation=&#39;repeatable read&#39;;
+SET
+</code></pre>
+<p>通过行级锁可以解决并发写，修改的时候需要对数据行加锁，且在事务提交时才会释放。</p>
+<blockquote>
+<p>这里需要注意一下，如果更新的条件没有用到索引的话，mysql会对所有行加行锁，然后再判断不满足的行进行释放，这个过程其实也比较影响性能。所以，如果是大表的话，建议合理设计索引，如果真的出现这种情况，那很难保证并发度。</p>
+</blockquote>
+<h2>2.4. 幻读</h2>
+<p>mysql有两种读数据方式，一种是快照读(普通select)，另一种是当前读(select ... for update,update,delete)。mysql可以完全解决快照读下的幻读问题，但是并不能完全解决当前读下的幻读问题。解决方式是使用了行锁+间隙锁，这个锁叫做 Next-Key锁。</p>
+<h3>2.4.1. 快照读</h3>
+<p>mysql通过mvcc解决了快照读下的幻读问题。当启动事务后执行查询会创建一个read view，后续的查询语句会利用这个read view在undo log版本中找到事务，即便其他事务后续插入或删除了新的数据，原事务也只会读原来的快照，避免了幻读问题。</p>
+<p>以下以<code>select ... for update</code> 举例说明，update和delete同理。</p>
+<p>!<a href="mysql快照读下解决幻读.html" class="internal-link">mysql快照读下解决幻读</a></p>
+<h3>2.4.2. 当前读</h3>
+<p>mysql数据库中会为索引维护一套B+树，用来快速定位行记录。B+索引树是有序的，所以会把这张表的索引分割成几个区间。如下图被分成了（负无穷,10）、(10,30)、(30,正无穷)三个区间，这三个区间是可以加间隙锁的。注意，mysql的间隙锁依赖于索引，否则会为整个表加上间隙锁，即所有的数据插入、删除都无法执行。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/mysql%E9%97%B4%E9%9A%99%E9%94%81.png" alt="image.png"></p>
+<p>如下操作，事务A对(10,30)区间增加了间隙锁，对数据行10和30增加的行锁，来保证不会出现幻读。<br>!<a href="mysql当前读下解决幻读.html" class="internal-link">mysql当前读下解决幻读</a></p>
+<blockquote>
+<p>使用等值条件会将值两端区间都增加间隙锁，如<code>price = 10</code> 或<code>price &lt;= 10</code> 都会将(负无穷,10)和(10,30)两个区间加锁。</p>
+</blockquote>
+<p>注意mysql并没有真正意义上解决幻读的问题，如下场景可以看出同一事务的两次查询看到的是不同的现象，因此解决幻读的最好方式是及早使用当前读的方式对数据加间隙锁。</p>
+<p>!<a href="mysql当前读下幻读问题.html" class="internal-link">mysql当前读下幻读问题</a></p>
+<h2>2.5. 串行化</h2>
+<p>要彻底解决幻读问题，只能采用串行化，简单粗暴地将所有sql命令串行化执行，显然这样会极大地影响数据库性能。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

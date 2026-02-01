@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tcpdump - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>tcpdump</h1>
+        <time datetime="2020-08-09T00:00:00.000Z">2020年8月9日</time>
+        <div class="tags">
+            
+            <span class="tag">计算机网络</span>
+            
+            <span class="tag">network</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>tcpdump是一个优秀的网络分析工具，提供了强大且简单的接口。</p>
+<!--more-->
+
+<h1>1. options</h1>
+<ul>
+<li><strong>-i any</strong> 监听所有的网卡接口，用来查看是否有网络流量</li>
+<li><strong>-i eth0</strong> 只监听eth0网卡接口</li>
+<li><strong>-D</strong> 显示可用的接口列表</li>
+<li><strong>-n</strong> 不要解析主机名</li>
+<li><strong>-nn</strong> 不要解析主机名或者端口名</li>
+<li><strong>-q</strong> 显示更少的输出(更加quiet)</li>
+<li><strong>-t</strong> 输出可读的时间戳</li>
+<li><strong>-tttt</strong> 输出最大程度可读的时间戳</li>
+<li><strong>-X</strong> 以hex和ASCII两种形式显示包的内容</li>
+<li><strong>-XX</strong> 与-X类似，增加以太网header的显示</li>
+<li><strong>-v, -vv, -vvv</strong> 显示更加多的包信息</li>
+<li><strong>-c</strong> 只读取x个包，然后停止</li>
+<li><strong>-s</strong> 指定每一个包捕获的长度，单位是byte，使用<code>-s0</code>可以捕获整个包的内容</li>
+<li><strong>-S</strong> 输出绝对的序列号</li>
+<li><strong>-e</strong> 获取以太网header</li>
+<li><strong>-E</strong> 使用提供的秘钥解密IPSEC流量</li>
+</ul>
+<h1>2. Example</h1>
+<h2>2.1. 监听所有网卡接口</h2>
+<pre><code class="language-shell">tcpdump -i any
+</code></pre>
+<h2>2.2. 监听指定网卡接口</h2>
+<pre><code class="language-bash">tcpdump -i eth0
+</code></pre>
+<h2>2.3. 显示可用接口列表</h2>
+<pre><code class="language-bash">tcpdump -D
+</code></pre>
+<h2>2.4. 指定ip</h2>
+<pre><code class="language-bash">tcpdump host 8.8.8.8
+</code></pre>
+<p>08:12:42.050004 IP 64.64.238.73.16clouds.com &gt; dns.google: ICMP echo request, id 27320, seq 1, length 64<br>08:12:42.059723 IP dns.google &gt; 64.64.238.73.16clouds.com: ICMP echo reply, id 27320, seq 1, length 64<br>08:12:43.050762 IP 64.64.238.73.16clouds.com &gt; dns.google: ICMP echo request, id 27320, seq 2, length 64<br>08:12:43.051410 IP dns.google &gt; 64.64.238.73.16clouds.com: ICMP echo reply, id 27320, seq 2, length 64<br>08:12:44.058965 IP 64.64.238.73.16clouds.com &gt; dns.google: ICMP echo request, id 27320, seq 3, length 64<br>08:12:44.059281 IP dns.google &gt; 64.64.238.73.16clouds.com: ICMP echo reply, id 27320, seq 3, length 64</p>
+<h2>2.5. 指定源或目的地址</h2>
+<pre><code class="language-bash">tcpdump src 64.64.238.73
+tcpdump dst 8.8.8.8
+</code></pre>
+<h2>2.6. 指定子网</h2>
+<pre><code class="language-bash">tcpdump net 192.168.0.0/16
+</code></pre>
+<h2>2.7. 显示绝对序列号</h2>
+<pre><code class="language-bash">tcpdump -S host google.com
+</code></pre>
+<p>08:39:14.977056 IP 64.64.238.73.16clouds.com.56270 &gt; lax31s12-in-f14.1e100.net.https: Flags [P.], seq 1389390438:1389390527, ack 2289481827, win 292, options [nop,nop,TS val 2079502004 ecr 4062705777], length 89<br>08:39:14.977429 IP lax31s12-in-f14.1e100.net.https &gt; 64.64.238.73.16clouds.com.56270: Flags [P.], seq 2289481827:2289481858, ack 1389390527, win 240, options [nop,nop,TS val 4062731918 ecr 2079502004], length 31<br>08:39:14.977457 IP 64.64.238.73.16clouds.com.56270 &gt; lax31s12-in-f14.1e100.net.https: Flags [P.], seq 1389390527:1389390822, ack 2289481858, win 292, options [nop,nop,TS val 2079502005 ecr 4062731918], length 295<br>08:39:14.982669 IP lax31s12-in-f14.1e100.net.https &gt; 64.64.238.73.16clouds.com.56270: Flags [.], ack 1389390822, win 244, options [nop,nop,TS val 4062731923 ecr 2079502005], length 0<br>08:39:15.016514 IP lax31s12-in-f14.1e100.net.https &gt; 64.64.238.73.16clouds.com.56270: Flags [P.], seq 2289481858:2289482742, ack 1389390822, win 244, options [nop,nop,TS val 4062731957 ecr 2079502005], length 884<br>08:39:15.016558 IP lax31s12-in-f14.1e100.net.https &gt; 64.64.238.73.16clouds.com.56270: Flags [P.], seq 2289482742:2289484160, ack 1389390822, win 244, options [nop,nop,TS val 4062731957 ecr 2079502005], length 1418<br>08:39:15.016578 IP 64.64.238.73.16clouds.com.56270 &gt; lax31s12-in-f14.1e100.net.https: Flags [.], ack 2289484160, win 337, options [nop,nop,TS val 2079502044 ecr 4062731957], length 0<br>08:39:15.016593 IP lax31s12-in-f14.1e100.net.https &gt; 64.64.238.73.16clouds.com.56270: Flags [P.], seq 2289484160:2289484819, ack 1389390822, win 244, options [nop,nop,TS val 4062731957 ecr 2079502005], length 659<br>08:39:15.016603 IP lax31s12-in-f14.1e100.net.https &gt; 64.64.238.73.16clouds.com.56270: Flags [P.], seq 2289484819:2289486237, ack 1389390822, win 244, options [nop,nop,TS val 4062731957 ecr 2079502005], length 1418<br>08:39:15.016608 IP 64.64.238.73.16clouds.com.56270 &gt; lax31s12-in-f14.1e100.net.https: Flags [.], ack 2289486237, win 382, options [nop,nop,TS val 2079502044 ecr 4062731957], length 0</p>
+<blockquote>
+<p>[!note]</p>
+<ul>
+<li>seq为tcp报文的序列号，按包内数据字节长度加上，如包内数据是21字节，而当前IP1发到IP2的包的seq是10的话，那下个IP1发到IP2的包的seq就是10+21=31</li>
+<li>ack为已经收到的报文的序列号，告诉对方下次从seq=ack处继续发报文</li>
+<li>win是剩余窗口大小，如win=0，表示窗口已满，告知对方暂停发包</li>
+</ul>
+</blockquote>
+<h2>2.8. 不解析ip和端口号</h2>
+<pre><code class="language-bash">tcpdump -nn host 8.8.8.8
+</code></pre>
+<p>08:46:48.586465 IP 64.64.238.73 &gt; 8.8.8.8: ICMP echo request, id 27537, seq 1, length 64<br>08:46:48.586921 IP 8.8.8.8 &gt; 64.64.238.73: ICMP echo reply, id 27537, seq 1, length 64<br>08:46:49.594835 IP 64.64.238.73 &gt; 8.8.8.8: ICMP echo request, id 27537, seq 2, length 64<br>08:46:49.596609 IP 8.8.8.8 &gt; 64.64.238.73: ICMP echo reply, id 27537, seq 2, length 64<br>08:46:50.594823 IP 64.64.238.73 &gt; 8.8.8.8: ICMP echo request, id 27537, seq 3, length 64<br>08:46:50.595311 IP 8.8.8.8 &gt; 64.64.238.73: ICMP echo reply, id 27537, seq 3, length 64</p>
+<h2>2.9. 指定协议</h2>
+<pre><code class="language-bash">tcpdump icmp
+</code></pre>
+<h2>2.10. 指定端口范围</h2>
+<pre><code class="language-bash">tcpdump portrange 0-5000
+</code></pre>
+<h2>2.11. 基于包的大小过滤流量</h2>
+<pre><code class="language-bash">tcpdump less 32
+tcpdump greater 64
+tcpdump &lt;=128
+</code></pre>
+<h2>2.12. 读取指定数量的包</h2>
+<pre><code class="language-bash">tcpdump -c 10
+</code></pre>
+<h2>2.13. 导入/导出</h2>
+<p>可以使用-w导出成PCAP，使用wireshark等可视化工具打开，或使用-r导入</p>
+<pre><code class="language-bash">tcpdump -c 10 -w test.pcap
+tcpdump -r test.pcap
+</code></pre>
+<h1>3. 组合</h1>
+<ul>
+<li>AND: <strong>and</strong> or <strong>&amp;&amp;</strong></li>
+<li>OR: <strong>or</strong> or <strong>||</strong></li>
+<li>EXCEPT: <strong>not</strong> or !</li>
+</ul>
+<pre><code class="language-bash">tcpdump -nnvvS src 10.5.2.3 and dst port 3389
+tcpdump -nvX src net 192.168.0.0/16 and dst net 10.0.0.0/8 or 172.16.0.0/16
+tcpdump dst 192.168.0.2 and src net and not icmp
+tcpdump &#39;src 10.0.2.3 and (dst port 3389 or 22)&#39;
+</code></pre>
+<h1>4. 指定的TCP标识</h1>
+<p><code>tcp[index]</code>，其中index表示数据包中的第index个字节（index从零开始），第13个字节主要用于存储tcp标识符。<code>tcp[13]=x</code>标识第13个字节值为x，<code>tcp[13] &amp; x</code>得到与x与之后的结果，可以用于提取某一bit位的值。</p>
+<p>!<a href="tcp与udp协议11-首部格式.html" class="internal-link">TCP与UDP协议<span class="tag">#1</span>.1. 首部格式</a></p>
+<h2>4.1. 显示所有的URGENT (URG)包</h2>
+<p>32二进制位<code>00100000</code>，用于取第13个字节的第3位，即URG标识。</p>
+<pre><code>tcpdump &#39;tcp[13] &amp; 32!=0&#39;
+</code></pre>
+<h2>4.2. 显示所有的ACKNOWLEDGE (ACK)包</h2>
+<pre><code>tcpdump &#39;tcp[13] &amp; 16!=0&#39;
+</code></pre>
+<h2>4.3. 显示所有的PUSH(PSH)包</h2>
+<pre><code>tcpdump &#39;tcp[13] &amp; 8!=0&#39;
+</code></pre>
+<h2>4.4. 显示所有的RESET(RST)包</h2>
+<pre><code>tcpdump &#39;tcp[13] &amp; 4!=0&#39;
+</code></pre>
+<h2>4.5. 显示所有的SYNCHRONIZE (SYN) 包</h2>
+<pre><code>tcpdump &#39;tcp[13] &amp; 2!=0&#39;
+</code></pre>
+<h2>4.6. 显示所有的FINISH(FIN)包</h2>
+<pre><code>tcpdump &#39;tcp[13] &amp; 1!=0&#39;
+</code></pre>
+<h2>4.7. 显示所有的SYNCHRONIZE/ACKNOWLEDGE (SYNACK)包</h2>
+<pre><code>tcpdump &#39;tcp[13]=18&#39;
+</code></pre>
+<h2>4.8. 参考链接</h2>
+<p><a href="https://github.com/mylxsw/growing-up/blob/master/doc/tcpdump%E7%AE%80%E6%98%8E%E6%95%99%E7%A8%8B.md">tcpdump简明教程</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

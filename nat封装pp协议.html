@@ -1,0 +1,1864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nat封装Pp协议 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Nat封装Pp协议</h1>
+        <time datetime="2026-01-03T13:04:29.212Z">2026年1月3日</time>
+        <div class="tags">
+            
+            <span class="tag">excalidraw</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>==⚠  Switch to EXCALIDRAW VIEW in the MORE OPTIONS menu of this document. ⚠==</p>
+<h1>Text Elements</h1>
+<p>client ^pdsoIL0z</p>
+<p>NAT ^lEtOOR5s</p>
+<p>Server ^7HyKnicB</p>
+<p>SYN<br>seq0 ^3wBZM9az</p>
+<p>SYN<br>seq0 ^R34LJTTX</p>
+<p>SYN ACK<br>seq1<br>    ack seq0+1 ^ku3h4ofD</p>
+<p>SYN ACK<br>seq1<br>ack seq0+1 ^VaSJirUE</p>
+<p>ACK<br>se0+1<br>ack seq1+1 ^5yzdFJfC</p>
+<p>ACK<br>seq0+1<br>ack seq1+1 ^uJx2rLkd</p>
+<p>PSH ACK<br>seq0+1<br>ack seq1+1 ^skKSIqjO</p>
+<p>PP<br>seq0+1<br>ack seq+1 ^MMMDiihE</p>
+<p>PSH ACK<br>seq0+1+pp_len<br>ack seq1+1 ^uUkvWLB5</p>
+<p>在发送第一个数据报文前，发送pp数据包 ^LV7br3Ql</p>
+<p>用户的数据包中的seq需要额外加上pp_len的长度 ^b9Iy3zcE</p>
+<p>ACK<br>seq1+1<br>ack seq0+1+pp_len ^0DvdQori</p>
+<p>ACK<br>seq1+1<br>ack seq0+len+1 ^bv0yq8Fc</p>
+<p>ACK<br>seq1+2<br>ack seq0+1+pp_len+len ^L4xd5TyH</p>
+<p>%%</p>
+<h1>Drawing</h1>
+<pre><code class="language-json">{
+    &quot;type&quot;: &quot;excalidraw&quot;,
+    &quot;version&quot;: 2,
+    &quot;source&quot;: &quot;https://excalidraw.com&quot;,
+    &quot;elements&quot;: [
+        {
+            &quot;type&quot;: &quot;line&quot;,
+            &quot;version&quot;: 113,
+            &quot;versionNonce&quot;: 1032280207,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;m3iF9m4FE5h3X6e0NLHGo&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -200,
+            &quot;y&quot;: -180,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 0,
+            &quot;height&quot;: 780,
+            &quot;seed&quot;: 81634927,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: null,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    780
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;line&quot;,
+            &quot;version&quot;: 253,
+            &quot;versionNonce&quot;: 1134787553,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;nlPzc8VJPtpiIHzRuinNr&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 0,
+            &quot;y&quot;: -180,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 0,
+            &quot;height&quot;: 780,
+            &quot;seed&quot;: 1638577729,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: null,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    780
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;line&quot;,
+            &quot;version&quot;: 269,
+            &quot;versionNonce&quot;: 1464561327,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;YEG-0OkChANzMuw0Z9J82&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 220,
+            &quot;y&quot;: -180,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 0,
+            &quot;height&quot;: 780,
+            &quot;seed&quot;: 1755827489,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: null,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    0,
+                    780
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 18,
+            &quot;versionNonce&quot;: 678123457,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;pdsoIL0z&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -180,
+            &quot;y&quot;: -220,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 48,
+            &quot;height&quot;: 23,
+            &quot;seed&quot;: 1723098049,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;client&quot;,
+            &quot;rawText&quot;: &quot;client&quot;,
+            &quot;baseline&quot;: 19,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;client&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 31,
+            &quot;versionNonce&quot;: 1751630031,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;lEtOOR5s&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -20,
+            &quot;y&quot;: -220,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 40,
+            &quot;height&quot;: 23,
+            &quot;seed&quot;: 411947681,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;NAT&quot;,
+            &quot;rawText&quot;: &quot;NAT&quot;,
+            &quot;baseline&quot;: 19,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;NAT&quot;
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 23,
+            &quot;versionNonce&quot;: 59553697,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;7HyKnicB&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 140,
+            &quot;y&quot;: -220,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 60,
+            &quot;height&quot;: 23,
+            &quot;seed&quot;: 121843041,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 20,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;Server&quot;,
+            &quot;rawText&quot;: &quot;Server&quot;,
+            &quot;baseline&quot;: 19,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;Server&quot;
+        },
+        {
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;version&quot;: 20,
+            &quot;versionNonce&quot;: 1383386863,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;091QgiAn4BgPzzu1P4SOf&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -200,
+            &quot;y&quot;: -160,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 200,
+            &quot;height&quot;: 43,
+            &quot;seed&quot;: 468416719,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;3wBZM9az&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    200,
+                    43
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 15,
+            &quot;versionNonce&quot;: 1463229313,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;3wBZM9az&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -98,
+            &quot;y&quot;: -156,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 36,
+            &quot;height&quot;: 37,
+            &quot;seed&quot;: 656757519,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;SYN\nseq0&quot;,
+            &quot;rawText&quot;: &quot;SYN\nseq0&quot;,
+            &quot;baseline&quot;: 34,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;091QgiAn4BgPzzu1P4SOf&quot;,
+            &quot;originalText&quot;: &quot;SYN\nseq0&quot;
+        },
+        {
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;version&quot;: 25,
+            &quot;versionNonce&quot;: 804985103,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;Kl1DWtKqsz1BExsZ4BdiD&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 0,
+            &quot;y&quot;: -120,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 220,
+            &quot;height&quot;: 40,
+            &quot;seed&quot;: 682529505,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;R34LJTTX&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    220,
+                    40
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 13,
+            &quot;versionNonce&quot;: 866780001,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;R34LJTTX&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 62,
+            &quot;y&quot;: -119,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 36,
+            &quot;height&quot;: 38,
+            &quot;seed&quot;: 1388412111,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;SYN\nseq0&quot;,
+            &quot;rawText&quot;: &quot;SYN\nseq0&quot;,
+            &quot;baseline&quot;: 34,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;Kl1DWtKqsz1BExsZ4BdiD&quot;,
+            &quot;originalText&quot;: &quot;SYN\nseq0&quot;
+        },
+        {
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;version&quot;: 31,
+            &quot;versionNonce&quot;: 913514287,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;PgM1d1K7TWnTzGUjpFETl&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 220,
+            &quot;y&quot;: -60,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 220,
+            &quot;height&quot;: 60,
+            &quot;seed&quot;: 388453775,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;ku3h4ofD&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -220,
+                    60
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 95,
+            &quot;versionNonce&quot;: 1966403393,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;ku3h4ofD&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 49.5,
+            &quot;y&quot;: -58.5,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 101,
+            &quot;height&quot;: 57,
+            &quot;seed&quot;: 11136175,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;SYN ACK\nseq1\n    ack seq0+1&quot;,
+            &quot;rawText&quot;: &quot;SYN ACK\nseq1\n    ack seq0+1&quot;,
+            &quot;baseline&quot;: 53,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;PgM1d1K7TWnTzGUjpFETl&quot;,
+            &quot;originalText&quot;: &quot;SYN ACK\nseq1\n    ack seq0+1&quot;
+        },
+        {
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;version&quot;: 17,
+            &quot;versionNonce&quot;: 1480941903,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;jXDHyzzS1Nv1w7QQgzhrQ&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 0,
+            &quot;y&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 200,
+            &quot;height&quot;: 60,
+            &quot;seed&quot;: 820767841,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;VaSJirUE&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -200,
+                    60
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 52,
+            &quot;versionNonce&quot;: 1110925089,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;VaSJirUE&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -141.5,
+            &quot;y&quot;: 1.5,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 83,
+            &quot;height&quot;: 56,
+            &quot;seed&quot;: 2015618863,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;SYN ACK\nseq1\nack seq0+1&quot;,
+            &quot;rawText&quot;: &quot;SYN ACK\nseq1\nack seq0+1&quot;,
+            &quot;baseline&quot;: 52,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;jXDHyzzS1Nv1w7QQgzhrQ&quot;,
+            &quot;originalText&quot;: &quot;SYN ACK\nseq1\nack seq0+1&quot;
+        },
+        {
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;version&quot;: 15,
+            &quot;versionNonce&quot;: 650796911,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;xcpjY_ot7TvgA2vdD5RS1&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -200,
+            &quot;y&quot;: 80,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 200,
+            &quot;height&quot;: 60,
+            &quot;seed&quot;: 503602369,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;5yzdFJfC&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    200,
+                    60
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 31,
+            &quot;versionNonce&quot;: 1226887937,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;5yzdFJfC&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: -141.5,
+            &quot;y&quot;: 81.5,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 83,
+            &quot;height&quot;: 56,
+            &quot;seed&quot;: 1225076801,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349967,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;ACK\nse0+1\nack seq1+1&quot;,
+            &quot;rawText&quot;: &quot;ACK\nse0+1\nack seq1+1&quot;,
+            &quot;baseline&quot;: 52,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;xcpjY_ot7TvgA2vdD5RS1&quot;,
+            &quot;originalText&quot;: &quot;ACK\nse0+1\nack seq1+1&quot;
+        },
+        {
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;version&quot;: 16,
+            &quot;versionNonce&quot;: 1951046031,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;-ZL01wsvcyUuI1vBsMiF0&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 20,
+            &quot;y&quot;: 160,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 200,
+            &quot;height&quot;: 60,
+            &quot;seed&quot;: 1281048897,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;uJx2rLkd&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    200,
+                    60
+                ]
+            ]
+        },
+        {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;version&quot;: 38,
+            &quot;versionNonce&quot;: 1047579361,
+            &quot;isDeleted&quot;: false,
+            &quot;id&quot;: &quot;uJx2rLkd&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;angle&quot;: 0,
+            &quot;x&quot;: 78.5,
+            &quot;y&quot;: 161.5,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;width&quot;: 83,
+            &quot;height&quot;: 56,
+            &quot;seed&quot;: 53995489,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;boundElements&quot;: [],
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;text&quot;: &quot;ACK\nseq0+1\nack seq1+1&quot;,
+            &quot;rawText&quot;: &quot;ACK\nseq0+1\nack seq1+1&quot;,
+            &quot;baseline&quot;: 52,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;containerId&quot;: &quot;-ZL01wsvcyUuI1vBsMiF0&quot;,
+            &quot;originalText&quot;: &quot;ACK\nseq0+1\nack seq1+1&quot;
+        },
+        {
+            &quot;id&quot;: &quot;Z8TIIBFwBqJItffKQD5BC&quot;,
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;x&quot;: -200,
+            &quot;y&quot;: 160,
+            &quot;width&quot;: 200,
+            &quot;height&quot;: 60,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;seed&quot;: 1115679009,
+            &quot;version&quot;: 12,
+            &quot;versionNonce&quot;: 905875375,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;skKSIqjO&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    200,
+                    60
+                ]
+            ],
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;
+        },
+        {
+            &quot;id&quot;: &quot;skKSIqjO&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -141.5,
+            &quot;y&quot;: 161.5,
+            &quot;width&quot;: 83,
+            &quot;height&quot;: 57,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 1487985761,
+            &quot;version&quot;: 31,
+            &quot;versionNonce&quot;: 448186049,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;PSH ACK\nseq0+1\nack seq1+1&quot;,
+            &quot;rawText&quot;: &quot;PSH ACK\nseq0+1\nack seq1+1&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;baseline&quot;: 53,
+            &quot;containerId&quot;: &quot;Z8TIIBFwBqJItffKQD5BC&quot;,
+            &quot;originalText&quot;: &quot;PSH ACK\nseq0+1\nack seq1+1&quot;
+        },
+        {
+            &quot;id&quot;: &quot;946BNL1fR9ar5RPGABil0&quot;,
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;x&quot;: 0,
+            &quot;y&quot;: 220,
+            &quot;width&quot;: 220,
+            &quot;height&quot;: 60,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;seed&quot;: 1687925263,
+            &quot;version&quot;: 27,
+            &quot;versionNonce&quot;: 1191747745,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;MMMDiihE&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705846008912,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    220,
+                    60
+                ]
+            ],
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: {
+                &quot;elementId&quot;: &quot;LV7br3Ql&quot;,
+                &quot;focus&quot;: -0.941385435168739,
+                &quot;gap&quot;: 1
+            },
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;
+        },
+        {
+            &quot;id&quot;: &quot;MMMDiihE&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: 63,
+            &quot;y&quot;: 221.5,
+            &quot;width&quot;: 74,
+            &quot;height&quot;: 57,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 66969025,
+            &quot;version&quot;: 35,
+            &quot;versionNonce&quot;: 412239521,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;PP\nseq0+1\nack seq+1&quot;,
+            &quot;rawText&quot;: &quot;PP\nseq0+1\nack seq+1&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;baseline&quot;: 53,
+            &quot;containerId&quot;: &quot;946BNL1fR9ar5RPGABil0&quot;,
+            &quot;originalText&quot;: &quot;PP\nseq0+1\nack seq+1&quot;
+        },
+        {
+            &quot;id&quot;: &quot;KYP1U1f_WHlWUSBQx515G&quot;,
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;x&quot;: 0,
+            &quot;y&quot;: 280,
+            &quot;width&quot;: 219,
+            &quot;height&quot;: 50.17069370577428,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;seed&quot;: 894812239,
+            &quot;version&quot;: 59,
+            &quot;versionNonce&quot;: 30276289,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;uUkvWLB5&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705846020256,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    219,
+                    50.17069370577428
+                ]
+            ],
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: {
+                &quot;elementId&quot;: &quot;b9Iy3zcE&quot;,
+                &quot;focus&quot;: -0.7541282169237863,
+                &quot;gap&quot;: 1
+            },
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;
+        },
+        {
+            &quot;id&quot;: &quot;uUkvWLB5&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: 54.5,
+            &quot;y&quot;: 281.5,
+            &quot;width&quot;: 111,
+            &quot;height&quot;: 57,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 705625903,
+            &quot;version&quot;: 49,
+            &quot;versionNonce&quot;: 1325948929,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705845731943,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;PSH ACK\nseq0+1+pp_len\nack seq1+1&quot;,
+            &quot;rawText&quot;: &quot;PSH ACK\nseq0+1+pp_len\nack seq1+1&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;baseline&quot;: 53,
+            &quot;containerId&quot;: &quot;KYP1U1f_WHlWUSBQx515G&quot;,
+            &quot;originalText&quot;: &quot;PSH ACK\nseq0+1+pp_len\nack seq1+1&quot;
+        },
+        {
+            &quot;id&quot;: &quot;LV7br3Ql&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: 220,
+            &quot;y&quot;: 260,
+            &quot;width&quot;: 291,
+            &quot;height&quot;: 23,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 388796513,
+            &quot;version&quot;: 53,
+            &quot;versionNonce&quot;: 1586878991,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;id&quot;: &quot;946BNL1fR9ar5RPGABil0&quot;,
+                    &quot;type&quot;: &quot;arrow&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;在发送第一个数据报文前，发送pp数据包&quot;,
+            &quot;rawText&quot;: &quot;在发送第一个数据报文前，发送pp数据包&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 17,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;在发送第一个数据报文前，发送pp数据包&quot;
+        },
+        {
+            &quot;id&quot;: &quot;b9Iy3zcE&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: 220,
+            &quot;y&quot;: 320,
+            &quot;width&quot;: 347,
+            &quot;height&quot;: 23,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 2070088961,
+            &quot;version&quot;: 80,
+            &quot;versionNonce&quot;: 1688464975,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;id&quot;: &quot;KYP1U1f_WHlWUSBQx515G&quot;,
+                    &quot;type&quot;: &quot;arrow&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705846025279,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;用户的数据包中的seq需要额外加上pp_len的长度&quot;,
+            &quot;rawText&quot;: &quot;用户的数据包中的seq需要额外加上pp_len的长度&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 17,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;用户的数据包中的seq需要额外加上pp_len的长度&quot;
+        },
+        {
+            &quot;id&quot;: &quot;sK_9CSsIObfXp5KCyzwz-&quot;,
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;x&quot;: 220,
+            &quot;y&quot;: 360,
+            &quot;width&quot;: 220,
+            &quot;height&quot;: 80,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;seed&quot;: 2107300527,
+            &quot;version&quot;: 59,
+            &quot;versionNonce&quot;: 1924010561,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;0DvdQori&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705846025279,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -220,
+                    80
+                ]
+            ],
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;
+        },
+        {
+            &quot;id&quot;: &quot;0DvdQori&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: 39.5,
+            &quot;y&quot;: 371.5,
+            &quot;width&quot;: 141,
+            &quot;height&quot;: 57,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 2109679361,
+            &quot;version&quot;: 86,
+            &quot;versionNonce&quot;: 1858584065,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705845897608,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;ACK\nseq1+1\nack seq0+1+pp_len&quot;,
+            &quot;rawText&quot;: &quot;ACK\nseq1+1\nack seq0+1+pp_len&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;baseline&quot;: 53,
+            &quot;containerId&quot;: &quot;sK_9CSsIObfXp5KCyzwz-&quot;,
+            &quot;originalText&quot;: &quot;ACK\nseq1+1\nack seq0+1+pp_len&quot;
+        },
+        {
+            &quot;id&quot;: &quot;pVblaUBH11WWGCU9_zIct&quot;,
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;x&quot;: 0,
+            &quot;y&quot;: 500,
+            &quot;width&quot;: 200,
+            &quot;height&quot;: 80,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;seed&quot;: 166993505,
+            &quot;version&quot;: 23,
+            &quot;versionNonce&quot;: 501473871,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;bv0yq8Fc&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -200,
+                    80
+                ]
+            ],
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;
+        },
+        {
+            &quot;id&quot;: &quot;bv0yq8Fc&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: -157,
+            &quot;y&quot;: 511.5,
+            &quot;width&quot;: 114,
+            &quot;height&quot;: 57,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 1081383233,
+            &quot;version&quot;: 36,
+            &quot;versionNonce&quot;: 209546785,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;ACK\nseq1+1\nack seq0+len+1&quot;,
+            &quot;rawText&quot;: &quot;ACK\nseq1+1\nack seq0+len+1&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;baseline&quot;: 53,
+            &quot;containerId&quot;: &quot;pVblaUBH11WWGCU9_zIct&quot;,
+            &quot;originalText&quot;: &quot;ACK\nseq1+1\nack seq0+len+1&quot;
+        },
+        {
+            &quot;id&quot;: &quot;fErEF9rmvj4MQiaTUdvbN&quot;,
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;x&quot;: 220,
+            &quot;y&quot;: 440,
+            &quot;width&quot;: 220,
+            &quot;height&quot;: 60,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;seed&quot;: 109992239,
+            &quot;version&quot;: 16,
+            &quot;versionNonce&quot;: 384876655,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: [
+                {
+                    &quot;type&quot;: &quot;text&quot;,
+                    &quot;id&quot;: &quot;L4xd5TyH&quot;
+                }
+            ],
+            &quot;updated&quot;: 1705845349968,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -220,
+                    60
+                ]
+            ],
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;
+        },
+        {
+            &quot;id&quot;: &quot;L4xd5TyH&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: 24.5,
+            &quot;y&quot;: 441.5,
+            &quot;width&quot;: 171,
+            &quot;height&quot;: 57,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [
+                &quot;AZdGx_Evv6aQuvjjQz9d5&quot;
+            ],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 500192399,
+            &quot;version&quot;: 63,
+            &quot;versionNonce&quot;: 1842455919,
+            &quot;isDeleted&quot;: false,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705846004790,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;ACK\nseq1+2\nack seq0+1+pp_len+len&quot;,
+            &quot;rawText&quot;: &quot;ACK\nseq1+2\nack seq0+1+pp_len+len&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;center&quot;,
+            &quot;verticalAlign&quot;: &quot;middle&quot;,
+            &quot;baseline&quot;: 53,
+            &quot;containerId&quot;: &quot;fErEF9rmvj4MQiaTUdvbN&quot;,
+            &quot;originalText&quot;: &quot;ACK\nseq1+2\nack seq0+1+pp_len+len&quot;
+        },
+        {
+            &quot;id&quot;: &quot;LX1cU5NO&quot;,
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;x&quot;: 231.95261101973682,
+            &quot;y&quot;: 279.7216796875,
+            &quot;width&quot;: 5,
+            &quot;height&quot;: 19,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: null,
+            &quot;seed&quot;: 1056830735,
+            &quot;version&quot;: 37,
+            &quot;versionNonce&quot;: 1677016911,
+            &quot;isDeleted&quot;: true,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705844875526,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;text&quot;: &quot;&quot;,
+            &quot;rawText&quot;: &quot;&quot;,
+            &quot;fontSize&quot;: 16,
+            &quot;fontFamily&quot;: 2,
+            &quot;textAlign&quot;: &quot;left&quot;,
+            &quot;verticalAlign&quot;: &quot;top&quot;,
+            &quot;baseline&quot;: 15,
+            &quot;containerId&quot;: null,
+            &quot;originalText&quot;: &quot;&quot;
+        },
+        {
+            &quot;id&quot;: &quot;qITWz6xeazbBgd-D1Q7WR&quot;,
+            &quot;type&quot;: &quot;arrow&quot;,
+            &quot;x&quot;: 200,
+            &quot;y&quot;: 300,
+            &quot;width&quot;: 200,
+            &quot;height&quot;: 40,
+            &quot;angle&quot;: 0,
+            &quot;strokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+            &quot;backgroundColor&quot;: &quot;transparent&quot;,
+            &quot;fillStyle&quot;: &quot;hachure&quot;,
+            &quot;strokeWidth&quot;: 0.5,
+            &quot;strokeStyle&quot;: &quot;solid&quot;,
+            &quot;roughness&quot;: 0,
+            &quot;opacity&quot;: 100,
+            &quot;groupIds&quot;: [],
+            &quot;roundness&quot;: {
+                &quot;type&quot;: 2
+            },
+            &quot;seed&quot;: 751730031,
+            &quot;version&quot;: 12,
+            &quot;versionNonce&quot;: 2066489409,
+            &quot;isDeleted&quot;: true,
+            &quot;boundElements&quot;: null,
+            &quot;updated&quot;: 1705844885169,
+            &quot;link&quot;: null,
+            &quot;locked&quot;: false,
+            &quot;points&quot;: [
+                [
+                    0,
+                    0
+                ],
+                [
+                    -200,
+                    40
+                ]
+            ],
+            &quot;lastCommittedPoint&quot;: null,
+            &quot;startBinding&quot;: null,
+            &quot;endBinding&quot;: null,
+            &quot;startArrowhead&quot;: null,
+            &quot;endArrowhead&quot;: &quot;arrow&quot;
+        }
+    ],
+    &quot;appState&quot;: {
+        &quot;theme&quot;: &quot;light&quot;,
+        &quot;viewBackgroundColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#ffffff&lt;/span&gt;&quot;,
+        &quot;currentItemStrokeColor&quot;: &quot;&lt;span class=&quot;tag&quot;&gt;#000000&lt;/span&gt;&quot;,
+        &quot;currentItemBackgroundColor&quot;: &quot;transparent&quot;,
+        &quot;currentItemFillStyle&quot;: &quot;hachure&quot;,
+        &quot;currentItemStrokeWidth&quot;: 0.5,
+        &quot;currentItemStrokeStyle&quot;: &quot;solid&quot;,
+        &quot;currentItemRoughness&quot;: 0,
+        &quot;currentItemOpacity&quot;: 100,
+        &quot;currentItemFontFamily&quot;: 2,
+        &quot;currentItemFontSize&quot;: 16,
+        &quot;currentItemTextAlign&quot;: &quot;left&quot;,
+        &quot;currentItemStartArrowhead&quot;: null,
+        &quot;currentItemEndArrowhead&quot;: &quot;arrow&quot;,
+        &quot;scrollX&quot;: 307.63157894736867,
+        &quot;scrollY&quot;: 67.14638157894694,
+        &quot;zoom&quot;: {
+            &quot;value&quot;: 0.9500000000000001
+        },
+        &quot;currentItemRoundness&quot;: &quot;round&quot;,
+        &quot;gridSize&quot;: 20,
+        &quot;colorPalette&quot;: {},
+        &quot;previousGridSize&quot;: null
+    },
+    &quot;files&quot;: {}
+}
+</code></pre>
+<p>%%</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

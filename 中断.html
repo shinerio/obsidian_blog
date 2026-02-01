@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中断 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>中断</h1>
+        <time datetime="2026-01-03T13:04:29.276Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 中断（Interrupt）的定义</h1>
+<p><strong>中断</strong>是计算机系统中一种关键机制，允许处理器<strong>暂停当前执行的任务</strong>，转去处理更高优先级的紧急事件，处理完成后<strong>恢复原任务</strong>。中断机制提高了系统的响应速度和资源利用率，是操作系统实现多任务、实时响应的基础。</p>
+<h1>2. 硬件中断（Hardware Interrupt） vs 软件中断（Software Interrupt）</h1>
+<table>
+<thead>
+<tr>
+<th><strong>特征</strong></th>
+<th><strong>硬件中断</strong></th>
+<th><strong>软件中断</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>触发源</strong></td>
+<td>外部硬件设备（如键盘、网卡、定时器）</td>
+<td>CPU执行特定指令（如<code>int 0x80</code>）或程序异常（如除零错误）</td>
+</tr>
+<tr>
+<td><strong>同步性</strong></td>
+<td><strong>异步</strong>：随机发生，与CPU当前指令无关</td>
+<td><strong>同步</strong>：由正在执行的程序主动触发</td>
+</tr>
+<tr>
+<td><strong>目的</strong></td>
+<td>通知CPU外部事件（如数据到达、设备就绪）</td>
+<td>请求系统服务（如系统调用）或处理程序错误</td>
+</tr>
+<tr>
+<td><strong>中断号（IRQ）</strong></td>
+<td>由硬件分配固定IRQ（如IRQ1对应键盘）</td>
+<td>由软件指定（如Linux系统调用使用<code>0x80</code>中断号）</td>
+</tr>
+<tr>
+<td><strong>处理流程</strong></td>
+<td>1. 设备发送中断信号到中断控制器（如APIC）  <br>2. CPU保存现场，跳转到中断处理程序</td>
+<td>1. 执行<code>int</code>指令或触发异常  <br>2. CPU直接查表跳转到处理程序</td>
+</tr>
+<tr>
+<td><strong>典型场景</strong></td>
+<td>网卡收到数据包、硬盘I/O完成、键盘输入</td>
+<td>应用程序调用系统API（如读写文件）、除零错误</td>
+</tr>
+<tr>
+<td><strong>优先级</strong></td>
+<td>可配置优先级（如时钟中断 &gt; 磁盘中断）</td>
+<td>通常由操作系统定义（如异常 &gt; 普通系统调用）</td>
+</tr>
+<tr>
+<td><strong>屏蔽能力</strong></td>
+<td>可通过屏蔽中断（CLI指令）临时禁用</td>
+<td>不可屏蔽（如某些异常必须处理）</td>
+</tr>
+</tbody></table>
+<h1>3. 硬件中断详解</h1>
+<ol>
+<li><strong>触发过程</strong>：<ul>
+<li>设备通过物理信号线（如INTR、NMI）或消息信号（如MSI-X）通知中断控制器。</li>
+<li>中断控制器仲裁优先级后，向CPU发送中断请求。</li>
+</ul>
+</li>
+<li><strong>处理步骤</strong>：<ul>
+<li>CPU完成当前指令后，保存现场（寄存器、程序计数器）。</li>
+<li>根据中断号查询<strong>中断向量表</strong>，跳转到对应的<strong>中断服务程序（ISR）</strong>。</li>
+<li>ISR处理完成后，通过<code>IRET</code>指令恢复现场。</li>
+</ul>
+</li>
+<li><strong>例子</strong>：<ul>
+<li><strong>时钟中断</strong>：由定时器周期性触发，用于任务调度。</li>
+<li><strong>网卡中断</strong>：数据包到达时触发，通知CPU读取数据。</li>
+</ul>
+</li>
+</ol>
+<h1>4. 软件中断详解</h1>
+<ol>
+<li><strong>触发方式</strong>：<ul>
+<li><strong>主动调用</strong>：程序执行<code>int n</code>指令（如Linux系统调用<code>int 0x80</code>）。</li>
+<li><strong>异常触发</strong>：CPU检测到错误（如缺页、除零），自动生成中断。</li>
+</ul>
+</li>
+<li><strong>处理步骤</strong>：<ul>
+<li>CPU直接根据中断号跳转到预设的处理程序（如系统调用处理函数或异常处理程序）。</li>
+<li>处理完成后可能终止程序（如段错误）或恢复执行（如缺页处理）。</li>
+</ul>
+</li>
+<li><strong>例子</strong>：<ul>
+<li><strong>系统调用</strong>：用户程序通过<code>int 0x80</code>进入内核态执行特权操作。</li>
+<li><strong>断点调试</strong>：调试器利用<code>int 3</code>指令触发中断以暂停程序。</li>
+</ul>
+</li>
+</ol>
+<h1>5. 关键区别总结</h1>
+<ol>
+<li><strong>触发源</strong>：<ul>
+<li>硬件中断来自外部设备，软件中断来自CPU内部（指令或异常）。</li>
+</ul>
+</li>
+<li><strong>同步性</strong>：<ul>
+<li>硬件中断是异步事件，软件中断是同步执行的必然结果。</li>
+</ul>
+</li>
+<li><strong>用途</strong>：<ul>
+<li>硬件中断处理外部通信，软件中断实现系统服务或错误处理。</li>
+</ul>
+</li>
+<li><strong>响应延迟</strong>：<ul>
+<li>硬件中断可能被屏蔽或延迟处理，软件中断通常立即响应。</li>
+</ul>
+</li>
+</ol>
+<h1>6. 实际应用中的协同</h1>
+<ul>
+<li><strong>操作系统内核</strong>：混合使用两者。例如，网卡收到数据时触发硬件中断，内核处理数据后通过软件中断通知用户程序。</li>
+<li><strong>性能权衡</strong>：高频硬件中断可能引入开销，因此现代网卡支持<strong>轮询模式</strong>或<strong>中断合并</strong>（如NAPI）。</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

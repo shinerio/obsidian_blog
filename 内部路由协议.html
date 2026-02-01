@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>路由协议 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>路由协议</h1>
+        <time datetime="2020-04-26T00:00:00.000Z">2020年4月26日</time>
+        <div class="tags">
+            
+            <span class="tag">network</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>路由是选择路径并将报文沿着选择的路径进行转发的过程。</p>
+<!--more-->  
+
+<h1>1. 路由器</h1>
+<h2>1.1. 路由器功能</h2>
+<p>路由器从功能上可以划分为：</p>
+<ul>
+<li><font color=red>路由选择</font>：使用路由协议（或手工静态配置的方式）获取整个网络的拓扑结构，构造、维护路由表。</li>
+<li><font color=red>分组转发</font>：分组转发结构由交换结构、一组输入端口和一组输出端口构成。<ol>
+<li><font color=blue>IP分组检查</font>：检查版本号，检查分组头字段，计算头校验和。</li>
+<li><font color=blue>目的IP地址分析与路由表查找</font>：决定分组的输出接口和到达目的IP地址的下一跳节点。</li>
+<li><font color=blue>分组TTL控制</font>：路由器调整TTL值字段，防止分组在网络中无终止循环。本地递交的分组TTL值要大于0。对于向外转发的分组，首先TTL值减去1，在实际转发之前还要重新检查TTL值。TTL值过期的分组要丢掉，同时还可能向分组的发送者通告错误信息。</li>
+<li><font color=blue>校验和计算</font>：TTL字段的变化，要求重新计算校验和。</li>
+<li><font color=blue>IP分片</font>：为了适应输出网络接口的MTU(Maximum Transmission Unit)值，有时需要分片处理。分片对性能的影响比较大，现在由于PMTU技术的应用，分片操作并不多见。</li>
+</ol>
+</li>
+</ul>
+<blockquote>
+<p>对于IPv4包，路径MTU发现通过在传出包的IP头中设置Don&#39;t Fragment (DF)标志位来工作。然后，任何路径上MTU小于数据包的设备都将丢弃它，并返回包含其MTU过大的ICMPv4(类型3、代码4)数据包，从而允许源主机适当地减小其路径MTU。</p>
+</blockquote>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427143715.png" alt=""></p>
+<h2>1.2. 路由分组转发过程</h2>
+<ol>
+<li>从数据报的首部提取目的主机的IP地址D，得到目的网络地址N</li>
+<li>若N就是与此路由器直接相连的某个网络地址，则进行直接交付</li>
+<li>若路由表中有目的地址为D的特定主机路由，则把数据报传送给表中所指明的下一跳路由器</li>
+<li>若路由表中有到达网络N的路由，则把数据报传送给路由表中所指明的下一跳路由器</li>
+<li>若路由表中有一个默认路由，则把数据报传送给路由表中所指明的默认路由器</li>
+<li>报告转发分组出错</li>
+</ol>
+<blockquote>
+<p>路由选择使用CIDR技术，通过最长前缀匹配来定位最精准的一条路由信息。</p>
+</blockquote>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427145443.png" alt=""></p>
+<h1>2. 路由协议</h1>
+<p>路由选择协议都是自适应的，能随着网络通信量和拓扑结构的变化而自适应地进行调整。互联网可以划分为许多较小的自治系统（Autonomous system, AS），不同的AS可以采用不同的路由选择协议。路由选择协议主要可以分为两大类：</p>
+<ul>
+<li>内部网关协议（Interior Gateway Protocol，IGP）：RIP、OSPF和IS-IS</li>
+<li>外部网关协议（Exterior Gateway Protocol，EGP）：BGP</li>
+</ul>
+<h2>2.1. 路径算法</h2>
+<p>路由算法的本质是寻找最短路径，最短的含义取决于对链路长度的定义。长度通常是一个正数，它可以是物理距离的长短、时延的大小、各个节点队列长度等等。如果长度取1，则最短路由即为最小跳数 （中转次数）的路由。其次，链路的长度随着时间可能是变化的，它取决于链路拥塞情况。路由中使用最大的是Dijkstra算法，其是从一个顶点到其余各顶点的最短路径算法，解决的是有权图中最短路径问题。</p>
+<h2>2.2. 内部网关协议IGP</h2>
+<h3>2.2.1. RIP</h3>
+<h4>2.2.1.1. 简介</h4>
+<p>RIP （Routing Information Protocol，路由信息协议）是一种<strong>基于距离向量</strong>的路由选择协议。距离是指跳数，设备到与他直连网络的设备跳数为0，然后每经过一个<strong>三层</strong>设备跳数增加1，也就是度量值等于从本网络到达目网络间的三层设备数量。跳数最多为 15，超过 15 表示不可达。</p>
+<p>由于RIP的实现较为简单，在配置和维护管理方面也远比OSPF和IS-IS容易，因此RIP主要应用于<font color=blue>规模较小的网络</font>中，例如校园网以及结构较简单的地区性网络。对于更为复杂的环境和大型网络，一般不使用RIP协议。RIP通过<strong>UDP报文</strong>进行路由信息的交换，使用的端口号为520。所以它又是一个不可靠的路由协议。</p>
+<h4>2.2.1.2. 更新机制</h4>
+<p>RIP协议有两种更新机制：定期更新和触发更新。定期更新是根据设置的更新计时器定期发送RIP路由通告。而触发更新是RIP路由器一旦察觉到网络变化，就尽快甚至是立即发送更新报文，而不等待更新周期结束。只要触发更新的速度足够快，就可以大大地防止“计数到无穷大”的发生，但是这一现象还是有可能发生的，详见<a href="内部路由协议af58f6rip环路问题.html" class="internal-link">内部路由协议#^af58f6|RIP环路问题</a>。</p>
+<p>两种更新机制都遵循相同的更新规则：</p>
+<ol>
+<li>如果更新的某路由表项在路由表中没有，则直接在路由表中添加该路由表项</li>
+<li>如果路由表中已有相同目的网络的路由表项，且来源端口相同，那么无条件根据最新的路由信息更新其路由表</li>
+<li>如果路由表中已有相同目的网络的路由表项，但来源端口不同，则要比较它们的跳数，将跳数较小的一个作为自己的路由表项</li>
+<li>如果路由表中已有相同目的网络的路由表项，且跳数相等，保留原来的路由表项</li>
+<li>若 3 分钟还没有收到相邻路由器的更新路由表，则把该相邻路由器标为不可达，即把距离置为 16</li>
+</ol>
+<h4>2.2.1.3. 示例</h4>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427153405.png" alt=""></p>
+<ol>
+<li>所有路由器中的路由表都只有和自己直接连接的网络的路由表项。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427154311.png" alt=""></li>
+<li>各路由器就会按设置的周期（默认为30秒）向相邻路由器发送路由更新。具体哪个路由器会先发送路由更新，取决于哪个路由器先开。现假设路由器R2先收到来自路由器R1和R3的路由更新，然后就更新自己的路由表，添加了分别通过R1和R3到达10.0.0.0/8网络和13.0.0.0/8网络的路由表项，跳数加1。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427154917.png" alt=""></li>
+<li>R2更新自己的路由表后，会把完整的路由表发给邻居路由器R1和R3。路由器R1和R3分别再进行更新。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427155154.png" alt=""></li>
+<li>这个过程会按照固定时间间隔不断更新，最终路由表会趋向于收敛</li>
+</ol>
+<h3>2.2.2. OSPF</h3>
+<h4>2.2.2.1. 简介</h4>
+<p>OSPF（Open Shortest Path First，开放式最短路径优先）是<font color=blue>大中型网络</font>上使用较为广泛的内部网关协议，使用“代价（Cost）”作为路由度量。OSPF采用Dijkstra算法（SPF算法）来计算最短路径树。与RIP和BGP不同的是，OSPF协议不使用TCP或者UDP协议而是直接承载在IP协议之上。OSPF解决RIP存在的三个典型问题：</p>
+<ol>
+<li><strong>收敛慢</strong>：全局维护LSDB，独立生成SPF树</li>
+<li><strong>易产生路由环路</strong>：spf算法保证</li>
+<li><strong>可扩展性差</strong>：最大只能支持15跳<br>此外OSPF还具有以下优点：</li>
+<li>采用组播形式收发报文，减少对其他不运行ospf路由器的影响。</li>
+<li>支持无类型域间选路（cidr）</li>
+<li>支持等价路由进行负载分担</li>
+<li>支持报文加密</li>
+</ol>
+<h4>2.2.2.2. Cost代价</h4>
+<p>每个路由器都把自己当做Dijkstra算法的根，通过累计cost来计算达到目的地的最短路径。默认情况下，路由器根据接口的配置带宽来计算cost，带宽越高，开销越低，计算公式如下。最终cost是对路径上每一个路由器的入接口的cost值累加得到的。<br>$<br>cost_i = B_c/B_i，其中B_c为参照带宽10^8bit/s,B_i为路由器i的入接口带宽<br>$</p>
+<h4>2.2.2.3. 工作过程</h4>
+<ol>
+<li>每台路由器和直接相连的路由器互交，发送Hello报文，建立邻居关系。</li>
+<li>每台路由器构建包含直接相连的链路状态的LSA（Link-State Advertisement，链路状态通告）。链路状态通告(LSA)中记录了所有相关的路由器，包括路由器接口状态、接口IP地址、掩码、链路类型、带宽等。</li>
+<li>每台路由器泛洪链路状态通告（LSA）给所有的邻路由器，并且自己也在本地储存邻路由发过来的LSA，然后再将收到的LSA泛洪给自己的所有邻居，直到在同一区域中的所有路由器收到了所有的LSA。每台路由器在本地数据库中保存所有收到的LSA副本，这个数据库被称作&quot;链路状态数据库（LSDB，Link-State Database）&quot;。</li>
+<li>每台路由器基于本地的&quot;链路状态数据库(LSDB)&quot;执行&quot;最短路径优先（SPF）&quot;算法，并以本路由器为根，生成一个SPF树。</li>
+<li>基于SPF树计算去往每个网络的最短路径，得到最终的路由表。</li>
+</ol>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427200104.png" alt=""></p>
+<blockquote>
+<p>路由器通过LSA的交换，最后独立的计算出到每个网络的最短路径，相对RIP具有更强的全局观，收敛速度更快。当检测到拓扑发生变化时立即发送更新，链路状态实时性更强。但SPF算法复杂度更高，对内存需求高，同时在网络初始化时，大量链路状态包泛洪，会影响网络的可用带宽。</p>
+</blockquote>
+<h4>2.2.2.4. LSA</h4>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/ospf_lsa.png" alt="image.png"></p>
+<h4>2.2.2.5. 区域</h4>
+<p>一个OSPF网络分为多个区域。区域将网络中的路由器在逻辑上分组并以区域为单位向网络的其余部分发送汇总路由信息。区域是以接口（Interface）为单位来划分的，所以一台多接口路由器可能属于多个区域。相同区域内的所有路由器都维护一份相同的链路状态数据库（LSDB），如果一台路由器属于多个区域，那么它将为每一个区域维护一份LSDB。常见的区域类型有如下几种：</p>
+<ol>
+<li><font color=red>骨干区域</font>：骨干区域（area0）是整个OSPF的核心区域。所有其他非骨干区域必须和骨干区域直接或间接相连。骨干区域的功能是在不同的非骨干区域之间分发路由信息。骨干区域必须是唯一而且连续的，但不需要在物理上连续，可以使用虚拟连接。</li>
+<li><font color=red>传送区域</font>：传送区域连接至少2个其他区域，它将通告从一个区域传送到另一个区域。</li>
+<li><font color=red>末梢区域</font>：末梢区域是一个不允许AS外部路由通告（AS External LSA，即类型5 LSA）在其内部进行洪泛扩散的区域。末梢区域的区域边界路由器会通告一条默认路由（default route）到该区域内所有路由器，任何发往AS外部网络的数据流都将依据默认路由来转发。</li>
+</ol>
+<p>将一个网络划分为多个区域有以下优点：</p>
+<ul>
+<li>某一区域内的路由器只需要维护该区域的LSDB，而不用维护整个OSPF网络的链路状态数据库。</li>
+<li>将某一区域网络拓扑变化的影响限制在该区域内，不会影响到整个OSPF网络，从而减小OSPF计算的频率。</li>
+<li>将链路状态通告（LSA）的洪泛限制在本区域内，从而降低OSPF协议产生的数据量。</li>
+<li>划分区域可以对网络进行层次化结构设计。</li>
+<li>划分区域有利于资源合理调配，核心区域部署性能较好的设备资源，边缘区域部署性能较差的设备资源即可。</li>
+</ul>
+<h4>2.2.2.6. 路由器类型</h4>
+<ol>
+<li><font color=red>内部路由器(IR, internal router)</font>：一台路由器上所有启动了OSPF的接口都在同一区域。</li>
+<li><font color=red>骨干路由器(BBR, backbone router)</font>：骨干路由器是指至少有一个启用了OSPF的接口是和骨干区域相连的路由器。骨干路由器也可以同时是区域边界路由器或自治系统边界路由器。</li>
+<li><font color=red>区域边界路由器(ABR, area border router)</font>：区域边界路由器是指连接一个或者多个区域的路由器。区域边界路由器为每一个与之相连的区域维护一份链路状态数据库，因此区域边界路由器需要比内部路由器更多的内存资源和更高性能的处理器。</li>
+<li><font color=red>自治系统边界路由器</font>： 自治系统边界路由器用来把从其他路由协议学习到的路由以路由重分发的方式注入到OSPF进程中，从而使得整个OSPF域内的路由器都可以学习到这些路由（除了末梢区域内的路由器）。一台自治系统边界路由器可以是OSPF域内非末梢区域的任何路由器，它可以是内部路由器、区域边界路由器、骨干路由器。</li>
+</ol>
+<h2>2.3. 外部网关协议BGP</h2>
+<h3>2.3.1. 路由注入和通告</h3>
+<p>BGP路由器的路由注入和通告都是为了修改BGP路由表。当路由器之间建立BGP邻居之后，就可以相互交换BGP路由。一台运行了BGP协议的路由器，会将BGP得到的路由与普通路由分开存放，所以BGP路由器会同时拥有两张路由表：</p>
+<ul>
+<li><font color=red>IGP路由表</font>：通过<code>show ip route</code>查看，存放通过IGP协议或手工配置得到的普通路由表</li>
+<li><font color=red>BGP路由表</font>：通过<code>show ip bgp</code>查看，运行BGP之后创建的路由表。BGP路由表的路由信息只能传递给BGP协议，如果两台BGP邻居的BGP路由表为空，就不会有任何路由传递。</li>
+</ul>
+<h4>2.3.1.1. BGP路由表注入</h4>
+<ul>
+<li><font color=red>纯动态注入</font>：路由器将通过IGP路由协议动态获得的路由信息直接注入到BGP中。</li>
+<li><font color=red>半动态注入</font>：路由器有选择的将IGP路由协议获得的动态路由信息注入到BGP中。</li>
+<li><font color=red>静态注入</font>: 路由器将静态配置的某条路由注入到BGP系统中。</li>
+</ul>
+<h4>2.3.1.2. BGP路由通告</h4>
+<p>在BGP路由表注入路由后，BGP路由器之间会将这些路由在BGP路由器间进行<strong>通告</strong>。通告要遵守以下规则：</p>
+<ul>
+<li>BGP 路由器只把自己使用的路由通告给相邻体</li>
+<li>BGP 路由器从EBGP获得的路由会向它的所有BGP相邻体通告（包括EBGP和IBGP）</li>
+<li>BGP路由器从IBGP获得的路由不会向它的IBGP相邻体通告（避免内部产生环路）</li>
+<li>BGP 路由器从IBGP获得的路由是否通告给它的EBGP相邻体要依IGP和BGP同步的情况而定</li>
+</ul>
+<h4>2.3.1.3. 路径属性</h4>
+<p>在默认情况下，到达同一目的地，BGP只走单条路径，并不会在多条路径之间执行负载均衡。对于IGP路由协议，当有多条路径可以到达同一目的地时，则根据最小metric值来选择最优路径，而 BGP 存在多条路径到达同一目的地时，对于最优路径的选择，BGP并不会以metric值大小为依据，BGP对于最优路径的选择，需要靠比较路由条目中的路径属性，只有在比较多条路由的属性之后，才能决定选择哪条为最优路径。</p>
+<p>BGP的路径属性可以划分为以下四类：</p>
+<ul>
+<li>公认强制 （Well-Known Mandatory）:所有的路由中都需要写入公认强制属性。如Origin，Next Hop，AS path。</li>
+<li>公认自选 （Well-Known Discretionary）：能够理解和支持即可，不一定要写入路由</li>
+<li>可选可传递 （Optional Transitive）：不一定要理解或支持</li>
+<li>可选不可传递（Optional Nontransitive）：只有特定的BGP路由器才能理解和传递</li>
+</ul>
+<p>对于任何一台运行BGP的路由器，都必须支持公认强制属性，并且在将路由信息发给其它BGP邻居时，必须在路由中写入公认强制属性，这些属性是被强制写入路由中的，一条不带公认强制属性的路由被BGP路由器被视为无效而被丢弃，一个不支持公认强制属性的BGP，是不正常的，不合法的BGP。</p>
+<h4>2.3.1.4. rigin</h4>
+<p>origin属性为起源属性，描述路由是以何种方式注入到BGP路由表中的，主要有以下两种情况:</p>
+<ul>
+<li>以 <code>network</code> 命令注入到BGP路由表中，origin 属性为 IGP</li>
+<li>以 <code>redistribute</code> 命令注入到BGP路由表中，origin 属性为 Incomplete</li>
+</ul>
+<blockquote>
+<p>IGP优先级比Incomplete高</p>
+</blockquote>
+<h4>2.3.1.5. Next Hop</h4>
+<p>指示下一个AS的路由器入口的<font color=red>网段</font>，同一个AS内Next hop的值不变<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427220030.png" alt=""></p>
+<h4>2.3.1.6. As Path</h4>
+<p>描述了该路由经过的AS组成的路径，AS路径中不能算上自己的AS，从离自己最近的AS开始，以目的网络的AS结束。下图为 AS5 到 AS1 的路由的AS Path属性：<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200427220121.png" alt=""></p>
+<p>  借助路由的AS Path属性，可以避免环路，具体操作就是收到一条AS Path属性中含有自己AS的路由的时候丢弃该路由。在选路的时候，优先选As Path最短的那条，如果As Path距离相等，则优选本AS内到出口路由器最短的那根，如果还相等，则选择Router_ID（发送路由的路由器）最小的那根。</p>
+<h3>2.3.2. BGP的缺陷与解决方法</h3>
+<h1>3. 引用</h1>
+<ol>
+<li><a href="https://blog.51cto.com/566577/197797">RIP环路问题总结</a><br> ^af58f6</li>
+<li><a href="https://www.jianshu.com/p/f542d5b415a1">RIP路由协议</a></li>
+<li><a href="https://www.qingsword.com/qing/596.html">OSPF协议详解</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/25433049">BGP漫谈</a></li>
+<li><a href="http://wulc.me/2016/12/25/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E8%AF%BE%E7%A8%8B%E6%80%BB%E7%BB%93--BGP%E5%8D%8F%E8%AE%AE/">计算机网络课程总结--BGP协议</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/126754100">【网络干货】超全ISIS路由协议技术详解 - 知乎 (zhihu.com)</a></li>
+<li><a href="https://www.cloudflare.com/zh-cn/learning/security/glossary/what-is-bgp/">什么是 BGP？| BGP 路由说明</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/126754314">【网络干货】最全BGP路由协议技术详解 - 知乎 (zhihu.com)</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

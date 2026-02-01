@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP概念理解 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>MCP概念理解</h1>
+        <time datetime="2026-01-24T14:48:44.315Z">2026年1月24日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 基本概念</h1>
+<p>MCP(Model Context Protocol 模型上下文协议) 是一个开放的标准化协议，用于在AI模型和外部数据源、工具之间建立安全、可控的连接。它定义了AI系统如何<strong>访问和利用</strong>外部上下文信息的规范。MCP就像是AI应用程序的USB-C接口，为AI模型提供了一种标准化的方式来连接不同的数据源和工具。</p>
+<p><strong>AI Agent</strong>是能够自主感知环境、做出决策并执行行动的智能实体，通常具备推理、规划、学习等能力。</p>
+<p>两者的关系可以理解为：MCP为AI Agent提供了一个标准化的&quot;接口层&quot;，使Agent能够安全、有效地获取和利用外部资源。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507271617253.svg" alt="mcp_architecture_zh.svg"></p>
+<h1>2. 核心组件</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507092309051.png" alt="image.png"><br>总共分为了下面五个部分：</p>
+<ul>
+<li><strong>MCP Hosts</strong>: Hosts是指发起连接的LLM应用程序，像 Cursor, Claude Desktop或<a href="https://github.com/cline/cline">Cline</a> 这样的应用程序。</li>
+<li><strong>MCP Clients</strong>: 客户端是用来在Hosts应用程序内与Server之间保持<strong>1:1</strong>连接，从MCP Server获取context一遍MCP Host可以使用。</li>
+<li><strong>MCP Server</strong>s: 通过标准化的协议，为Client端提供context，比如resources、tools和prompts</li>
+<li><strong>Local Data Sources</strong>: 本地的文件、数据库和 API。</li>
+<li><strong>Remote Services</strong>: 外部的文件、数据库和 API。</li>
+</ul>
+<p>本章节主要参考(<a href="https://modelcontextprotocol.io/docs/learn/architecture)%5Bhttps://modelcontextprotocol.io/docs/learn/architecture%5D">https://modelcontextprotocol.io/docs/learn/architecture)[https://modelcontextprotocol.io/docs/learn/architecture]</a></p>
+<h1>3. 原理</h1>
+<h2>3.1. MCP server</h2>
+<p>MCP Server就是为了实现AI Agent的自动化而存在的，它是一个中间层，告诉AI Agent目前存在哪些服务，哪些API，哪些数据源，AI Agent 可以根据 Server 提供的信息来决定是否调用某个服务，然后通过Function Calling来执行函数。<br>MCP servers可以在本地或者远程执行：</p>
+<ol>
+<li>Claude Desktop launches the <a href="https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem">filesystem server</a>, the server runs locally on the same machine because it uses the STDIO transport. This is commonly referred to as a “local” MCP server. </li>
+<li>The offical <a href="https://docs.sentry.io/product/sentry-mcp/">Sentry MCP server</a> runs on the Sentry platform, and uses the Streamable HTTP transport. This is commonly referred to as a “remote” MCP server.</li>
+</ol>
+<h2>3.2. MCP client</h2>
+<ol>
+<li>The client gets the list of available tools from the server</li>
+<li>Your query is sent to Claude along with tool descriptions</li>
+<li>Claude decides which tools (if any) to use</li>
+<li>The client executes any requested tool calls through the server</li>
+<li>Results are sent back to Claude</li>
+<li>Claude provides a natural language response</li>
+<li>The response is displayed to you</li>
+</ol>
+<h2>3.3. Layers</h2>
+<p>MCP consists of two layers</p>
+<h3>3.3.1. Data Layer</h3>
+<p>使用JSON-RPC作为C/S通信协议，所有传输都使用<a href="https://www.jsonrpc.org/">JSON-RPC</a> 2.0来交换消息。有关Model Context Protocol消息格式的详细信息，请参阅<a href="https://spec.modelcontextprotocol.io/">规范</a>。示例如下：</p>
+<pre><code>客户端 → 服务器：HTTP POST /mcp
+{
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;method&quot;: &quot;tools/call&quot;,
+  &quot;params&quot;: {...},
+  &quot;id&quot;: 1
+}
+
+服务器 → 客户端：HTTP Response + SSE
+HTTP/1.1 200 OK
+Content-Type: text/event-stream
+
+data: {&quot;jsonrpc&quot;: &quot;2.0&quot;, &quot;result&quot;: {...}, &quot;id&quot;: 1}
+
+data: {&quot;jsonrpc&quot;: &quot;2.0&quot;, &quot;method&quot;: &quot;notification&quot;, &quot;params&quot;: {...}}
+</code></pre>
+<h3>3.3.2. Transport Layer</h3>
+<p>定义C/S之间通信机制，包括连接建立、消息框架和认知机制。传输层处理客户端和服务器之间的实际通信。</p>
+<h4>3.3.2.1. stdio</h4>
+<ul>
+<li>使用标准输入/输出进行通信</li>
+<li>适用于本地进程</li>
+</ul>
+<p>操作系统会：</p>
+<ol>
+<li>创建<strong>匿名管道</strong>（anonymous pipes）</li>
+<li>将服务器进程的stdout连接到管道的写入端</li>
+<li>将客户端进程stdin连接到管道的读取端</li>
+</ol>
+<h4>3.3.2.2. SSE</h4>
+<p>SSE是一种<strong>服务器主动向客户端推送数据</strong>的技术，建立在HTTP协议之上。在MCP中，SSE用于实现服务器到客户端的持续通信。<br><strong>SSE的工作流程</strong></p>
+<ol>
+<li><strong>连接建立</strong>：客户端通过HTTP GET请求建立连接</li>
+<li><strong>持久连接</strong>：服务器保持连接打开，不立即关闭</li>
+<li><strong>单向推送</strong>：服务器可以持续向客户端发送事件数据</li>
+<li><strong>自动重连</strong>：连接断开时，浏览器会自动尝试重连<br><a href="https://www.ruanyifeng.com/blog/2017/05/server-sent_events.html">SSE</a>（Server-Sent Events）是除了 <a href="https://www.ruanyifeng.com/blog/2017/05/websocket.html">WebSocket</a>外，另一种服务器向浏览器推送信息的方法。<br><strong>场景</strong>：AI Agent需要执行一个长时间运行的Python脚本或数据处理任务</li>
+</ol>
+<pre><code>用户请求：分析这个100GB的数据文件并生成报告
+
+传统方式问题：
+- 用户等待时间过长，不知道进度
+- 可能超时或连接中断
+- 无法及时发现执行错误
+
+使用SSE的优势：
+</code></pre>
+<p><strong>SSE流式反馈</strong>：</p>
+<pre><code>data: {&quot;type&quot;: &quot;progress&quot;, &quot;message&quot;: &quot;正在读取数据文件... 10%&quot;}
+data: {&quot;type&quot;: &quot;progress&quot;, &quot;message&quot;: &quot;数据预处理中... 35%&quot;}  
+data: {&quot;type&quot;: &quot;progress&quot;, &quot;message&quot;: &quot;正在计算统计指标... 60%&quot;}
+data: {&quot;type&quot;: &quot;warning&quot;, &quot;message&quot;: &quot;发现异常值，已自动处理&quot;}
+data: {&quot;type&quot;: &quot;progress&quot;, &quot;message&quot;: &quot;生成可视化图表... 90%&quot;}
+data: {&quot;type&quot;: &quot;complete&quot;, &quot;result&quot;: &quot;报告已生成，保存至report.pdf&quot;}
+</code></pre>
+<p>SSE能力让AI Agent能够：</p>
+<ul>
+<li><strong>提供实时反馈</strong>：用户随时了解任务进度</li>
+<li><strong>及时响应变化</strong>：快速应对突发情况</li>
+<li><strong>提升用户体验</strong>：减少等待焦虑，增加互动性</li>
+<li><strong>支持复杂工作流</strong>：处理需要多步骤协调的复杂任务<br>这些场景都需要服务器主动推送信息给客户端，而不是等待客户端轮询，SSE正是为此设计的理想解决方案。</li>
+</ul>
+<h4>3.3.2.3. Streamable HTTP</h4>
+<p>在 MCP 的初始设计中，为了实现服务器主动向 AI 客户端推送信息，采用了 <strong>HTTP + SSE</strong>。但这带来了“双线作战”的问题：客户端通过 POST 发消息，服务器通过 SSE 回消息。 这种模式在复杂的网络环境下（比如有负载均衡或防火墙时）非常脆弱，且难以进行权限校验和会话跟踪。<strong>SSE</strong>（Server-Sent Events）是 MCP 早期版本中用于远程通信的传输方式，而 <strong>Streamable HTTP</strong> 是从 2025 年 3 月起引入的<strong>新标准</strong>，旨在取代纯 SSE 方案。<br><strong>Streamable HTTP</strong> 并不是完全抛弃了 SSE，而是将其<strong>封装</strong>进了一个更健壮的框架中：</p>
+<ul>
+<li><strong>统一化</strong>：它不再区分专门的事件流端点。当你对 MCP 端点发起 <code>GET</code> 请求时，它会返回 <code>text/event-stream</code>；而 <code>POST</code> 请求则用于发送指令。</li>
+<li><strong>会话感知</strong>：引入了 <code>Mcp-Session-Id</code> 头部。这意味着即便底层的 TCP 连接断了，只要 Session ID 还在，服务器就能找回之前的状态。</li>
+<li><strong>灵活性</strong>：服务器可以根据需要决定是直接返回一个普通的 HTTP 响应，还是升级成一个 SSE 流来处理长任务（如大模型生成过程）。</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th><strong>特性</strong></th>
+<th><strong>SSE (旧版/Legacy)</strong></th>
+<th><strong>Streamable HTTP (新版/标准)</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>端点数量</strong></td>
+<td><strong>双端点</strong>：通常需要 <code>/sse</code>（接收消息）和 <code>/message</code>（发送消息）</td>
+<td><strong>单端点</strong>：所有操作通过同一个路径（如 <code>/mcp</code>）完成</td>
+</tr>
+<tr>
+<td><strong>连接模型</strong></td>
+<td>必须维持一个长期的长连接，对基础设施要求高</td>
+<td>按需建立连接，更加“无状态”，对云原生/Serverless 更友好</td>
+</tr>
+<tr>
+<td><strong>通信方向</strong></td>
+<td>严格单向（服务器到客户端），客户端必须另开 HTTP 请求</td>
+<td>支持在一个逻辑会话中更灵活地处理双向消息</td>
+</tr>
+<tr>
+<td><strong>恢复能力</strong></td>
+<td>连接断开后状态极易丢失，重连逻辑复杂</td>
+<td>原生支持<strong>会话管理 (Session ID)</strong> 和<strong>断线重连 (Last-Event-ID)</strong></td>
+</tr>
+<tr>
+<td><strong>兼容性</strong></td>
+<td>容易被防火墙、代理或网关（如超时设置）强行切断</td>
+<td>兼容标准 HTTP 中间件，能够更好地穿透 CDN 和 API 网关</td>
+</tr>
+</tbody></table>
+<h2>3.4. Primitives</h2>
+<h3>3.4.1. server side</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian202507271643120.png" alt="image.png"></p>
+<h4>3.4.1.1. Tools</h4>
+<p>Executable functions that AI applications can invoke to perform actions </p>
+<ul>
+<li>file operations</li>
+<li>API calls</li>
+<li>database queries</li>
+</ul>
+<h4>3.4.1.2. Resources</h4>
+<p>Data sources that provide contextual information to AI applications</p>
+<ul>
+<li>file contents</li>
+<li>database records</li>
+<li>API responses<br>定制化地请求和访问本地的资源，可以是文件系统、数据库、当前代码编辑器中的文件等等原本网页端的app无法访问到的<strong>静态资源</strong>。额外的resources会丰富发送给大模型的上下文，使得AI给我们更加精准的回答。</li>
+</ul>
+<h4>3.4.1.3. Prompts</h4>
+<p>有助于构建与LLM交互结构的可复用模板（例如，系统提示词、少样本示例）</p>
+<ul>
+<li><strong>System prompts</strong>：系统提示词，是用户预先设定的指令，用于定义模型的角色、任务目标或行为边界（例如：“请以专业医生的身份回答健康问题，语言通俗易懂”）。</li>
+<li><strong>Few-shot examples</strong>：少样本示例，指在提问时提供少量示例，让模型通过模仿示例理解任务要求（例如：要求模型生成对仗句时，先给出 “天对地，雨对风” 作为示例）</li>
+</ul>
+<h3>3.4.2. client side</h3>
+<h4>3.4.2.1. Sampling</h4>
+<p>允许服务器从客户端的 AI 应用程序中请求语言模型生成结果。当服务器开发者希望使用语言模型，但又希望保持模型独立性，且不想在其 MCP 服务器中集成语言模型 SDK 时，这种方式非常有用。他们可以通过<code>sampling/complete</code>方法从客户端的 AI 应用程序中请求语言模型生成结果。<br>核心价值：</p>
+<ul>
+<li>客户端负责管理 AI 模型（包括集成 SDK、维护模型版本、处理认证等），服务器只需通过统一接口（如<code>sampling/complete</code>）请求结果。</li>
+<li>优势：降低服务器的开发和维护成本（无需适配多种模型），同时保持灵活性（客户端可自主升级或更换模型，不影响服务器）<br>典型场景：</li>
+<li>游戏服务器需要 AI 生成 NPC 对话，但不想绑定某款语言模型，可让玩家客户端的 AI 应用程序处理模型调用，服务器仅通过接口获取对话文本。</li>
+</ul>
+<h4>3.4.2.2. Elicitation</h4>
+<p>允许服务器向用户请求额外信息。当服务器开发者希望从用户那里获取更多信息，或请求用户确认某项操作时，这种方式非常有用。他们可以通过<code>elicitation/request</code>方法向用户请求额外信息。<br>核心价值：</p>
+<ul>
+<li>服务器可根据业务需求动态触发信息请求，避免因信息缺失导致流程中断（例如注册时遗漏手机号、提交表单时字段不完整）。</li>
+<li>对于需要用户确认的敏感操作（如删除数据、支付订单），通过<code>elicitation/request</code>发起确认请求，可降低误操作风险，提升系统安全性。<br>典型场景：</li>
+<li>电商平台服务器在用户下单后发现商品库存不足，通过该方法询问用户是否接受替换同类商品；</li>
+<li>社交应用服务器检测到用户登录设备异常，通过该方法请求用户输入验证码以确认身份。</li>
+</ul>
+<h4>3.4.2.3. Roots</h4>
+<h2>3.5. notifications</h2>
+<p>The protocol supports real-time notifications to enable dynamic updates between servers and clients. For example, when a server’s available tools change—such as when new functionality becomes available or existing tools are modified—the server can send tool update notifications to inform connected clients about these changes. Notifications are sent as JSON-RPC 2.0 notification messages (without expecting a response) and enable MCP servers to provide real-time updates to connected clients.</p>
+<h1>4. MCP的初衷</h1>
+<p>在MCP出现之前，AI Agent就已经可以通过直接调用API来获取外部信息。</p>
+<table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>传统API调用</th>
+<th>MCP方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>标准化程度</strong></td>
+<td>每个服务都有独特的接口规范，需要单独适配</td>
+<td>统一的协议标准，所有服务遵循相同接口规范</td>
+</tr>
+<tr>
+<td><strong>集成复杂度</strong></td>
+<td>需要为每个API编写专门的客户端代码</td>
+<td>一次开发，支持所有MCP兼容服务</td>
+</tr>
+<tr>
+<td><strong>上下文管理</strong></td>
+<td>通常是无状态的请求-响应模式</td>
+<td>支持上下文持久化和增量更新</td>
+</tr>
+<tr>
+<td><strong>权限控制</strong></td>
+<td>每个API有自己的认证和授权机制</td>
+<td>统一的权限模型和访问控制</td>
+</tr>
+<tr>
+<td><strong>开发维护成本</strong></td>
+<td>高：需要维护多套API客户端代码</td>
+<td>低：统一的开发和维护模式</td>
+</tr>
+<tr>
+<td><strong>扩展性</strong></td>
+<td>添加新服务需要编写新的适配代码</td>
+<td>新服务只需实现MCP标准即可接入</td>
+</tr>
+<tr>
+<td><strong>错误处理</strong></td>
+<td>每个API有不同的错误格式和处理方式</td>
+<td>统一的错误处理机制</td>
+</tr>
+<tr>
+<td><strong>调试和测试</strong></td>
+<td>需要针对每个API编写不同的测试用例</td>
+<td>统一的测试和调试工具</td>
+</tr>
+</tbody></table>
+<h1>5. 技术原理</h1>
+<p><strong>MCP的核心原理</strong>：</p>
+<ul>
+<li>建立标准化的通信协议，定义数据格式、认证机制、权限控制等</li>
+<li>提供统一的API接口，屏蔽底层数据源的差异性</li>
+<li>实现上下文信息的动态获取和更新机制<br><strong>在AI Agent中的作用</strong>：</li>
+<li><strong>上下文增强</strong>：Agent通过MCP获取实时、相关的外部信息，丰富其决策依据</li>
+<li><strong>工具调用</strong>：Agent可以通过MCP调用外部工具和服务，扩展其能力边界</li>
+<li><strong>知识整合</strong>：将多源异构的信息统一整合，为Agent提供完整的知识视图</li>
+</ul>
+<h1>6. 实际应用场景</h1>
+<p><strong>企业级AI助手</strong>：</p>
+<ul>
+<li>Agent通过MCP连接企业内部数据库、文档系统、业务系统</li>
+<li>实现跨部门信息整合，提供综合性的决策支持</li>
+<li>确保数据访问的安全性和合规性<br><strong>智能客服系统</strong>：</li>
+<li>Agent利用MCP实时获取客户历史记录、产品信息、库存状态</li>
+<li>动态调用外部API获取物流、支付等信息</li>
+<li>提供个性化、准确的客户服务<br><strong>研发协作平台</strong>：</li>
+<li>Agent通过MCP连接代码库、文档系统、测试环境</li>
+<li>实现代码分析、文档生成、测试执行等自动化任务</li>
+<li>支持多工具链的协同工作<br><strong>智能分析系统</strong>：</li>
+<li>Agent通过MCP获取多维度数据源（数据库、API、文件系统）</li>
+<li>实现实时数据分析、报告生成、预警通知</li>
+<li>支持复杂的业务逻辑处理</li>
+</ul>
+<h1>7. 技术优势</h1>
+<p><strong>标准化</strong>：MCP提供统一的接口标准，降低了Agent与外部系统集成的复杂度<br><strong>安全性</strong>：通过协议层面的权限控制和认证机制，确保数据访问的安全、<br><strong>可扩展性</strong>：Agent可以轻松接入新的数据源和工具，无需重新开发<br><strong>实时性</strong>：支持动态上下文获取，使Agent能够基于最新信息做出决策<br><strong>互操作性</strong>：不同的AI系统可以通过MCP标准实现互联互通</p>
+<h1>8. ref</h1>
+<ol>
+<li><a href="https://guangzhengli.com/blog/zh/model-context-protocol">https://guangzhengli.com/blog/zh/model-context-protocol</a></li>
+<li><a href="https://modelcontextprotocol.io/introduction">https://modelcontextprotocol.io/introduction</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

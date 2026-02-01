@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机网络（九）—— 传输层 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>计算机网络（九）—— 传输层</h1>
+        <time datetime="2020-04-27T00:00:00.000Z">2020年4月27日</time>
+        <div class="tags">
+            
+            <span class="tag">计算机网络</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>传输层架构在网络层之上，在两台计算机<strong>进程</strong>之间传输数据，常见的传输层协议包括TCP和UDP。</p>
+<h1>1. TCP</h1>
+<h2>1.1. 首部格式</h2>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200423212128.png" alt=""></p>
+<h2>1.2. TCP状态机</h2>
+<p>TCP是面向连接的，在其生命周期会有各种不同状态	</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>LISTEN</td>
+<td>等待来自远程TCP应用程序的请求</td>
+</tr>
+<tr>
+<td>SYN_SENT</td>
+<td>发送连接请求后等待来自远程端点的确认。TCP第一次握手后客户端所处的状态</td>
+</tr>
+<tr>
+<td>SYN-RECEIVED</td>
+<td>该端点已经接收到连接请求并发送确认。该端点正在等待最终确认。TCP第二次握手后服务端所处的状态</td>
+</tr>
+<tr>
+<td>ESTABLISHED</td>
+<td>代表连接已经建立起来了。这是连接数据传输阶段的正常状态</td>
+</tr>
+<tr>
+<td>FIN_WAIT_1</td>
+<td>等待来自远程TCP的终止连接请求或终止请求的确认</td>
+</tr>
+<tr>
+<td>FIN_WAIT_2</td>
+<td>在此端点发送终止连接请求后，等待来自远程TCP的连接终止请求</td>
+</tr>
+<tr>
+<td>CLOSE_WAIT</td>
+<td>该端点已经收到来自远程端点的关闭请求，此TCP正在等待本地应用程序的连接终止请求</td>
+</tr>
+<tr>
+<td>CLOSING</td>
+<td>等待来自远程TCP的连接终止请求确认</td>
+</tr>
+<tr>
+<td>LAST_ACK</td>
+<td>等待先前发送到远程TCP的连接终止请求的确认</td>
+</tr>
+<tr>
+<td>TIME_WAIT</td>
+<td>等待足够的时间来确保远程TCP接收到其连接终止请求的确认</td>
+</tr>
+</tbody></table>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200423203536.png" alt=""></p>
+<h3>1.2.1. 三次握手</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200423210040.png" alt=""></p>
+<h3>1.2.2. 四次挥手</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200423210106.png" alt=""><br>具体过程如下：<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229221623113.png" alt="image.png"></p>
+<ul>
+<li>客户端主动调用关闭连接的函数，于是就会发送FIN报文，这个FIN报文代表客户端不会再发送数据了，进入FIN_WAIT_1状态；</li>
+<li>服务端收到了FIN报文，然后马上回复一个ACK确认报文，此时服务端进入 CLOSE_WAIT状态。在收到FIN报文的时候，TCP 协议栈会为FIN包插入一个文件结束符EOF到接收缓冲区中，服务端应用程序可以通过read调用来感知这个FIN包，这个EOF会被放在已排队等候的其他已接收的数据之后，所以必须要得继续read接收缓冲区已接收的数据；</li>
+<li>接着，当服务端在read数据的时候，最后自然就会读到EOF，接着read() 就会返回 0，这时服务端应用程序如果有数据要发送的话，就发完数据后才调用关闭连接的函数，如果服务端应用程序没有数据要发送的话，可以直接调用关闭连接的函数，这时服务端就会发一个FIN包，这个FIN报文代表服务端不会再发送数据了，之后处于LAST_ACK状态；</li>
+<li>客户端接收到服务端的FIN包，并发送ACK确认包给服务端，此时客户端将进入TIME_WAIT状态；</li>
+<li>服务端收到ACK确认包后，就进入了最后的CLOSE状态；</li>
+<li>客户端经过2MSL时间之后，也进入CLOSE状态；</li>
+</ul>
+<p>!<a href="tcp关键内核参数11-tcp-timewait.html" class="internal-link">tcp关键内核参数<span class="tag">#1</span>.1. tcp timewait</a></p>
+<h3>1.2.3. RST</h3>
+<p>其实关闭的连接的函数有两种函数：</p>
+<ul>
+<li>close函数，同时socket关闭发送方向和读取方向，也就是socket不再有发送和接收数据的能力；</li>
+<li>shutdown函数，可以指定socket只关闭发送方向而不关闭读取方向，也就是socket 不再有发送数据的能力，但是还是具有接收数据的能力；</li>
+</ul>
+<p>close在某些场景下会导致RST：</p>
+<ol>
+<li>只要TCP栈的读缓冲里还有未读取（read）数据，则调用close时会直接向对端发送RST。比如客户端一次发送100个字节，但是服务器read设置最多读取90个，read一次后就不再read，所以还有10个在缓冲区，服务器执行close，服务器会发送RST。如果客户端第一次发送100个字节，服务器read最多读取100个，read一次把数据全部读出来了，然后客户端再发送100个字节，但是服务器没有read，执行close，执行的是四次挥手。</li>
+<li>如果客户端用close函数来关闭连接，那么在TCP四次挥手过程中，如果收到了服务端发送的数据，由于客户端已经不再具有发送和接收数据的能力，所以客户端的内核会回RST报文给服务端，然后内核会释放连接，这时就不会经历完成的 TCP 四次挥手，所以我们常说，调用close是粗暴的关闭。</li>
+</ol>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229222110694.png" alt="image.png"></p>
+<p>当服务端收到RST后，内核就会释放连接，当服务端应用程序再次发起读操作或者写操作时，就能感知到连接已经被释放了</p>
+<ul>
+<li>如果是读操作，则会返回RST的报错，也就是我们常见的<a href="http连接池212-connection-reset-by-peerconnection-reset-by-peer.html" class="internal-link">http连接池<span class="tag">#2</span>.1.2. Connection reset by peer|Connection reset by peer</a>。</li>
+<li>如果是写操作，那么程序会产生SIGPIPE信号，应用层代码可以捕获并处理信号，如果不处理，则默认情况下进程会终止，异常退出。<br>相对的，shutdown函数因为可以指定只关闭发送方向而不关闭读取方向，所以即使在 TCP 四次挥手过程中，如果收到了服务端发送的数据，客户端也是可以正常读取到该数据的，然后就会经历完整的 TCP 四次挥手，所以我们常说，调用 shutdown 是优雅的关闭。</li>
+<li>当调用 <code>shutdown(sockfd, SHUT_RD)</code> 时，关闭套接字的读方向，这意味着该套接字不能再接收数据，即使接收缓冲区中还有数据也会被丢弃。对端如果继续发送数据，接收方会回复 RST 包，强制关闭连接。</li>
+<li>当调用 <code>shutdown(sockfd, SHUT_WR)</code> 时，关闭套接字的写方向，这会导致发送缓冲区中的数据被立即发送出去（如果有数据的话），然后发送一个 FIN 包给对端，通知对端本方不再发送数据，但仍可以接收对端的数据。这就是所谓的 “半关闭” 状态，常用于在完成数据发送后，等待对方发送完剩余数据再完全关闭连接的场景。<ul>
+<li>当调用 <code>shutdown(sockfd, SHUT_RDWR)</code> 时，相当于同时关闭读写方向，功能类似 <code>close</code> 函数，但 <code>shutdown</code> 不会立即释放套接字资源，直到所有数据传输完毕和连接完全关闭。</li>
+</ul>
+</li>
+</ul>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229222354006.png" alt="image.png"></p>
+<h4>1.2.3.1. 四次挥手优化为三次</h4>
+<p>当被动关闭方（下图的服务端）在 TCP 挥手过程中，「没有数据要发送」并且「开启了 TCP 延迟确认机制」，那么第二和第三次挥手就会合并传输，这样就出现了三次挥手。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229220836128.png" alt="image.png"><br>因为TCP延迟确认机制是默认开启的，所以导致我们抓包时，看见三次挥手的次数比四次挥手还多<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229220936995.png" alt="image.png"></p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229220909787.png" alt="image.png"></p>
+<h2>1.3. TCP延迟确认机制</h2>
+<p>当发送没有携带数据的ACK，它的网络效率也是很低的，因为它也有40个字节的IP头和TCP头，但却没有携带数据报文。为了解决ACK传输效率低问题，所以就衍生出了TCP延迟确认。</p>
+<p>TCP 延迟确认的策略：</p>
+<ul>
+<li>当有响应数据要发送时，ACK会随着响应数据一起立刻发送给对方</li>
+<li>当没有响应数据要发送时，ACK将会延迟一段时间，以等待是否有响应数据可以一起发送</li>
+<li>如果在延迟等待发送ACK期间，对方的第二个数据报文又到达了，这时就会立刻发送 ACK<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images20241229221203486.png" alt="image.png"></li>
+</ul>
+<h1>2. UDP</h1>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200423225822.png" alt=""></p>
+<h1>3. TCP与UDP的区别</h1>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>TCP</th>
+<th>UDP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>是否连接</td>
+<td>面向无连接</td>
+<td>面向连接</td>
+</tr>
+<tr>
+<td>是否可靠</td>
+<td>不可靠传输，尽力交付</td>
+<td>可靠传输，有流量控制和拥塞控制</td>
+</tr>
+<tr>
+<td>通信方式</td>
+<td>支持单播、多播</td>
+<td>只能点对点通信</td>
+</tr>
+<tr>
+<td>传输方式</td>
+<td>面向报文</td>
+<td>面向字节流</td>
+</tr>
+<tr>
+<td>首部开销</td>
+<td>8字节</td>
+<td>最小20字节，最大60字节</td>
+</tr>
+<tr>
+<td>使用场景</td>
+<td>适用IP电话、视频会议、直播、即时通讯等实时应用</td>
+<td>适用要求可靠传输的应用，如http，ftp等</td>
+</tr>
+</tbody></table>
+<h1>4. 引用</h1>
+<ol>
+<li><a href="https://www.jianshu.com/p/3c7a0771b67e">TCP状态机</a></li>
+<li><a href="https://blog.csdn.net/wilsonpeng3/article/details/12869233">TCP报文段首部格式详解</a></li>
+<li><a href="https://www.51cto.com/article/717235.html">TCP四次挥手变为三次</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

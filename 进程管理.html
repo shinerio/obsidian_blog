@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>进程管理 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>进程管理</h1>
+        <time datetime="2023-01-23T00:00:00.000Z">2023年1月23日</time>
+        <div class="tags">
+            
+            <span class="tag">linux</span>
+            
+            <span class="tag">thread</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>在 <code>linux</code>系统中，进程是资源调度的最小单位，进程的管理关乎着你使用<code>linux</code>系统的体验。</p>
+<h1>1. 进程类型</h1>
+<p>Linux 系统里有几种不同类型的进程：用户进程（User processes）、守护进程（Deamon processes）和内核进程（Kernel processes）。</p>
+<h2>1.1. 用户进程</h2>
+<p>系统里大多数进程都是用户进程。用户进程由通常的用户账户启动，并在用户空间（user space）当中执行。在没有获得额外许可的情况下，通常用户进程无法对处理器进行特殊访问，或是访问启动进程的用户无权访问的文件。</p>
+<h2>1.2. 守护进程</h2>
+<p>守护进程通常是后台程序，它们往往由一些持续运行的服务来管理。守护进程可以用来监听请求，而后访问某些服务。举例来说，<code>httpd</code>这一守护进程监听访问网络页面的请求。守护进程也可以用来自行启动一些任务。例如，<code>crond</code> 这一守护进程会在预设的时间点启动计划任务。</p>
+<p>尽管用于管理守护进程的服务通常是 <code>root</code> 用户启动的，但守护进程本身往往以非 <code>root</code> 用户启动。这种启动方式，符合「只赋予进程运行所必须的权限」之要求，因而能使系统免于一些攻击。举例来说，若是黑客骇入了 <code>httpd</code> 这一由 <code>Apache</code> 用户启动的守护进程，黑客仍然无法访问包括 <code>root</code> 用户在内的其他用户的文件，或是影响其他用户启动的守护进程。</p>
+<p>守护进程通常由系统在启动时拉起，而后一直运行到系统关闭。当然，守护进程也可以按需启动和终止，以及让守护进程在特定的系统运行级别上执行，或是在运行过程中触发重新加载配置信息。</p>
+<h2>1.3. 内核进程</h2>
+<p>内核进程仅在内核空间（kernel space）当中执行。内核进程与守护进程有些相似，它们之间主要的不同在于：</p>
+<ol>
+<li>内核进程对内核数据结构拥有完全的访问权限。</li>
+<li>内核进程不如守护进程灵活：修改配置文件并触发重载即可修改守护进程的行为；但对于内核进程来说，修改行为则需要重新编译内核本身。</li>
+</ol>
+<h1>2. 进程状态</h1>
+<p><code>linux</code>是一个多用户、多任务的系统，可以同时运行多个用户的多个程序，就必然会产生很多的进程，而每个进程会有不同的状态。同一时间同一<code>CPU</code>上只能运行一个进程，其他进程只能等待，因此我们可以宽泛地将进程状态分为：</p>
+<ul>
+<li>在CPU上执行，此时进程正在运行</li>
+<li>不在CPU上执行，此时进程不在运行</li>
+</ul>
+<p>进一步来讲，未在运行的进程也可能处于不同的状态：</p>
+<ul>
+<li>TASK_RUNNING</li>
+<li>TASK_INTERRUPTIBLE</li>
+<li>TASK_UNINTERRUPTIBLE</li>
+<li>TASK_STOPPED/TASK_TRACED</li>
+<li>TASK_DEAD - EXIT_ZOMBIE</li>
+<li>TASK_DEAD - EXIT_DEAD</li>
+</ul>
+<h2>2.1. <code>R</code>(TASK_RUNNING，可执行状态)</h2>
+<p>只有在该状态的进程才可能在CPU上运行。而同一时刻可能有多个进程处于可执行状态，这些进程的task_struct结构（进程控制块）被放入对应CPU的可执行队列中（一个进程最多只能出现在一个CPU的可执行队列中）。进程调度器的任务就是从各个CPU的可执行队列中分别选择一个进程在该CPU上运行。很多操作系统教科书将正在CPU上执行的进程定义为RUNNING状态、而将可执行但是尚未被调度执行的进程定义为READY状态，这两种状态在linux下统一为<code>TASK_RUNNING</code>状态。</p>
+<h2>2.2. <code>S</code>(TASK_INTERRUPTIBLE，可中断状态)</h2>
+<p>这个状态的进程因为等待某事件的发生（比如等待socket连接、等待信号量等）而被挂起，然后当这些事件发生或完成后，对应的等待队列中的一个或多个进程将被唤醒。一般情况下，系统中的大部分进程都处于这个状态。因为系统的CPU数量是有限的，而系统的进程数量是非常多的，所以大部分进程都处于睡眠状态。</p>
+<h2>2.3. <code>D</code>(TASK_UNINTERRUPTIBLE，不可中断状态)</h2>
+<p>与<code>TASK_INTERRUPTIBLE</code>状态类似，进程处于睡眠状态，但是此刻进程是不可中断的。不可中断，指的并不是CPU不响应外部硬件的中断，而是指进程不响应异步信号。</p>
+<p>绝大多数情况下，进程处在睡眠状态时，总是应该能够响应异步信号的。否则你将惊奇的发现，<code>kill -9</code>竟然杀不死一个正在睡眠的进程了！因此我们也很好理解<code>ps</code>命令看到的进程几乎不会出现<code>TASK_UNINTERRUPTIBLE</code>状态，而总是<code>TASK_INTERRUPTIBLE</code>状态。</p>
+<p><code>TASK_UNINTERRUPTIBLE</code>状态存在的意义就在于，内核的某些处理流程是不能被打断的。如果响应异步信号，程序的执行流程中就会被插入一段用于处理异步信号的流程（这个插入的流程可能只存在于内核态，也可能延伸到用户态），于是原有的流程就被中断了。在进程对某些硬件进行操作时（比如进程调用read系统调用对某个设备文件进行读操作，而read系统调用最终执行到对应设备驱动的代码，并与对应的物理设备进行交互），可能需要使用<code>TASK_UNINTERRUPTIBLE</code>状态对进程进行保护，以避免进程与设备交互的过程被打断，造成设备陷入不可控的状态。这种情况下的<code>TASK_UNINTERRUPTIBLE</code>状态总是非常短暂的，通过ps命令基本上不可能捕捉到。</p>
+<p><code>linux</code>系统中也存在容易捕捉的<code>TASK_UNINTERRUPTIBLE</code>状态。执行<code>vfork</code>系统调用后，父进程将进入<code>TASK_UNINTERRUPTIBLE</code>状态，直到子进程调用<code>exit</code>或<code>exec</code>。<br>通过下面的代码就能得到处于<code>TASK_UNINTERRUPTIBLE</code>状态的进程：</p>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt;   
+void main() {  
+    if (!vfork()) {
+        sleep(100);  
+    }
+}
+</code></pre>
+<h2>2.4. <code>T</code> (TASK_STOPPED or TASK_TRACED)，暂停状态或跟踪状态</h2>
+<p>向进程发送一个<code>SIGSTOP</code>信号，它就会因响应该信号而进入<code>TASK_STOPPED</code>状态（除非该进程本身处于<code>TASK_UNINTERRUPTIBLE</code>状态而不响应信号）。（<code>SIGSTOP</code>与<code>SIGKILL</code>信号一样，是非常强制的。不允许用户进程通过<code>signal</code>系列的系统调用重新设置对应的信号处理函数。）  向进程发送一个<code>SIGCONT</code>信号，可以让其从<code>TASK_STOPPED</code>状态恢复到<code>TASK_RUNNING</code>状态。</p>
+<p>当进程正在被跟踪时，它处于<code>TASK_TRACED</code>这个特殊的状态。“正在被跟踪”指的是进程暂停下来，等待跟踪它的进程对它进行操作。比如在<code>gdb</code>中对被跟踪的进程下一个断点，进程在断点处停下来的时候就处于<code>TASK_TRACED</code>状态。而在其他时候，被跟踪的进程还是处于前面提到的那些状态。</p>
+<p>对于进程本身来说，<code>TASK_STOPPED</code>和<code>TASK_TRACED</code>状态很类似，都是表示进程暂停下来。而<code>TASK_TRACED</code>状态相当于在<code>TASK_STOPPED</code>之上多了一层保护，处于<code>TASK_TRACED</code>状态的进程不能响应<code>SIGCONT</code>信号而被唤醒。只能等到调试进程通过<code>ptrace</code>系统调用执行<code>PTRACE_CONT</code>、<code>PTRACE_DETACH</code>等操作（通过<code>ptrace</code>系统调用的参数指定操作），或调试进程退出，被调试的进程才能恢复<code>TASK_RUNNING</code>状态。</p>
+<h2>2.5. <code>Z</code>(TASK_DEAD - EXIT_ZOMBIE)，退出状态，进程成为僵尸进程</h2>
+<p>进程在退出的过程中，处于TASK_DEAD状态。在这个退出过程中，进程占有的所有资源将被回收，除<code>task_struct</code>结构（以及少数资源）以外。于是进程就只剩下<code>task_struct</code>这么个空壳，故称为僵尸。  </p>
+<p>之所以保留<code>task_struct</code>，是因为<code>task_struct</code>里面保存了进程的退出码、以及一些统计信息。而其父进程很可能会关心这些信息。比如在<code>shell</code>中，<code>$?</code>变量就保存了最后一个退出的前台进程的退出码，而这个退出码往往被作为if语句的判断条件。  </p>
+<p>当然，内核也可以将这些信息保存在别的地方，而将<code>task_struct</code>结构释放掉，以节省一些空间。但是使用<code>task_struct</code>结构更为方便，因为在内核中已经建立了从<code>pid</code>到<code>task_struct</code>查找关系，还有进程间的父子关系。释放掉<code>task_struct</code>，则需要建立一些新的数据结构，以便让父进程找到它的子进程的退出信息。</p>
+<p>父进程可以通过wait系列的系统调用（如wait4、waitid）来等待某个或某些子进程的退出，并获取它的退出信息。然后wait系列的系统调用会顺便将子进程的尸体（task_struct）也释放掉。子进程在退出的过程中，内核会给其父进程发送一个信号，通知父进程来“收尸”。这个信号默认是<code>SIGCHLD</code>，在通过<code>clone</code>系统调用创建子进程时，可以设置这个信号。</p>
+<h2>2.6. <code>X</code> (TASK_DEAD - EXIT_DEAD)，退出状态，进程即将被销毁</h2>
+<p>进程在退出过程中也可能不会保留它的<code>task_struct</code>。比如这个进程是多线程程序中被detach过的进程（进程？线程？参见《linux线程浅析》）。或者父进程通过设置SIGCHLD信号的handler为SIG_IGN，显式的忽略了SIGCHLD信号。（这是posix的规定，尽管子进程的退出信号可以被设置为SIGCHLD以外的其他信号。）<br>此时，进程将被置于EXIT_DEAD退出状态，这意味着接下来的代码立即就会将该进程彻底释放。所以EXIT_DEAD状态是非常短暂的，几乎不可能通过ps命令捕捉到。</p>
+<h1>3. 进程树</h1>
+<p>每一个进程都是被别的进程启动的，或者说是复刻（Fork）的。当系统刚刚启动的时候，有一个非常特别的根进程 init ，它就是是直接被操作系统内核启动的。</p>
+<p>这样一来，这个系统中运行的所有进程集合就构成了一颗以<code>init</code>进程为根节点的进程树，所有的其他进程都有一个父进程，也有可能有多个子进程。</p>
+<p>比方说，每次我们在<code>bash</code>命令行提示符下执行一个命令的时候，bash 会复刻一个新的进程来执行这个命令，这时这个进程就变成了<code>bash</code>的子进程了。</p>
+<p>相似地，当我们看见一个「登录」提示符时，这其实是<code>login</code>命令在运行着。如果我们成功的登录了，<code>login</code>命令会复刻一个新的进程来执行登录用户选择的<code>shell</code>。</p>
+<p>我们可以使用<code>ps auxf</code>命令来查看树形结构的进程列表，像下面这样:</p>
+<pre><code class="language-shell">-+= 00001 root /sbin/launchd
+ |--= 00085 root /usr/libexec/logd
+ |--= 00086 root /usr/libexec/UserEventAgent (System)
+ |--= 00089 root /System/Library/PrivateFrameworks/Uninstall.framework/Resource
+ |--= 00090 root /System/Library/Frameworks/CoreServices.framework/Versions/A/F
+ |--= 00091 root /System/Library/PrivateFrameworks/MediaRemote.framework/Suppor
+ |-+= 00093 root /usr/sbin/systemstats --daemon
+ | \--- 00359 root /usr/sbin/systemstats --logger-helper /private/var/db/system
+ |--= 00095 root /usr/libexec/configd
+ |--= 00096 root endpointsecurityd
+</code></pre>
+<h1>4. 进程归属权</h1>
+<p>每一个进程都归属于某个特定的用户，归属于该用户的进程有权限像该用户直接登录了一样执行所有该用户可以执行的所有命令。</p>
+<p>比方说，假如有一个进程归<code>shinerio</code>用户所有，那么这个进程就可以做所有<code>shinerio</code>用户能做的事情了：编辑<code>shinerio</code>用户<code>home</code>目录下的文件，启动一个归属于<code>shinerio</code>用户的新进程，等等。</p>
+<p>系统进程比如<code>init</code>和<code>login</code>归属于<code>root</code>用户，而且当一个根进程复刻一个新进程的时候，它可以改变这个子进程的归属。</p>
+<p>所以，当我们登录后， <code>login</code>命令会复刻一个新的进程我运行我们的<code>shell</code>，但是新的进程是所属于成功登陆的那个用户的。接下来所有的后续命令都会以该用户的名义执行，所启动的进程都归属于他。</p>
+<p>默认情况下，只有 root 进程可以像这样改变归属权。</p>
+<h1>5. Init System</h1>
+<p>操作系统内核在初始化进程中所做的最后一件事情就是启动「init system」，也就是执行 <code>/sbin/init</code>命令。「init system」有很多种，但它们都有相同的职责：</p>
+<ol>
+<li>控制哪些服务在系统启动时跟随启动</li>
+<li>提供可以开启、停止服务的工具，并且给出服务的状态信息总览</li>
+<li>提供一个可以编写新的服务的框架</li>
+</ol>
+<p>这里的服务涵盖了从<code>web</code>服务器到用来管理登录的系统级服务器在内的所有服务。基本上，一个「init system」的工作就是让所有面向用户（即非内核）的程序和服务运行起来。</p>
+<blockquote>
+<p>例如，Ubuntu和centos都使用<code>systemd</code>作为默认的「init system」。根据 Linux 惯例，字母 d 是守护进程（daemon）的缩写。 Systemd这个名字的含义，就是它要<strong>守护整个系统</strong>。</p>
+</blockquote>
+<p>(1)-(3) 中设计的特定命令和工具会因不同的「init system」而各有不同。<code>Linux</code>系统历史上最通用的一个「init system」叫做「System V Init」，它是以极具影响力的<code>UNIX SYSTEM V</code>来命名的。在现在<code>Linux</code>系统中，同时被<code>CentOS</code>、<code>RedHad</code>、<code>Debian</code>、<code>Ubuntu</code>等等主流发行版本所采用的「init system」叫做「systemd init system」。</p>
+<p>有两点需要铭记：</p>
+<ol>
+<li>不同的 Linux 发行版本可以使用不同的「init system」</li>
+<li>同一 Linux 发型版本的不同版本号可以使用不同的「init system」</li>
+</ol>
+<h1>8. 终止进程</h1>
+<p>我们可以使用<code>kill</code>命令或<code>killall</code>命令来终止一个进程。常用的kill命令如下：</p>
+<ul>
+<li>1 (HUP)：重新加载进程。</li>
+<li>2 (INT):    中断（同<code>Ctrl + C</code>）</li>
+<li>3 ( QUIT):   退出（同<code>Ctrl + \</code>）</li>
+<li>9 (KILL)：无条件强制杀死一个进程。</li>
+<li>15 (TERM)：正常停止一个进程。</li>
+<li>18 (CONT):    继续（与STOP相反）</li>
+<li>19 (STOP):    暂停（同<code>Ctrl + Z</code>）</li>
+</ul>
+<blockquote>
+<p>只有第9种信号(SIGKILL)才可以无条件终止进程，其他信号进程都有权利忽略</p>
+</blockquote>
+<p>默认情况下，<code>kill</code>和<code>killall</code>命令会发送<code>TERM</code>信号给特定的进程。<code>TERM</code>信号是一个「优雅」的终止信号，进程收到这个信号时会以合适的方式处理和结束进程。比如，被终止的进程可能想要在终止之前完成当前的任务、或者是清理可能会残留在系统中的临时文件等等。</p>
+<p>如果一个进程有漏洞导致它已经不能响应<code>TERM</code>信号了，这种情况下我们就只能发送另一个比较激进的信号了。有两种方法可以发送这个信号：</p>
+<ol>
+<li>kill -KILL pid</li>
+<li>kill -9 pid</li>
+</ol>
+<p><code>kill -9</code>或者<code>killall -9</code>指令都是非常激进了，粗略地等同于直接拔掉计算机的电源。像这样来终止进程可能会留下一堆麻烦，只不过如果进程真的不响应了，也没啥别的办法。所以，在使用<code>kill -9 PID</code>之前，一定要先尽量尝试使用<code>kill PID</code>才是。</p>
+<h1>9. 进程API</h1>
+<h2>9.1. Fork</h2>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;unistd.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdio.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdlib.h&gt;
+
+int main(int argc, char *argv[]){
+    printf(&quot;hello world (pid: %d)\n&quot;, (int) getpid());
+    int rc = fork();
+    if (rc &lt; 0){
+        fprintf(stderr, &quot;fork failed\n&quot;);
+        exit(1);
+    } else if (rc == 0){
+        printf(&quot;hello, I am child (pid: %d)\n&quot;, (int) getpid());
+    } else {
+        printf(&quot;hello, I am parent of %d (pid: %d)\n&quot;, rc, (int) getpid());
+    }
+    sleep(10);
+    return 0;
+}
+</code></pre>
+<ol>
+<li>输出hello world以及当前进程pid</li>
+<li>fork()系统调用，创建新进程；新进程与调用进程几乎完全一样，只不过新创建的线程不会从main函数入口开始执行，而是从fork()系统调用直接返回，父进程返回值是子进程的PID，子进程返回的是0；子进程拥有自己独立的地址空间、寄存器、程序计数器等</li>
+<li>第二行和第三行的打印顺序是随机的，这取决于CPU在父子进程之间的调度顺序</li>
+</ol>
+<pre><code class="language-shell">hello world (pid: 80471)
+hello, I am parent of 80479 (pid: 80471)
+hello, I am child (pid: 80479)
+# ps aux|grep fork_test|grep -v grep
+shinerio         80479   0.0  0.0  4278540    420   ??  S    10:47下午   0:00.00 /Users/shinerio/WorkSpace/c_learn/fork_test
+shinerio         80471   0.0  0.0  4277516    760   ??  SX   10:47下午   0:00.00 /Users/shinerio/WorkSpace/c_learn/fork_tes
+</code></pre>
+<h2>9.2. Wait</h2>
+<p>wait()系统调用可以让父进程等待子进程执行完成。</p>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;unistd.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdio.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdlib.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;time.h&gt;
+
+void print_time(){
+    time_t now;
+    time(&amp;now);
+    struct tm * timeinfo = localtime(&amp;now);
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), &quot;%Y-%m-%d %H:%M:%S&quot;, timeinfo);
+    printf(&quot;time: %s&quot;, ctime(&amp;now));
+}
+
+int main(int argc, char *argv[]){
+    printf(&quot;hello world (pid: %d)\n&quot;, (int) getpid());
+    int rc = fork();
+    if (rc &lt; 0){
+        fprintf(stderr, &quot;fork failed\n&quot;);
+        exit(1);
+    } else if (rc == 0){
+        print_time();
+        printf(&quot;hello, I am child (pid: %d)\n&quot;, (int) getpid());
+    } else {
+        wait(NULL); //  waitpid(rc, NULL, 0);
+        print_time();
+        printf(&quot;hello, I am parent of %d (pid: %d)\n&quot;, rc, (int) getpid());
+    }
+    sleep(10);
+    return 0;
+}
+</code></pre>
+<p><code>wait(NULL)</code>只会等待任意一个子进程完成，即多个子进程的情况下，父进程只会阻塞到第一个执行完成的子进程。使用<code>pid_t waitpid(pid_t pid, int *status, int options);</code>可以明确等待指定pid号的进程执行完成。</p>
+<ul>
+<li><code>pid</code>：指定要等待的子进程的进程 ID。其取值有以下几种情况：<ul>
+<li><code>pid &gt; 0</code>：等待进程 ID 为 <code>pid</code> 的子进程。</li>
+<li><code>pid == 0</code>：等待与调用进程（父进程）属于同一进程组的任何子进程。</li>
+<li><code>pid == -1</code>：等待任何子进程，作用类似于 <code>wait(NULL)</code>。</li>
+<li><code>pid &lt; -1</code>：等待进程组标识符为 <code>|pid|</code> 的任何子进程。</li>
+</ul>
+</li>
+<li><code>status</code>：一个指向整数的指针，用于存储子进程的退出状态信息。如果不关心子进程的退出状态，可以将其设置为 <code>NULL</code>。</li>
+<li><code>options</code>：控制 <code>waitpid()</code> 的行为，是一个位掩码，可以使用以下标志的组合（使用 <code>|</code> 运算符）：<ul>
+<li><code>WNOHANG</code>：如果没有子进程退出，立即返回，而不是阻塞父进程。</li>
+<li><code>WUNTRACED</code>：除了等待已终止的子进程，还会等待已停止的子进程。</li>
+<li><code>WCONTINUED</code>：等待已停止的子进程被继续运行。</li>
+</ul>
+</li>
+</ul>
+<pre><code>hello world (pid: 80921)
+time: Tue Jan 14 23:02:10 2025
+hello, I am child (pid: 80926)
+time: Tue Jan 14 23:02:20 2025
+hello, I am parent of 80926 (pid: 80921)
+</code></pre>
+<h2>9.3. Exec</h2>
+<p>Fork()系统调用可以让子进程执行与父进程一样的程序，而exec系列函数可以让子进程与父进程执行不一样的程序。<br>不同的 <code>exec</code> 函数在参数传递和环境变量处理上有不同的方式，根据实际需求选择合适的函数。例如：</p>
+<ul>
+<li>如果要使用 <code>PATH</code> 环境变量查找可执行文件，可以使用 <code>execlp</code> 或 <code>execvp</code>；</li>
+<li>如果要明确指定路径，可以使用 <code>execv</code> 或 <code>execve</code>；</li>
+<li>如果要指定环境变量，可以使用 <code>execle</code> 或 <code>execve</code></li>
+</ul>
+<p>exec系列函数会从可执行程序中加载代码和静态数据，并用它覆写自己的代码段（以及静态数据），堆、栈及其他内存空间也会被重新初始化。同时，对exec函数的调用永远不会返回，也就是原进程的后续代码不会执行。</p>
+<pre><code class="language-c">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;unistd.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdio.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdlib.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string.h&gt;
+
+int main(int argc, char *argv[]){
+    int rc = fork();
+    if (rc &lt; 0){
+        fprintf(stderr, &quot;fork failed\n&quot;);
+        exit(1);
+    } else if (rc == 0){
+        printf(&quot;I am child (pid: %d)\n&quot;, (int) getpid());
+        char *myargs[3];
+        myargs[0] = strdup(&quot;wc&quot;);
+        myargs[1] = strdup(&quot;fork_test.cpp&quot;);
+        myargs[2] = NULL;
+        execvp(myargs[0], myargs);
+        printf(&quot;this shouldn&#39;t print out&quot;);
+    } else {
+        printf(&quot;I am parent of %d (pid: %d)\n&quot;, rc, (int) getpid());
+    }
+}
+</code></pre>
+<p>输出如下:</p>
+<pre><code>I am parent of 91679 (pid: 91678)
+I am child (pid: 91679)
+      24      70     595 fork_test.cpp
+</code></pre>
+<h2>9.4. fork和exec组合</h2>
+<p>fork和exec都是一个最简单的抽象，fork用于克隆一个进程，而exec用于执行一个新的进程，通过对这两个简单接口的组合可以实现非常强大的功能。如先fork进程，然后做一些环境准备工作，然后再执行exec，最后wait等待子进程执行完成。</p>
+<p>以shell中最简单的重定向举例<code>wc test.txt &gt; count.txt</code></p>
+<ul>
+<li>shell本身也是一个用户程序，它先fork()创建新进程</li>
+<li>然后关闭标准输出</li>
+<li>打开文件count.txt</li>
+<li>然后调用exec来执行wc程序，这样程序输出结果就不是屏幕，而是count.txt文件了。</li>
+</ul>
+<pre><code class="language-c++">&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;unistd.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdio.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;stdlib.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;string.h&gt;
+&lt;span class=&quot;tag&quot;&gt;#include&lt;/span&gt; &lt;fcntl.h&gt;
+
+int main(int argc, char *argv[]){
+    int rc = fork();
+    if (rc &lt; 0){    
+        fprintf(stderr, &quot;fork failed\n&quot;);
+        exit(1);
+    } else if (rc == 0){
+        close(STDOUT_FILENO);
+        open(&quot;./fork_test.txt&quot;, O_CREAT|O_WRONLY|O_TRUNC, S_IRWXU);
+        char *myargs[3];
+        myargs[0] = strdup(&quot;wc&quot;);
+        myargs[1] = strdup(&quot;fork_test.cpp&quot;);
+        myargs[2] = NULL; 
+        execvp(myargs[0], myargs);
+    } else {
+        printf(&quot;I am parent of %d (pid: %d)\n&quot;, rc, (int) getpid());
+    }
+}
+</code></pre>
+<p>以上代码会将<code>wc fork_test.cpp</code>的命令输出结果写到fork_test.txt文件中</p>
+<h1>10. 受限执行</h1>
+<p>受限直接执行是操作系统中一种用于实现进程控制和管理的技术手段</p>
+<h2>10.1. 基本概念</h2>
+<p>受限直接执行是指在操作系统的管理下，让程序在处理器上直接运行，但对其访问资源和执行操作的权限进行严格限制的一种执行方式。它允许进程在一定的约束条件下，直接使用处理器资源来执行指令，完成任务，但又防止其对系统资源进行非法或不合理的访问和操作，以保证系统的稳定性、安全性和公平性。</p>
+<h3>10.1.1. 实现方式</h3>
+<ul>
+<li><strong>硬件支持</strong>：硬件提供了一些机制来支持受限直接执行。例如，处理器具有不同的特权级别，如<a href="操作系统地址空间1-用户空间与内核空间用户态和内核态.html" class="internal-link">操作系统地址空间<span class="tag">#1</span>. 用户空间与内核空间|用户态和内核态</a>。在用户态下运行的进程受到限制，不能直接访问一些关键的硬件资源和执行特权指令，而内核态则具有更高的权限，可以进行各种底层的系统操作。通过这种特权级别的设置，硬件可以确保进程在受限的环境下运行。</li>
+<li><strong>操作系统管理</strong>：操作系统通过进程控制块（PCB）等数据结构来管理进程的执行。操作系统会为每个进程分配一定的资源，如内存空间、CPU 时间片等，并记录进程的状态信息。在进程执行过程中，操作系统会根据进程的状态和资源分配情况，对进程进行调度和切换，确保每个进程都能在受限的条件下公平地使用系统资源。同时，操作系统还会通过内存管理、文件系统管理等模块，对进程的资源访问进行监控和限制，防止进程越界访问或非法操作。</li>
+</ul>
+<h3>10.1.2. 作用和意义</h3>
+<ul>
+<li><strong>资源隔离与保护</strong>：可以将不同进程的运行环境隔离开来，防止一个进程非法访问或修改其他进程的资源，避免进程之间的相互干扰和破坏，从而保证系统中各个进程的独立性和稳定性。</li>
+<li><strong>系统安全保障</strong>：限制了进程对系统关键资源和敏感信息的访问，降低了恶意程序或错误程序对系统造成严重破坏的可能性，增强了系统的安全性。</li>
+<li><strong>公平分配资源</strong>：操作系统可以根据一定的调度算法，为各个进程分配合理的 CPU 时间和其他资源，使各个进程能够在受限的条件下公平地竞争资源，提高系统资源的利用率和整体性能。</li>
+</ul>
+<h1>11. 进程切换</h1>
+<p>上下文切换时长，对于一个2GHz或3GHz的处理器，上下文切换的时间可以达到亚微秒级别。<br>!<a href="操作系统地址空间13-进程切换.html" class="internal-link">操作系统地址空间<span class="tag">#1</span>.3. 进程切换</a></p>
+<h1>12. 参考链接</h1>
+<ol>
+<li><a href="https://liam.page/2020/01/10/the-states-of-processes-on-Linux/">Linux 系统里的进程状态</a></li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

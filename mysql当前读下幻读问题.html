@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mysql当前读下幻读问题 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Mysql当前读下幻读问题</h1>
+        <time datetime="2026-01-03T13:04:29.071Z">2026年1月3日</time>
+        <div class="tags">
+            
+            <span class="tag">excalidraw</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>==⚠  Switch to EXCALIDRAW VIEW in the MORE OPTIONS menu of this document. ⚠==</p>
+<h1>Excalidraw Data</h1>
+<h2>Text Elements</h2>
+<p>事务A ^skXrctjq</p>
+<p>事务B ^eJoYKov2</p>
+<p>insert into orders values(&#39;0&#39;, 0); ^RcVhTM5p</p>
+<p>begin; ^F3wihVa1</p>
+<p>begin; ^sc2G6i5R</p>
+<p>select * from orders where price &lt;= 10; ^jDEoSLjn</p>
+<p>commit; ^oT7fXmbv</p>
+<p>commit; ^RxKbBBlK</p>
+<p>Query OK, 1 row affected (0.01 sec) ^Iojqvw71</p>
+<p>select * from orders; ^wbIsN2l2</p>
+<p>mysql&gt; select * from orders; ^C5vWWYlS</p>
+<p>+------+-------+ ^w33MU80T</p>
+<p>| id   | price | ^BHLVFZKt</p>
+<p>+------+-------+ ^fL6LWArI</p>
+<p>| 1    |    10 | ^0wCD6Jbg</p>
+<p>| 3    |    30 | ^AkDgLYvB</p>
+<p>+------+-------+ ^z0G2APDS</p>
+<p>2 rows in set (0.00 sec) ^vfjvMWjm</p>
+<p>select * from orders where price &lt;= 10; ^fNmHOdPB</p>
+<p>mysql&gt; select * from orders where price &lt;= 10; ^Fj6wsCbM</p>
+<p>+------+-------+ ^uCX9e09u</p>
+<p>| id   | price | ^IC76Y4Pj</p>
+<p>+------+-------+ ^HXQ5FS1U</p>
+<p>| 1    |    10 | ^GGXZoLCC</p>
+<p>+------+-------+ ^WoYT35OL</p>
+<p>1 row in set (0.00 sec) ^12q6Enxn</p>
+<p>mysql&gt; select * from orders where price &lt;= 10 for update; ^V311lmCZ</p>
+<p>+------+-------+ ^YQzYzHi7</p>
+<p>| id   | price | ^mRgxjZNe</p>
+<p>+------+-------+ ^daH201dY</p>
+<p>| 0    |     0 | ^VA6sprPL</p>
+<p>| 1    |    10 | ^MDLVsMwF</p>
+<p>+------+-------+ ^W0xATBgF</p>
+<p>2 rows in set (0.00 sec) ^N9s9RoIo</p>
+<p>%%</p>
+<h2>Drawing</h2>
+<pre><code class="language-compressed-json">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
+</code></pre>
+<p>%%</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

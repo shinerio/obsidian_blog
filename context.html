@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Context - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Context</h1>
+        <time datetime="2026-01-03T13:04:29.134Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>go1.7加入了一个新的标准库context，用来简化对于处理单个请求的多个goroutine之间与请求域的数据、取消信号、截止时间等相关操作，这些操作可能涉及多个API调用。</p>
+<p>&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;当一个上下文被取消时，它派生的所有上下文也被取消</span>。当context生命周期结束时，可以从<code>ctx.Done()</code>管道接收消息，子协程可以判断后进行相应处理。</p>
+<pre><code class="language-go">func TestContext(t *testing.T) {  
+    parentCtx := context.Background()  
+    ctx, cancel := context.WithTimeout(parentCtx, 5*time.Second)  
+    defer cancel() // 当函数返回时，确保上下文被取消，释放资源  
+  
+    go func() {  
+       for {  
+          select {  
+          case &lt;-time.After(time.Second):  
+             fmt.Println(&quot;1 second after.&quot;)  
+          case &lt;-ctx.Done():  
+             // 当超时发生或者外部取消时，这里会被触发  
+             fmt.Println(&quot;operation cancelled:&quot;, ctx.Err())  
+             return  
+          }  
+       }  
+    }()  
+  
+    time.Sleep(time.Second * 6)  
+}
+</code></pre>
+<p>主协程中通知子线程取消</p>
+<pre><code class="language-go">func TestCancelContext(t *testing.T) {  
+    parentContext := context.Background()  
+    ctx, cancel := context.WithCancel(parentContext)  
+  
+    group := sync.WaitGroup{}  
+    group.Add(1)  
+  
+    go func(context context.Context) {  
+       for {  
+          select {  
+          case &lt;-ctx.Done():  
+             fmt.Println(&quot;child exit.&quot;)  
+             group.Done()  
+             return  
+          default:  
+             time.Sleep(time.Second)  
+             fmt.Println(&quot;1 second passed.&quot;)  
+          }  
+  
+       }  
+    }(ctx)  
+  
+    time.Sleep(6 * time.Second)  
+    cancel()  
+    group.Wait()  
+    fmt.Println(&quot;main exit.&quot;)  
+}
+</code></pre>
+<h1>1. Backgroud和TODO</h1>
+<p>Go内置两个函数：<code>Background()</code>和<code>TODO()</code>，我们代码中最开始都是以这两个内置的上下文对象作为&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;最顶层的partent context</span>，衍生出更多的子上下文对象。background和todo本质上都是emptyCtx结构体类型，是一个不可取消，没有设置截止时间，没有携带任何值的Context。</p>
+<h2>1.1. Background</h2>
+<p>Background()主要用于&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;main函数</span>、初始化以及测试代码中，作为Context这个树结构的最顶层的Context，也就是根Context。<br><strong>使用场景</strong></p>
+<ul>
+<li>作为所有<code>context</code>树的<strong>顶层根节点</strong>（例如：<code>main</code>函数、初始化逻辑、测试代码等）。</li>
+<li>当没有现成的<code>context</code>可用时（比如处理请求的入口处）。</li>
+<li>常用于启动后台任务或服务的初始化。</li>
+</ul>
+<h2>1.2. TODO()</h2>
+<p>这个函数也返回一个空的context，可以在不确定该用什么context，或者暂时还没有合适的context可用时，作为&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;占位使用</span>。不过TODO可能在以后会被替换成具体的context，所以使用TODO的地方需要后续检查是否正确。比如在重构代码的时候，可能&lt;span style=&quot;background:<span class="tag">#fff88f</span>&quot;&gt;暂时用TODO标记，提醒以后处理</span>。在生产代码中，应该&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;避免使用TODO</font><br><strong>使用场景</strong></p>
+<ul>
+<li>在代码重构或开发阶段，<strong>临时占位</strong>（例如：函数需要<code>context</code>参数，但调用方暂时无法提供合适的<code>context</code>）。</li>
+<li>提醒后续需要替换为更明确的<code>context</code>（比如从父<code>context</code>派生或传递业务相关的值）。</li>
+</ul>
+<h1>2. With系列函数</h1>
+<p>此外，context包中还定义了四个With系列函数。</p>
+<ul>
+<li><code>withCancel</code>，可以在父协程中调用返回的cancel函数取消子协程</li>
+<li><code>WithDeadline</code>，和withCancel一样，但是有一个最长的生命周期限制，到达<strong>绝对时间</strong>后子上下文也会被取消，适用于在&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;某个时间点</font>之前必须要执行完的任务。</li>
+<li><code>WithTimeout</code>，和withDeadline类似，但是不是以绝对时间为准的，而是以函数被调用时刻为参考的相对时间，适用于执行&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;限制任务的最大时长</font>。</li>
+<li><code>withValue</code>，func WithValue(parent Context, key, val interface{}) Context</li>
+</ul>
+<h1>3. context中值传递的原则</h1>
+<ul>
+<li>父context不能获取子context新加的value（每新加一个value就会生成一个新的context）</li>
+<li>父 Context中某个键对应的值被修改了，子Context可以获取到最新的值。这是因为 Context 中存储的值是通过引用来传递的，而不是通过值传递的方式。当我们使用 <code>context.WithValue</code> 函数创建一个新的子 Context 时，实际上是创建了一个新的 Context 对象，该对象包含了父 Context 中所有键值对的引用。建议context中存储不可变的对象，如果需要变，则可以通过全局变量控制。</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

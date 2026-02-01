@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafka高性能读写 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Kafka高性能读写</h1>
+        <time datetime="2026-01-03T13:04:29.189Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>核心：</p>
+<ul>
+<li>顺序读写</li>
+<li>page cache，避免每次读取磁盘。也正是因为顺序读写，避免了大量page cache miss，可以充分利用page cache。</li>
+<li>零拷贝。</li>
+</ul>
+<h1>1. 存储结构</h1>
+<p>一个topic下多个partition，每个partition使用一个文件夹存储。partition命名规则为：topic名称-序号（从0开始）<br>一个partion分为多个大小大致相等的segment，kafka的数据清理是以segment为最小单位的，当数据超过最长保存时间或最大保存空间后，会优先释放最早的segment。<code>log.segment.bytes</code>，此配置是指 log 日志划分成块的大小，默认值 1G。</p>
+<p>segment命名规则：partion全局的第一个segment从0开始，后续每个segment文件命名为上一个segment文件最后一条消息的offset值+1。数值最大为64位long大小，19位数字字符长度，没有数字用0填充。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202410131617661.png" alt="image.png"></p>
+<p>一个segment分为如下三个文件：</p>
+<ul>
+<li>xxx.log文件</li>
+<li>xxx.index文件</li>
+<li>xxx.timeindex文件</li>
+</ul>
+<h1>2. 稀疏索引</h1>
+<p>segment index file采取稀疏索引存储方式，不会为每条数据创建索引，大大的减少索了引文件大小。可以通过配置项<code>log.index.interval.bytes</code>控制。稀疏索引间存储数据的大小，默认4kb，kafka每当写入了4kb大小的日志（.log），然后就往index文件里面记录一个索引。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202410131619339.png" alt="image.png"></p>
+<blockquote>
+<p>稀疏索引占用空间小，查询相对稠密索引慢；稠密索引占用空间大，查询快</p>
+</blockquote>
+<h1>3. 查找过程</h1>
+<p>根据offset二分查找文件列表，就可以快速定位到具体的.log和.index文件。 如当offset=600时定位到00000000000000000522.index|log文件。在index文件中根据offset来查找到最近的不大于当前查找目标的记录，找到对应的position。索引文件中的position是相对于日志文件（.log 文件）的首地址。position记录了特定offset对应的消息在日志文件中的具体位置，这个位置是从日志文件开头开始计算的偏移量。通过这个相对位置，可以快速在日志文件中定位到对应的消息进行读取操作。通过position快速跳转到log对应位置然后顺序查找到所用的消息。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/202410131621711.png" alt="image.png"></p>
+<blockquote>
+<p>kafka拉数据不是每次都从磁盘上获取的，顺序读的特性可以很好地利用page cache机制，直接从内存中获取数据。</p>
+</blockquote>
+<blockquote>
+<p>timeindex文件存储的了时间戳和offset的映射关系，主要是用于基与时间戳快速定位消息。采用的也是稀疏索引。</p>
+</blockquote>
+<p>kafka的性能与内存大小有关，内存越大，page cache存储的数据就越多，读写越快。</p>
+<h1>4. # leader-epoch-checkpoint</h1>
+<p>在Apache Kafka中，<code>leader-epoch-checkpoint</code> 主要涉及到Leader Epoch机制，这是一种用于管理Kafka集群中分区领导者变更的关键机制，目的是为了简化和增强领导者选举和数据一致性方面的功能。</p>
+<pre><code>0 &lt;span class=&quot;tag&quot;&gt;#版本号&lt;/span&gt;
+1 &lt;span class=&quot;tag&quot;&gt;#下面的记录行数&lt;/span&gt; 
+29 2485991681 &lt;span class=&quot;tag&quot;&gt;#leader&lt;/span&gt; epoch ，可以看到有两位值（epoch，offset）。 
+
+## epoch表示leader的版本号，从0开始，当leader变更过1次时epoch就会+1
+## offset则对应于该epoch版本的leader写入第一条消息的位移
+</code></pre>
+<h1>5. 零拷贝</h1>
+<p>在传统的数据读取和发送方式中，数据从磁盘文件读取到内核缓冲区，再从内核缓冲区复制到用户缓冲区，然后从用户缓冲区再复制到内核的套接字缓冲区（用于网络发送），最后发送到网络。这种多次数据复制会带来大量的 CPU 开销和内存带宽占用，降低了系统性能。</p>
+<p>零拷贝（Zero-Copy）是一种<code>I/O</code> 操作优化技术，可以快速高效地将数据从文件系统移动到网络接口，而不需要将其从内核空间复制到用户空间。其在 <code>FTP</code> 或者 <code>HTTP</code> 等协议中可以显著地提升性能。但是需要注意的是，并不是所有的操作系统都支持这一特性，目前只有在使用 <code>NIO</code> 和 <code>Epoll</code> 传输时才可使用该特性。需要注意，它不能用于实现了数据加密或者压缩的文件系统上。零拷贝大大提高了应用程序的性能，减少了内核和用户模式之间的上下文切换 。对 Linux操作系统而言，零拷贝技术依赖于底层的sendfile() 方法实现 。对应于Java 语言，Fi leChannal.transferTo()方法的底层实现就是 sendfile()方法 。</p>
+<blockquote>
+<p>零拷贝技术通过 DMA (Direct Memory Access) 技术将文件内容复制到内核模式下的 Read Buffer 中。零拷贝是针对内核模式而言的， 数据在内核模式下实现了零拷贝。</p>
+</blockquote>
+<p>Kafka 利用了<code>sendfile()</code>系统调用。当 Kafka 的生产者发送消息或者消费者读取消息时，数据可以直接从文件系统缓存（内核缓冲区）通过<code>sendfile()</code>系统调用发送到网络接口（套接字缓冲区），避免了数据从内核缓冲区到用户缓冲区再回到内核缓冲区（套接字缓冲区）的多余复制。例如，假设 Kafka 存储的日志文件（存储消息数据）已经在操作系统的页面缓存（内核缓冲区）中，当需要将数据发送给消费者时，<code>sendfile()</code>直接将页面缓存中的数据传输到网络套接字，减少了数据复制的次数。</p>
+<h1>6. 思考</h1>
+<p>kafka中topic的数量是否有上限；partition的数量是否有上限</p>
+<ul>
+<li>增加broker节点数量</li>
+<li>增加broker磁盘数量</li>
+<li>增加内存大小</li>
+</ul>
+<h1>7. 参考文献</h1>
+<p><a href="https://juejin.cn/post/6995519558475841550">一文彻底弄懂零拷贝原理零拷贝（Zero-Copy）是一种 I/O 操作优化技术，可以快速高效地将数据从文件系统移动到网络 - 掘金 (juejin.cn)</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

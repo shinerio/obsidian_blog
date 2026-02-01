@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作系统地址空间 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>操作系统地址空间</h1>
+        <time datetime="2026-01-03T13:04:29.276Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>操作系统的地址空间是一个抽象概念，表示操作系统在运行时能够管理和访问的内存范围。它提供了一种将物理内存映射到逻辑地址的机制，使得程序能够在一个独立于物理硬件的虚拟地址空间中执行。</p>
+<h1>1. 用户空间与内核空间</h1>
+<p>操作系统的核心是内核，独立于普通的应用程序，可以访问受保护的内存空间，也有访问底层硬件设备的所有权限。为了保证用户进程不能直接操作内核（kernel），保证内核的安全，操心系统将地址空间划分为两部分，一部分为内核空间，一部分为用户空间。</p>
+<p>对于32位操作系统而言，寻址空间（虚拟存储空间）为4G（2的32次方），linux系统将最高的1G字节（从虚拟地址0xC0000000到0xFFFFFFFF）供内核使用，称为内核空间，而将较低的3G字节（从虚拟地址0x00000000到0xBFFFFFFF），供各个进程使用，称为用户空间。</p>
+<p>对于64位操作系统而言，寻址空间为256TB(2的64次方)，用户空间(应用程序)的虚拟地址范围为:从0x0000000000000000到0x00007fffffffffff，共128TB。内核空间的虚拟地址范围为:从0xffff800000000000到0xffffffffffffffff，共128TB。实际可用的物理内存规模也远小于该数字，但具备了极大扩展能力。64位系统通过将内核空间和用户空间的虚拟地址隔离到高低非连续区域，实现了安全的内存隔离。同时也提供了超大的寻址容量来支撑未来需求。</p>
+<h2>1.1. 内核空间</h2>
+<ul>
+<li>内核空间是操作系统专用的内存区域，包含操作系统的内核代码、数据结构和驱动程序等。</li>
+<li>在内核空间运行的代码拥有最高的特权级别，可以执行特权指令，直接访问硬件资源。</li>
+<li>用户程序无法直接访问内核空间，需要通过系统调用请求内核执行一些特权操作。</li>
+</ul>
+<h2>1.2. 用户空间</h2>
+<ul>
+<li>用户空间是为用户进程分配的内存区域，包含用户程序的代码、数据、堆和栈等。</li>
+<li>用户程序在用户空间内执行，具有较低的特权级别。</li>
+<li>用户程序通过系统调用向内核发出请求，以便执行一些需要特权级别的操作。</li>
+</ul>
+<h2>1.3. 进程切换</h2>
+<p>为了控制进程的执行，内核必须有能力挂起正在CPU上运行的进程，并恢复以前挂起的某个进程的执行。这种行为被称为进程切换。因此可以说，任何进程都是在操作系统内核的支持下运行的，是与内核紧密相关的。</p>
+<p>从一个进程的运行转到另一个进程上运行，这个过程中经过下面这些变化：</p>
+<ol>
+<li>保存处理机上下文，包括程序计数器和其他寄存器。</li>
+<li>更新PCB信息。</li>
+<li>把进程的PCB移入相应的队列，如就绪、在某事件阻塞等队列。</li>
+<li>选择另一个进程执行，并更新其PCB。</li>
+<li>更新内存管理的数据结构。</li>
+<li>恢复处理机上下文。</li>
+</ol>
+<h3>1.3.1. PCB</h3>
+<p>PCB（Process Control Block，进程控制块）是操作系统中用于管理和维护进程信息的数据结构。每个正在运行的进程都有一个对应的 PCB，其中存储了该进程的各种状态、上下文信息以及控制信息。PCB 通常由操作系统内核维护和管理，包含的主要信息有：</p>
+<ol>
+<li><strong>进程状态（Process State）：</strong><ul>
+<li>存储进程的当前状态，如运行（Running）、就绪（Ready）、阻塞（Blocked）等。</li>
+<li>状态的变化由操作系统内核根据进程的执行情况进行管理。</li>
+</ul>
+</li>
+<li><strong>程序计数器（Program Counter）：</strong><ul>
+<li>记录了进程下一条要执行的指令的地址。</li>
+<li>在进程切换时，操作系统保存和恢复程序计数器的值。</li>
+</ul>
+</li>
+<li><strong>寄存器集合（Register Set）：</strong><ul>
+<li>包括通用寄存器、程序状态寄存器等。</li>
+<li>保存了进程在执行过程中的各种寄存器的当前值。</li>
+</ul>
+</li>
+<li><strong>进程标识符（Process ID）：</strong><ul>
+<li>唯一标识一个进程的标识符。</li>
+<li>操作系统使用进程标识符来管理和识别进程。</li>
+</ul>
+</li>
+<li><strong>优先级（Priority）：</strong><ul>
+<li>进程的优先级信息，用于调度算法中的进程调度决策。</li>
+</ul>
+</li>
+<li><strong>进程调度信息：</strong><ul>
+<li>包括进程的调度状态、等待时间、运行时间等。</li>
+<li>用于操作系统进行进程调度和资源分配。</li>
+</ul>
+</li>
+<li><strong>进程控制信息：</strong><ul>
+<li>包括进程所拥有的资源、权限等控制信息。</li>
+<li>用于管理进程对系统资源的访问。</li>
+</ul>
+</li>
+<li><strong>内存管理信息：</strong><ul>
+<li>包括进程的内存分配情况，页表信息等。</li>
+<li>用于操作系统进行内存管理。</li>
+</ul>
+</li>
+<li><strong>文件描述符表（File Descriptor Table）：</strong><ul>
+<li>记录了进程打开的文件及其属性。</li>
+<li>用于文件的读写和管理。</li>
+</ul>
+</li>
+<li><strong>进程间通信信息：</strong><ul>
+<li>记录了进程与其他进程之间进行通信的相关信息，如消息队列、共享内存等。</li>
+</ul>
+</li>
+<li><strong>信号和处理器状态：</strong><ul>
+<li>记录了进程当前对信号的处理方式和相关状态。</li>
+<li>用于处理进程收到的信号。<br>PCB 提供了操作系统对进程的抽象和控制，允许操作系统在多任务环境中有效地管理和调度进程。当操作系统进行进程切换时，会保存当前运行进程的状态到其对应的 PCB 中，然后加载下一个要执行的进程的 PCB，从而实现进程的无缝切换。</li>
+</ul>
+</li>
+</ol>
+<h1>2. 分页和分页</h1>
+<h2>2.1. 分段（Segmentation）：</h2>
+<ul>
+<li>采用分段机制将地址空间划分为不同的段，如代码段、数据段、堆、栈等。</li>
+<li>每个段都有不同的权限和属性，以实现对程序和数据的不同保护和访问控制。</li>
+</ul>
+<h2>2.2. 分页（Paging）：</h2>
+<ul>
+<li>采用分页机制将地址空间划分为固定大小的页面，通常为4KB。</li>
+<li>操作系统通过页表来映射虚拟地址到物理地址，实现虚拟内存管理。</li>
+</ul>
+<blockquote>
+<p><a href="https://xie.infoq.cn/article/a7c83189a19387018b8595e98">DPDK大页内存原理_Linux_赖猫_InfoQ写作社区</a></p>
+</blockquote>
+<h1>3. 栈和堆</h1>
+<h2>3.1. 栈（Stack）：</h2>
+<ul>
+<li>栈是一种后进先出（LIFO）的数据结构，用于存储函数调用时的局部变量、返回地址等。</li>
+<li>栈空间由操作系统自动管理，通过栈指针进行操作。</li>
+</ul>
+<h2>3.2. 堆（Heap）：</h2>
+<ul>
+<li>堆是一块用于动态分配内存的区域，由程序员手动管理。</li>
+<li>通过堆管理函数（如<code>malloc</code>、<code>free</code>）进行内存的分配和释放</li>
+</ul>
+<h1>4. 共享内存和内存映射</h1>
+<h2>4.1. 共享内存：</h2>
+<ul>
+<li>用于实现进程间通信，允许多个进程共享同一块物理内存。</li>
+<li>进程通过共享内存区域直接读写数据，避免了复制数据的开销。</li>
+</ul>
+<h2>4.2. 内存映射：</h2>
+<ul>
+<li>允许文件或设备映射到进程的地址空间，使得对文件的读写可以通过内存访问来完成。</li>
+<li>通过<code>mmap</code>等系统调用实现内存映射。</li>
+</ul>
+<h1>5. 文件描述符（File Descriptor）</h1>
+<p>linux系统中一切都可以看成文件，文件分为：普通文件、目录文件、链接文件、字符设备文件、块设备文件和套接口文件。分别通过字符-/d/l/c/b/s指代。<br>文件描述符是内核为了高效管理<strong>已经被打开的文件所创建的索引</strong>。其值通常为一个非负整数，用于指代被打开的文件，所有执行I/O操作的系统调用都通过文件描述符。</p>
+<ul>
+<li><p>每个文件描述符会与一个打开的文件相对应</p>
+</li>
+<li><p>不同文件描述符也可能指向同一个文件</p>
+</li>
+<li><p>相同的文件可以被不同的进程打开，也可以在同一个进程中被打开多次<br>linux提供了三个表来维护文件描述符，分别是：进程级的文件描述符表，系统及的文件描述符表，文件系统的i-node表<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/linux%E5%9F%BA%E7%A1%80/linux%E7%B3%BB%E7%BB%9F%E6%96%87%E4%BB%B6%E6%8F%8F%E8%BF%B0%E7%AC%A6%E8%A1%A8.png" alt="linux系统文件描述符"></p>
+</li>
+<li><p>在进程A中，文件描述符1和30都指向了同一个打开的文件句柄（<span class="tag">#23</span>），这可能是该进程多次对执行<strong>打开</strong>操作</p>
+</li>
+<li><p>进程A中的文件描述符2和进程B的文件描述符2都指向了同一个打开的文件句柄（<span class="tag">#73</span>），这种情况有几种可能</p>
+<ul>
+<li>进程A和进程B可能是父子进程关系</li>
+<li>进程A和进程B打开了同一个文件，且文件描述符相同（低概率事件）</li>
+<li>A、B中某个进程通过UNIX域套接字将一个打开的文件描述符传递给另一个进程。</li>
+<li>进程A的描述符0和进程B的描述符3分别指向不同的打开文件句柄，但这些句柄均指向i-node表的相同条目（<span class="tag">#1936</span>），换言之，指向同一个文件。发生这种情况是因为每个进程各自对同一个文件发起了打开请求。同一个进程两次打开同一个文件，也会发生类似情况。</li>
+</ul>
+</li>
+</ul>
+<h3>5.1.1. 缓存I/O</h3>
+<p>缓存I/O又被称作标准I/O，大多数文件系统的默认I/O操作都是缓存I/O。在Linux的缓存I/O机制中，数据先从磁盘复制到内核空间的缓冲区，然后从内核空间缓冲区复制到应用程序的地址空间。<br><strong>读操作</strong>：操作系统检查内核的缓冲区有没有需要的数据，如果已经缓存了，那么就直接从缓存中返回；否则从磁盘中读取，然后缓存在操作系统的缓存中。<br><strong>写操作</strong>：将数据从用户空间复制到内核空间的缓存中。这时对用户程序来说写操作就已经完成，至于什么时候再写到磁盘中由操作系统决定，除非显示地调用了sync同步命令</p>
+<h3>5.1.2. 阻塞与同步</h3>
+<p>阻塞、非阻塞说的是调用者。同步、异步说的是被调用者。调用blocking IO会一直block住对应的进程直到操作完成，而non-blocking IO在kernel还准备数据的情况下会立刻返回。synchronous IO做”IO operation”的时候会将process阻塞。按照这个定义，blocking IO，non-blocking IO，IO multiplexing都属于synchronous IO。asynchronous IO则不一样，当进程发起IO 操作之后，就直接返回再也不理睬了，直到kernel发送一个信号，告诉进程说IO完成。在这整个过程中，进程完全没有被block。non-blocking IO和asynchronous IO的区别还是很明显的。在non-blocking IO中，虽然进程大部分时间都不会被block，但是它仍然要求进程去主动的check，并且当数据准备完成以后，也需要进程主动的再次调用recvfrom来将数据拷贝到用户内存。而asynchronous IO则完全不同。它就像是用户进程将整个IO操作交给了他人（kernel）完成，然后他人做完后发信号通知。在此期间，用户进程不需要去检查IO操作的状态，也不需要主动的去拷贝数据。</p>
+<h4>5.1.2.1. 同步与异步</h4>
+<p><strong>同步请求</strong><br>A调用B，B的处理是同步的，在处理完之前他不会通知A，只有处理完之后才会明确的通知A。<br><strong>异步请求</strong><br>A调用B，B的处理是异步的，B在接到请求后先告诉A我已经接到请求了，然后异步去处理，处理完之后通过回调等方式再通知A。</p>
+<blockquote>
+<p>同步和异步最大的区别就是被调用方的执行方式和返回时机。 同步指的是被调用方做完事情之后再返回，异步指的是被调用方先返回，然后再做事情，做完之后再想办法通知调用方。</p>
+</blockquote>
+<h4>5.1.2.2. 阻塞与非阻塞</h4>
+<p><strong>阻塞请求</strong><br>A调用B，A一直等着B的返回，别的事情什么也不干。<br><strong>非阻塞请求</strong><br>A调用B，A不用一直等着B的返回，先去忙别的事情了。</p>
+<p>所以说，阻塞和非阻塞最大的区别就是在被调用方返回结果之前的这段时间内，调用方是否一直等待。 阻塞指的是调用方一直等待别的事情什么都不做。非阻塞指的是调用方先去忙别的事情。</p>
+<h3>5.1.3. Unix中的五种I/O模型</h3>
+<p>对于一次I/O访问read操作分为两个阶段</p>
+<ol>
+<li>等待数据准备，数据被拷贝到操作系统内核的缓冲区</li>
+<li>数据从内核缓冲区拷贝到用户态缓冲区<br>对于socket流而言</li>
+<li>通常涉及到等待网络上的数据分组到达，也就是被复制到内核的某个缓冲区</li>
+<li>把数据从内核缓冲区复制到应用进程缓冲区</li>
+</ol>
+<h4>5.1.3.1. 同步阻塞I/O</h4>
+<p>分为两个阶段，这两个阶段都必须完成后才能继续下一步操作，blocking IO的特点就是IO执行的两个阶段都被block了。</p>
+<ol>
+<li>等待数据就绪。网络I/O中就是等待远端数据陆续抵达。数据从网络中或者从磁盘上被复制到内核缓冲区中。</li>
+<li>数据拷贝。出于系统安全考虑，用户态的程序没有权限直接读取内核态内存，因此内核负责把内核态内存中的数据拷贝一份到用户态内存中</li>
+</ol>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/linux%E5%9F%BA%E7%A1%80/blocking_io.png" alt="blockingIO"></p>
+<blockquote>
+<p>send函数是应用程序用来向TCP连接的另一端发送数据<br>recvfrom或recv函数是应用程序用来从TCP连接的另一端接收数据</p>
+</blockquote>
+<h4>5.1.3.2. 同步非阻塞I/O</h4>
+<p>非阻塞是对于主调方来说的，用户进程可以在阶段1的时候选择去做其他事情，通过轮询的方式看看内核缓冲区是否就绪。如果数据就绪，再执行阶段2，第2阶段的拷贝数据的整个过程，进程仍然是属于阻塞状态的。nonblocking IO的特点就是用户进程需要不断的主动轮询kernel数据好了没有。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/linux%E5%9F%BA%E7%A1%80/noblocking_io.png" alt="noneBlockingIO"></p>
+<h4>5.1.3.3. I/O多路复用</h4>
+<p>I/O多路复用也称为时间驱动模型。I/O多路复用是指内核一旦发现进程指定的一个或者多个IO条件准备读取，它就通知该进程。目前支持I/O多路复用的系统调用有select、pselect、poll、epoll，一个进程可以监听多个描述符，一旦某个文件描述符fd就绪（一般是读就绪或者写就绪），能够通知程序进行相应的读写操作。当用户进程调用了select，那么整个进程会被block，而同时，kernel会“监视”所有select负责的socket，当任何一个socket中的数据准备好了，select就会返回。这个时候用户进程再调用read操作，将数据从kernel拷贝到用户进程。select/pselect/poll/epoll本质上都是同步I/O，因为他们都需要在读写事件就绪后自己负责进行读写，也就是说这个读写过程是阻塞的，而异步I/O则无需自己负责进行读写，异步I/O的实现会负责把数据从内核拷贝到用户空间。相比如同步非阻塞I/O，它的改进在于原本需要用户进程去轮询的事情交给了内核线程帮你完成，而且这个内核线程可以等待多个socket，能实现同时对多个I/O端口进行监听。所以，如果处理的连接数不是很高的话，使用select/epoll的web server不一定比使用多线程 + 阻塞IO的web server性能更好，可能延迟还更大。 也就是说，select/epoll的优势并不是对于单个连接能处理得更快，而是在于能处理更多的连接。高并发的程序一般使用同步非阻塞方式而非多线程 + 同步阻塞方式。在IO multiplexing Model中，实际中，对于每一个socket，一般都设置成为non-blocking，但是，如下图所示，整个用户的process其实是一直被block的。只不过process是被select这个函数block，而不是被socket IO给block。</p>
+<ul>
+<li>select： select可以先对要操作的描述文件符进行查询，查看是否目标描述符可以进行读、写或者错误操作，然后当文件描述符满足操作条件的时候才进行真正的I/O操作。函数select()返回值为0，-1或者一个大于1的整数值，当监视的文件集中有文件描述符符合要求，即读文件描述符集中的文件可读，写文件描述符集中的文件可写或者错误文件描述符中的文件发生错误时，返回值为大于0的正值；当超时的时候返回0；当发生错误的时候返回-1。</li>
+<li>pselect: 与select函数一致，除了超时时间结构是纳秒级的结构。不过Linux平台下内核调度的精度为10毫秒级，所以根本达不到设置的精度。</li>
+<li>poll: poll解决了select中fds集合大小1024的限制。但是，它并没改变大量描述符数组被整体复制于用户态和内核态的地址空间之间，以及个别描述符就绪触发整体描述符集合的遍历的低效问题。poll随着监控的socket集合的增加性能线性下降，poll不适合用于大并发场景。</li>
+<li>epoll: 是select和poll的增强版。epoll使用一个文件描述符管理多个描述符，将用户关系的文件描述符的事件存放到内核的一个事件表中，这样在用户空间和内核空间的copy只需一次。</li>
+</ul>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/linux%E5%9F%BA%E7%A1%80/io%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8.png" alt="io多路复用"></p>
+<h3>5.1.4. 信号驱动I/O</h3>
+<p>信号驱动式I/O是指进程预先告知内核，使得当某个描述符上发生某事时，内核使用信号通知相关进程。信号驱动式I/O对于TCP套接字近乎无用，因为该信号产生得过于频繁，不能区分具体是哪种事件</p>
+<ul>
+<li>监听套接字上某个连接请求请求已经完成</li>
+<li>某个断连接请求已经发起</li>
+<li>某个连接之半已经关闭</li>
+<li>数据到达套接字</li>
+<li>数据已经从套接字发送走(即输出缓冲区有空闲空间)</li>
+<li>发生某个异步错误</li>
+</ul>
+<h3>5.1.5. 异步I/O</h3>
+<p>相对于同步IO，异步IO不是顺序执行。用户进程进行aio_read系统调用之后，无论内核数据是否准备好，都会直接返回给用进程，然后用户态进程可以去做别的事情。等到socket数据准备好了，内核直接复制数据给进程，然后从内核向进程发送通知。IO两个阶段， 进程都是非阻塞的。Linux提供了AIO库函数实现异步，但是用的很少。目前有很多开源的异步IO库，例如libevent、libev、libuv。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/linux%E5%9F%BA%E7%A1%80/asynchronousIO.png" alt="异步IO"></p>
+<h1>6. 参考文献</h1>
+<p><a href="https://segmentfault.com/a/1190000003063859">Linux IO模式及select、poll、epoll详解</a><br><a href="https://segmentfault.com/a/1190000009724931">文件描述符简介</a><br><a href="https://blog.csdn.net/cywosp/article/details/38965239">Linux中的文件描述符与打开文件之间的关系</a><br><a href="https://www.jianshu.com/p/2aa6357fe262">缓存IO与直接IO</a><br>[详解 Java 中 4 种 I/O 模型](&lt;<a href="https://mp.weixin.qq.com/s?__biz=MzI3ODcxMzQzMw==&mid=2247488064&idx=2&sn=56b6f87cb4e99107737c73f7ed1e5e8e&chksm=eb539776dc241e60f88f7185da4b7fb46bf41f10a66a53898ca672e8942e8b6a8d47ec7d3d3d&scene=21">https://mp.weixin.qq.com/s?__biz=MzI3ODcxMzQzMw==&amp;mid=2247488064&amp;idx=2&amp;sn=56b6f87cb4e99107737c73f7ed1e5e8e&amp;chksm=eb539776dc241e60f88f7185da4b7fb46bf41f10a66a53898ca672e8942e8b6a8d47ec7d3d3d&amp;scene=21</a><span class="tag">#wechat_redirect</span>&gt;)<br><a href="https://blog.csdn.net/hnlyyk/article/details/48346227">Linux网络编程--select()和pselect()函数</a></p>
+<h1>7. select和poll</h1>
+<p>Epoll是Linux内核提供的一种高效的I/O多路复用机制，可以高效地处理大量socket，提供高并发的网络通信。其高效的原理主要在于以下几点:</p>
+<ol>
+<li>基于事件(event)驱动，避免了select/poll需轮询所有FD的模型。</li>
+<li>将用户空间FD相关数据内核化，减少了上下文切换开销。</li>
+<li>使用红黑树作为FD存储结构，加速查找速度。</li>
+<li>采用水平触发，避免了重复通知的效率问题。</li>
+<li>支持边缘触发，减少无效中断。</li>
+<li>一定程度上实现了&quot;反应堆&quot;模式，不直接调用回调函数，进一步提高效率。</li>
+</ol>
+<p>总的来说，epoll通过内核化、锁优化、减少复制以及高效的数据结构访问等手段，极大提升了I/O的并发处理能力，使其可以支撑海量并发连接，这就是epoll的高效设计原理。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

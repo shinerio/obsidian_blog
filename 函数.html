@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>函数 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>函数</h1>
+        <time datetime="2026-01-03T13:04:29.136Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 结构体返回值</h1>
+<p>在Go语言中，函数返回结构体时，接收它的变量类型可以是<strong>值类型</strong>或<strong>指针类型</strong></p>
+<h2>1.1. 使用值类型接收值类型返回值</h2>
+<ul>
+<li><strong>结构体较小</strong>（如 2-3 个字段的结构体），直接复制不会有明显性能影响。</li>
+<li>结构体的数据不需要在外部修改，返回值是独立的副本。</li>
+</ul>
+<pre><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;log&quot;
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func NewPerson() Person {
+    p := Person{Name: &quot;Alice&quot;, Age: 25}
+    log.Printf(&quot;函数内结构体地址, %p&quot;, &amp;p)
+    return p
+}
+
+func main() {
+    p := NewPerson()
+    log.Printf(&quot;函数返回值结构体地址, %p&quot;, &amp;p)
+    fmt.Println(p.Name, p.Age)
+}
+</code></pre>
+<p>输出如下</p>
+<pre><code class="language-text">2025/03/02 07:30:45 函数内结构体地址, 0xc000010030
+2025/03/02 07:30:45 函数返回值结构体地址, 0xc000010018
+Alice 25
+</code></pre>
+<h2>1.2. 使用指针类型接收指针类型返回值</h2>
+<ul>
+<li><strong>结构体较大</strong>（包含多个字段，或者嵌套结构体），使用指针避免值拷贝的开销。</li>
+<li><strong>需要修改结构体的字段</strong>，指针允许直接修改原始对象，而不需要显式返回新的值。</li>
+</ul>
+<pre><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+    &quot;log&quot;
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func NewPerson() *Person {
+    p := Person{Name: &quot;Alice&quot;, Age: 25}
+    log.Printf(&quot;函数内结构体地址, %p&quot;, &amp;p)
+    return &amp;p
+}
+
+func main() {
+    p := NewPerson()
+    log.Printf(&quot;函数返回值结构体地址, %p&quot;, p)
+    fmt.Println(p.Name, p.Age)
+}
+</code></pre>
+<p>输出如下</p>
+<pre><code class="language-go">2025/03/02 07:32:30 函数内结构体地址, 0xc000010018
+2025/03/02 07:32:30 函数返回值结构体地址, 0xc000010018
+Alice 25
+</code></pre>
+<h1>2. 函数入参</h1>
+<h2>2.1. 接口类型参数传递</h2>
+<p>接口本身就是引用类型，接口变量在内部实现上已经包含了一个指向实际数据的指针和一个指向方法表的指针（通常称为iface结构，包含tab和data两个指针）。接口传递是浅复制：当你传递一个接口变量时，只是复制了这两个指针，而不是底层的数据结构，所以传递成本很低。一个典型的使用场景是对<code>context.Context</code>参数的传递。</p>
+<pre><code class="language-go">package main
+
+import (
+    &quot;fmt&quot;
+)
+
+// Shape 接口是一种抽象类型,它定义了一组方法签名,但不包含实现代码
+type Shape interface {
+    Area() float64
+    Perimeter() float64
+}
+
+// Rectangle 实现了接口中声明的所有方法，那么它就被认为实现了该接口
+type Rectangle struct {
+    Width, Height float64
+}
+
+func (r Rectangle) Area() float64 {
+    return r.Width * r.Height
+}
+
+func (r Rectangle) Perimeter() float64 {
+    return 2 * (r.Width + r.Height)
+}
+
+func main() {
+    rect := Rectangle{5.0, 4.0}
+    print(rect)
+}
+
+func print(s Shape) {
+    fmt.Println(&quot;Area: &quot;, s.Area())
+    fmt.Println(&quot;Perimeter: &quot;, s.Perimeter())
+}
+</code></pre>
+<p>输出如下：</p>
+<pre><code class="language-text">Area:  20
+Perimeter:  18
+</code></pre>
+<p>在Go语言里，函数参数在声明时会指定参数的类型，有时候可以不明确给出参数变量名，在接口定义、参数忽略和代码简洁性方面有重要作用。</p>
+<h2>2.2. 参数类型声明（共用类型）</h2>
+<p>在Go语言中，当函数的多个相邻参数具有相同类型时，可以只在最后一个参数后面声明类型，前面的参数就不用重复声明该类型了。也就是说，<code>length, width float64</code>这种写法等同于<code>length float64, width float64</code></p>
+<h2>2.3. 参数变量声明</h2>
+<h3>2.3.1. 方法占位</h3>
+<p>在 Go 语言中，当你定义一个接口时，接口中的方法可以只声明参数类型而不声明变量名。接口描述的是一组方法的签名，重点在于方法的输入输出类型，而不是具体的参数名。这有助于抽象出通用的行为，让不同的类型可以根据这些方法签名来实现接口。<br>示例代码</p>
+<pre><code class="language-go">package main
+
+import &quot;fmt&quot;
+
+// Shape 是一个接口，定义了计算面积和周长的方法
+type Shape interface {
+    Area(float64, float64) float64
+    Perimeter(float64, float64) float64
+}
+
+// Rectangle 是一个结构体，表示矩形
+type Rectangle struct{}
+
+// Area 实现了 Shape 接口的 Area 方法
+func (r Rectangle) Area(length, width float64) float64 {
+    return length * width
+}
+
+// Perimeter 实现了 Shape 接口的 Perimeter 方法
+func (r Rectangle) Perimeter(length, width float64) float64 {
+    return 2 * (length + width)
+}
+
+func main() {
+    var s Shape = Rectangle{}
+    fmt.Println(&quot;矩形面积:&quot;, s.Area(5, 3))
+    fmt.Println(&quot;矩形周长:&quot;, s.Perimeter(5, 3))
+}
+</code></pre>
+<p>在 Shape 接口中，Area 和 Perimeter 方法只声明了参数类型，没有指定参数名。这样做的目的是定义一个通用的方法签名，任何实现 Shape 接口的类型都需要按照这个签名来实现相应的方法。</p>
+<h3>2.3.2. 忽略参数</h3>
+<p>在某些情况下，函数可能接收了一些参数，但在函数内部并不需要使用这些参数。此时可以不声明参数变量名，以表明这些参数在函数实现中被忽略。</p>
+<pre><code class="language-go">package main
+
+import &quot;fmt&quot;
+
+// 函数接收三个参数，但只使用了其中一个
+func exampleFunc(int, str string, _ bool) {
+    fmt.Println(&quot;接收到的字符串参数:&quot;, str)
+}
+
+func main() {
+    exampleFunc(10, &quot;hello&quot;, true)
+}
+</code></pre>
+<p>在exampleFunc函数中，第一个参数只声明了类型 int，没有变量名，表示该参数在函数内部不会被使用。第三个参数使用了下划线 _ 作为变量名，这是 Go 语言中用于忽略变量的惯例</p>
+<h3>2.3.3. 代码简洁性</h3>
+<p>在一些简单的匿名函数或者测试代码中，不声明参数变量名可以让代码更加简洁，突出函数的主要逻辑。</p>
+<pre><code class="language-go">package main
+
+import &quot;fmt&quot;
+func main() {
+    // 匿名函数，不声明参数变量名
+    add := func(int, int) int {
+        return 1 + 2
+    }
+    result := add(10, 20)
+    fmt.Println(&quot;计算结果:&quot;, result)
+}
+</code></pre>
+<p>在这个匿名函数中，不声明参数变量名，直接实现了一个简单的加法逻辑。这样代码更加简洁，适用于一些临时的、简单的函数实现。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

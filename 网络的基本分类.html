@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机网络（三）—— 网络的基本分类 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>计算机网络（三）—— 网络的基本分类</h1>
+        <time datetime="2020-04-21T00:00:00.000Z">2020年4月21日</time>
+        <div class="tags">
+            
+            <span class="tag">计算机网络</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>本文主要介绍计算机网络的分类以及局域网技术。</p>
+<!--more-->
+
+<h2>0.1. 网络分类</h2>
+<ul>
+<li><font color=red>地理位置</font>：<ol>
+<li>个域网（PAN，Personal Area Network）。个域网允许设备围绕一个人进行通信。一个常见的例子是计算机通过无线网络（蓝牙）与其外围设备（显示器、键盘、鼠标。打印机）连接。</li>
+<li>局域网（LAN，Local Area Network）。局域网是一种私有网络，一般在一座建筑物内或建筑物附近，如家庭、办公室或工厂。局域网被广泛用来连接个人计算机等电子设备，使它们能够共享资源（打印机）和交换信息。</li>
+<li>城域网（MAN，Metropolitan Area Network）。城域网的范围可覆盖一个城市。最有名的城域网例子是许多城市都有的有线电视网。</li>
+<li>广域网（WAN，Wide Area Network）。广域网的覆盖范围很大，可以跨越很大的地理区域，通常是一个国家，地区甚至大陆。</li>
+<li>互联网（internet）世界上存在着很多网络，它们常常使用不同的硬件和软件，将这些相互之间不同而且常常不兼容的网络连接起来的网络称为互联网。而全球范围内的**因特网（Internet）**常常用首字母大写来表示。</li>
+</ol>
+</li>
+<li><font color=red>网络拓扑结构</font>：<ol>
+<li>星型网络结构。星型网络结构是现在最常用的网络拓扑结构，在星型网络结构中各个计算机使用各自的线缆连接到网络中，因此如果一个站点出了问题，不会影响整个网络的运行。</li>
+<li>环型网络结构。这种结构中的传输媒体从一个端用户到另一个端用户，直到将所有的端用户连成环型。数据在环路中沿着一个方向在各个节点间传输，信息从一个节点传到另一个节点。这种结构显而易见消除了端用户通信时对中心系统的依赖性。</li>
+<li>总线型网络结构。在总线型网络结构中所有的站点共享一条数据通道。总线型网络安装简单方便，需要铺设的电缆最短，成本低，某个站点的故障一般不会影响整个网络，但介质的故障会导致网络瘫痪。总线网安全性低，监控比较困难，增加新站点也不如星型网容易。<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory/20200425194342.png" alt=""></li>
+</ol>
+</li>
+<li><font color=red>传输媒介</font>：<ol>
+<li>有线网络。有线网指采用同轴电缆、双绞线、光纤等有线介质连接计算机的网络。</li>
+<li>无线网络。无线网络采用微波、红外线、无线电等电磁波作为传输介质。</li>
+</ol>
+</li>
+</ul>
+<h2>0.2. 局域网技术</h2>
+<p>局域网技术包括以太网、令牌环网、FDDI网（Fiber Distributed Data Interface）、ATM网（Asynchronous Transfer Mode）。</p>
+<h3>0.2.1. 以太网</h3>
+<p>以太网是当今现有局域网采用的最通用的通信协议标准。IEEE组织的IEEE 802.3标准制定了以太网的技术标准，它规定了包括物理层的连线、电子信号和介质访问层协议的内容。</p>
+<h4>0.2.1.1. 分类</h4>
+<p>以太网有两类：第一类是经典以太网，第二类是交换式以太网，使用交换机设备连接不同的计算机。经典以太网是以太网的原始形式，运行速度从3~10 Mbps不等；而交换式以太网正是广泛应用的以太网，可运行在100、1000和10000Mbps那样的高速率，分别以快速以太网、千兆以太网和万兆以太网的形式呈现。</p>
+<h4>0.2.1.2. 网络结构</h4>
+<p>以太网的标准拓扑结构为总线拓扑结构，但目前的快速以太网（<a href="https://baike.baidu.com/item/100BASE-T">100BASE-T</a>、<a href="https://baike.baidu.com/item/1000BASE-T">1000BASE-T</a>标准）为了减少冲突，将能提高的网络速度和使用效率最大化，使用集线器来进行网络连接和组织。如此一来，以太网的拓扑结构就成了星型；但在逻辑上，以太网仍然使用总线型拓扑和CSMA/CD的总线技术。</p>
+<p>CSMA/CD(Carrier Sense Multiple Access/Collision Detection，载波多重访问/碰撞检测）工作原理：</p>
+<ol>
+<li>【开始】如果线路空闲，则启动传输，否则跳转到第4步。</li>
+<li>【发送】如果检测到冲突，继续发送数据直到达到最小回报时间（min echo receive interval）以确保所有其他转发器和终端检测到冲突，而后跳转到第4步。</li>
+<li>【成功传输】向更高层的网络协议报告发送成功，退出传输模式。</li>
+<li>【线路繁忙】持续等待直到线路空闲。</li>
+<li>【线路空闲】在尚未达到最大尝试次数之前，每隔一段随机时间转到第1步重新尝试。</li>
+<li>【超过最大尝试传输次数】向更高层的网络协议报告发送失败，退出传输模式。</li>
+</ol>
+<p>因为所有的通信信号都在共享线路上传输，即使信息只是想发给其中的一个终端（destination），却会使用广播的形式，发送给线路上的所有计算机。在正常情况下，网络接口卡会滤掉不是发送给自己的信息，接收到目标地址是自己的信息时才会向CPU发出中断请求，除非网卡处于混杂模式（Promiscuous mode）。这种“一个说，大家听”的特质是共享介质以太网在安全上的弱点，因为以太网上的一个节点可以选择是否监听线路上传输的所有信息。共享电缆也意味着共享带宽，所以在某些情况下以太网的速度可能会非常慢，比如电源故障之后，当所有的网络终端都重新启动时。</p>
+<h4>0.2.1.3. 工作模式</h4>
+<p>以太网卡可以工作在两种模式下：半双工和全双工</p>
+<ul>
+<li><font color=red>半双工</font>：半双工传输模式实现以太网载波监听多路访问冲突检测。传统的共享LAN是在半双工下工作的，在同一时间只能传输单一方向的数据。当两个方向的数据同时传输时，就会产生冲突，这会降低以太网的效率。</li>
+<li><font color=red>全双工</font>：全双工传输是采用点对点连接，这种安排没有冲突，因为它们使用双绞线中两个独立的线路，这等于没有安装新的介质就提高了带宽（单行道变双行道）。在双全工模式下，冲突检测电路不可用，因此每个双全工连接只用一个端口，用于点对点连接。标准以太网的传输效率可达到50％～60％的带宽，双全工在两个方向上都提供100％的效率。</li>
+</ul>
+<h3>0.2.2. 令牌环网</h3>
+<p>令牌环网是IBM公司于70年代发展的，现在这种网络比较少见。在老式的令牌环网中，数据传输速度为4Mbps或16Mbps，新型的快速令牌环网速度可达100Mbps。令牌环网的传输方法在物理上采用了星形拓扑结构，但逻辑上仍是环形拓扑结构。其通信传输介质可以是无屏蔽双绞线、屏蔽双绞线和光纤等。 结点间采用多站访问部件（Multistation Access Unit，MAU）连接在一起。MAU是一种专业化集线器，它是用来围绕工作站计算机的环路进行传输。由于数据包看起来像在环中传输，所以在工作站和MAU中没有终结器。在这种网络中，有一种专门的帧称为“令牌”，在环路上持续地传输来确定一个结点何时可以发送包。令牌为24位长，有3个8位的域，分别是首定界符（Start Delimiter，SD）、访问控制（Access Control，AC）和终定界符（End Delimiter，ED）。首定界符是一种与众不同的信号模式，作为一种非数据信号表现出来，用途是防止它被解释成其它东西。这种独特的8位组合只能被识别为帧首标识符（SOF）。由于目前以太网技术发展迅速，令牌网存在固有缺点，令牌在整个计算机局域网已不多见，原来提供令牌网设备的厂商多数也退出了市场，所以在目前局域网市场中令牌网可以说是“明日黄花”了。</p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

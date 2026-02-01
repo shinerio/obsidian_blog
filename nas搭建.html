@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAS搭建 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>NAS搭建</h1>
+        <time datetime="2026-01-03T13:04:29.300Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. 主机硬件</h1>
+<ul>
+<li>主板：微星B360M Mortar</li>
+<li>CPU：i3-8300t</li>
+<li>内存：金士顿骇客8G * 2 DDR4</li>
+<li>SSD：三星980 NVMe PCIe3.0 500G</li>
+<li>西数：红盘4T</li>
+<li>散热器：利民AXP90 X47</li>
+<li>电源：台达VX350</li>
+<li>机箱：先马米立方matx</li>
+</ul>
+<h1>2. ssh登录</h1>
+<p>ubuntu系统，设置仅支持ssh秘钥登录，保证安全性</p>
+<h1>3. 开启samba共享文件</h1>
+<pre><code class="language-shell">vim /etc/samba/smb.conf
+</code></pre>
+<h1>4. plex</h1>
+<p>配置ssl加密，在let&#39;s encrypt申请证书（p12格式，默认包含公钥、私钥和证书）。</p>
+<blockquote>
+<p>更换绑定证书后需要浏览器清理一下证书缓存。</p>
+</blockquote>
+<p>外网访问plex统一使用https通道，内网还保留http通道。</p>
+<h1>5. movie-robot</h1>
+<pre><code class="language-shell">docker run -itd --name=movie-robot --restart always --network host -p 1329:1329 -v /home/shinerio/movie-robot:/data -v /home/shinerio/Downloads:/Downloads -v /home/shinerio/data/Media/Movie:/Movie -v /home/shinerio/data/Media/TvShow:/TvShow --env &#39;LICENSE_KEY=存储在1password&#39; yipengfei/movie-robot:latest
+</code></pre>
+<h1>6. shadowsocks打通隧道</h1>
+<p>通过ddns绑定公网ip，端口只映射几个必要的、能够保证安全的端口，其他服务在外网通过ss代理的方式访问。内网主机配置自定义域名解析到192.168.85.0/24内网IP，识别外网环境强制192.168.85.0/24这个网段走家庭网络专用ss代理服务器。</p>
+<h2>6.1. 端口映射</h2>
+<table>
+<thead>
+<tr>
+<th>port</th>
+<th>service</th>
+<th>安全性</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>50000</td>
+<td>tomcat</td>
+<td>使用tomcat用户启动，无login权限，无sudo权限；三重密码保护</td>
+</tr>
+<tr>
+<td>14443</td>
+<td>ss-server</td>
+<td>高安全性加密算法，复杂密码</td>
+</tr>
+<tr>
+<td>32400</td>
+<td>plex</td>
+<td>plex用户启动，无login权限，无sudo权限；两步认证</td>
+</tr>
+</tbody></table>
+<h2>6.2. 域名分配</h2>
+<p>设备使用自定义域名解析到内网ip，配置场景模式外网环境强制走ss代理，14443端口回家，家庭环境直接走内网，不过路由。</p>
+<table>
+<thead>
+<tr>
+<th>ip地址</th>
+<th>自定义域名</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>192.168.85.105</td>
+<td>shinerio.nas</td>
+</tr>
+<tr>
+<td>192.168.85.2</td>
+<td>shinerio.server</td>
+</tr>
+</tbody></table>
+<h2>6.3. 外网访问使用的所有自定义域名ss-server也必须可以解析</h2>
+<pre><code class="language-shell"># vim /etc/hosts添加
+192.168.85.2 shinerio.server
+fe80::211a:a1f9:e853:b548 shinerio.server
+192.168.85.105 shinerio.nas
+fe80::20c:29ff:feb5:ff66 shinerio.nas
+</code></pre>
+<p>需要同时添加ipv6的解析，否则ss建连会比较慢</p>
+<pre><code class="language-bash">Apr  2 19:40:53 shinerio-ubuntu /usr/local/bin/ss-server[27224]: successfully resolved shinerio.nas
+Apr  2 19:40:53 shinerio-ubuntu /usr/local/bin/ss-server[27224]: new connection to remote, 1 opened remote connections
+Apr  2 19:40:53 shinerio-ubuntu /usr/local/bin/ss-server[27224]: failed to lookup v6 address Timeout while contacting DNS servers
+</code></pre>
+<h1>7. 远程控制</h1>
+<h2>7.1. xrdp远程桌面</h2>
+<pre><code class="language-shell"># 安装
+apt install xrdp
+# 启动
+systemctl start xrdp
+# 开机启动
+systemctl enable xrdp
+</code></pre>
+<p>解决黑屏</p>
+<pre><code class="language-shell"># 编辑
+vim /etc/xrdp/startwm.sh
+# 添加配置
+unset DBUS_SESSION_BUS_ADDRESS
+unset XDG_RUNTIME_DIR
+
+# 优化桌面，不做任何配置，启动之后的桌面是非常别扭的，因为是Gnome的原始桌面，没有左侧的任务栏，窗口也没有最小化按钮，等等一些列问题
+vim ~/.xsessionrc
+
+# 添加：
+export GNOME_SHELL_SESSION_MODE=ubuntu
+export XDG_CURRENT_DESKTOP=ubuntu:GNOME
+export XDG_CONFIG_DIRS=/etc/xdg/xdg-ubuntu:/etc/xdg
+
+# 重启
+systemctl restart xrdp
+</code></pre>
+<h2>7.2. 通过Guacamole实现web端控制</h2>
+<pre><code class="language-shell"># 默认情况下guacamole只监听本地ip
+# /etc/guacamole/guacd.conf
+[server]
+bind_host = 192.168.85.2
+bind_port = 4822
+</code></pre>
+<p>配置登录信息</p>
+<pre><code class="language-shell">vim /etc/guacamole/user-mapping.xml
+</code></pre>
+<p>为了安全尽量不要配置密码，在登录后手动输入</p>
+<pre><code class="language-xml">&lt;user-mapping&gt;
+        &lt;authorize password=&quot;xxxx&quot; username=&quot;shinerio&quot;&gt; &lt;span class=&quot;tag&quot;&gt;#登录界面账号密码&lt;/span&gt;
+
+        &lt;connection name=&quot;rdp-shinerio-ubuntu&quot;&gt;
+                &lt;protocol&gt;rdp&lt;/protocol&gt;  &lt;span class=&quot;tag&quot;&gt;#RDP协议配置&lt;/span&gt;
+                &lt;param name=&quot;hostname&quot;&gt;192.168.85.2&lt;/param&gt; &lt;span class=&quot;tag&quot;&gt;#远程主机IP&lt;/span&gt;
+                &lt;param name=&quot;port&quot;&gt;3389&lt;/param&gt; &lt;span class=&quot;tag&quot;&gt;#rdp&lt;/span&gt; 默认端口
+                &lt;param name=&quot;username&quot;&gt;your-username&lt;/param&gt; &lt;span class=&quot;tag&quot;&gt;#远程主机用户&lt;/span&gt;
+                &lt;param name=&quot;ignore-cert&quot;&gt;true&lt;/param&gt;
+        &lt;/connection&gt;
+      &lt;/authorize&gt;
+&lt;/user-mapping&gt;
+</code></pre>
+<p>重启<br>systemctl restart guacd</p>
+<h1>8. 群晖（虚拟机）</h1>
+<p>使用arpl安装。设置复杂密码+两步认证+开启自动封锁</p>
+<h2>8.1. 安装webDav server</h2>
+<h2>8.2. 设置仅支持ssh秘钥登录</h2>
+<pre><code># sshd对文件夹权限校验严格，需要将以下目录权限设置正确
+chmod 755 /homes/shinerio 
+chmod 700 ~/.ssh 
+chmod 600 ~/.ssh/authorized_keys
+</code></pre>
+<h2>8.3. 安装git备份obsidian笔记</h2>
+<pre><code class="language-shell"># 增量同步数据
+rsync -r shinerio@192.168.85.2:/home/shinerio/data/Documents/obsidian /var/services/homes/shinerio/Document/note
+</code></pre>
+<h1>9. 分工原则</h1>
+<p>ubuntu: 媒体中心，存储电视、电影，通过web控制端兼具远程办公能力<br>nas: photo备份(google photo同步备份)，重要资料备份中心，document目录1自动同步google drive云备份<br>obsidian：</p>
+<ol>
+<li>全平台所有资料存储本地保存，通过gitee同步。</li>
+<li>苹果是主力写作平台，通过icloud同步，同时google drive同步</li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

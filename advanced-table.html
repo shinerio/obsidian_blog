@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Table - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Advanced Table</h1>
+        <time datetime="2026-01-03T13:04:29.300Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><span class="tag">#obsidian</span> </p>
+<h1>功能</h1>
+<ul>
+<li>自动化格式表格</li>
+<li>Excel样式的表格导航，即使用Tab和Enter在行和列之间导航</li>
+<li>对指定的列进行函数求值</li>
+<li>添加、删除、移动行和列</li>
+<li>设置列的对齐方式</li>
+<li>对指定列进行排序</li>
+<li>将表格导出为CSV格式</li>
+</ul>
+<h1>公式</h1>
+<p><a href="https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md">公式</a>基本格式如下：</p>
+<p><code>&lt;!-- TBLFM: 结果存放单元格=计算式 --&gt;</code></p>
+<p>如<code>&lt;!-- TBLFM: @&gt;$2=sum(@I..@-1) --&gt;</code>中的 <code>@&gt;$2</code> 代表最后一行、第二列，右边的 <code>sum</code> 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。</p>
+<h2>单元格引用</h2>
+<h3>绝对引用</h3>
+<ul>
+<li>指定行<ul>
+<li><code>@n</code> 代表第 n 行</li>
+<li><code>@&lt;</code> 代表第一行</li>
+<li><code>@&gt;</code> 代表最后一行</li>
+<li><code>@I</code> 表示表头与内容分隔线</li>
+</ul>
+</li>
+<li>指定列<ul>
+<li><code>$n</code> 表示第 n 列</li>
+<li><code>&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;article&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Advanced Table&lt;/h1&gt;
+        &lt;time datetime=&quot;2026-01-03T13:04:29.300Z&quot;&gt;2026年1月3日&lt;/time&gt;
+        &lt;div class=&quot;tags&quot;&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;section class=&quot;content&quot;&gt;
+        {&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;$&gt;=sum(@I..@-1) --&gt;}
+    &lt;/section&gt;
+&lt;/article&gt;amp;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;article&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Advanced Table&lt;/h1&gt;
+        &lt;time datetime=&quot;2026-01-03T13:04:29.300Z&quot;&gt;2026年1月3日&lt;/time&gt;
+        &lt;div class=&quot;tags&quot;&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;section class=&quot;content&quot;&gt;
+        {&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;$&gt;=sum(@I..@-1) --&gt;}
+    &lt;/section&gt;
+&lt;/article&gt;amp;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;&lt;article&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Advanced Table&lt;/h1&gt;
+        &lt;time datetime=&quot;2026-01-03T13:04:29.300Z&quot;&gt;2026年1月3日&lt;/time&gt;
+        &lt;div class=&quot;tags&quot;&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;section class=&quot;content&quot;&gt;
+        {&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;$&gt;=sum(@I..@-1) --&gt;}
+    &lt;/section&gt;
+&lt;/article&gt;gt;=sum(@I..@-1) --&gt;lt;</code> 表示第一列</li>
+<li><code>&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;article&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Advanced Table&lt;/h1&gt;
+        &lt;time datetime=&quot;2026-01-03T13:04:29.300Z&quot;&gt;2026年1月3日&lt;/time&gt;
+        &lt;div class=&quot;tags&quot;&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;section class=&quot;content&quot;&gt;
+        {&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;$&gt;=sum(@I..@-1) --&gt;}
+    &lt;/section&gt;
+&lt;/article&gt;amp;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&lt;article&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Advanced Table&lt;/h1&gt;
+        &lt;time datetime=&quot;2026-01-03T13:04:29.300Z&quot;&gt;2026年1月3日&lt;/time&gt;
+        &lt;div class=&quot;tags&quot;&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;section class=&quot;content&quot;&gt;
+        {&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;$&gt;=sum(@I..@-1) --&gt;}
+    &lt;/section&gt;
+&lt;/article&gt;amp;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;&lt;article&gt;
+    &lt;header&gt;
+        &lt;h1&gt;Advanced Table&lt;/h1&gt;
+        &lt;time datetime=&quot;2026-01-03T13:04:29.300Z&quot;&gt;2026年1月3日&lt;/time&gt;
+        &lt;div class=&quot;tags&quot;&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+    &lt;section class=&quot;content&quot;&gt;
+        {&lt;p&gt;&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; &lt;/p&gt;
+&lt;h1&gt;功能&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;自动化格式表格&lt;/li&gt;
+&lt;li&gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&lt;/li&gt;
+&lt;li&gt;对指定的列进行函数求值&lt;/li&gt;
+&lt;li&gt;添加、删除、移动行和列&lt;/li&gt;
+&lt;li&gt;设置列的对齐方式&lt;/li&gt;
+&lt;li&gt;对指定列进行排序&lt;/li&gt;
+&lt;li&gt;将表格导出为CSV格式&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;公式&lt;/h1&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&quot;&gt;公式&lt;/a&gt;基本格式如下：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;如&lt;code&gt;&amp;lt;!-- TBLFM: @&amp;gt;$2=sum(@I..@-1) --&amp;gt;&lt;/code&gt;中的 &lt;code&gt;@&amp;gt;$2&lt;/code&gt; 代表最后一行、第二列，右边的 &lt;code&gt;sum&lt;/code&gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&lt;/p&gt;
+&lt;h2&gt;单元格引用&lt;/h2&gt;
+&lt;h3&gt;绝对引用&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;指定行&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@n&lt;/code&gt; 代表第 n 行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;lt;&lt;/code&gt; 代表第一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@&amp;gt;&lt;/code&gt; 代表最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;@I&lt;/code&gt; 表示表头与内容分隔线&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;指定列&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$n&lt;/code&gt; 表示第 n 列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;lt;&lt;/code&gt; 表示第一列&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;p&amp;gt;&amp;lt;span class=&amp;quot;tag&amp;quot;&amp;gt;#obsidian&amp;lt;/span&amp;gt; &amp;lt;/p&amp;gt;
+&amp;lt;h1&amp;gt;功能&amp;lt;/h1&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;自动化格式表格&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;Excel样式的表格导航，即使用Tab和Enter在行和列之间导航&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定的列进行函数求值&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;添加、删除、移动行和列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;设置列的对齐方式&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;对指定列进行排序&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;将表格导出为CSV格式&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h1&amp;gt;公式&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;a href=&amp;quot;https://github.com/tgrosinger/md-advanced-tables/blob/main/docs/formulas.md&amp;quot;&amp;gt;公式&amp;lt;/a&amp;gt;基本格式如下：&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: 结果存放单元格=计算式 --&amp;amp;gt;&amp;lt;/code&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;p&amp;gt;如&amp;lt;code&amp;gt;&amp;amp;lt;!-- TBLFM: @&amp;amp;gt;$2=sum(@I..@-1) --&amp;amp;gt;&amp;lt;/code&amp;gt;中的 &amp;lt;code&amp;gt;@&amp;amp;gt;$2&amp;lt;/code&amp;gt; 代表最后一行、第二列，右边的 &amp;lt;code&amp;gt;sum&amp;lt;/code&amp;gt; 代表计算，整个公式意思是右边的计算部分放到左边指定单元格里。&amp;lt;/p&amp;gt;
+&amp;lt;h2&amp;gt;单元格引用&amp;lt;/h2&amp;gt;
+&amp;lt;h3&amp;gt;绝对引用&amp;lt;/h3&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;指定行&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@n&amp;lt;/code&amp;gt; 代表第 n 行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;lt;&amp;lt;/code&amp;gt; 代表第一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@&amp;amp;gt;&amp;lt;/code&amp;gt; 代表最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@I&amp;lt;/code&amp;gt; 表示表头与内容分隔线&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;指定列&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$n&amp;lt;/code&amp;gt; 表示第 n 列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;lt;&amp;lt;/code&amp;gt; 表示第一列&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$&amp;amp;gt;&amp;lt;/code&amp;gt; 表示最后一列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;h3&amp;gt;相对引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;相对引用意思是引用单元格在当前单元格的某个位置。&amp;lt;/p&amp;gt;
+&amp;lt;ul&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;@-1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一列，但在最后一行&amp;lt;/li&amp;gt;
+&amp;lt;li&amp;gt;&amp;lt;code&amp;gt;$+1&amp;lt;/code&amp;gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&amp;lt;/li&amp;gt;
+&amp;lt;/ul&amp;gt;
+&amp;lt;p&amp;gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&amp;lt;/p&amp;gt;
+&amp;lt;h3&amp;gt;范围引用&amp;lt;/h3&amp;gt;
+&amp;lt;p&amp;gt;&amp;lt;code&amp;gt;@I..@-1&amp;lt;/code&amp;gt; 这样两个点表示引用一个范围。&amp;lt;/p&amp;gt;
+&amp;lt;blockquote&amp;gt;
+&amp;lt;p&amp;gt;注意，范围只允许行到行、列到列、单元格到单元格。&amp;lt;/p&amp;gt;
+&amp;lt;/blockquote&amp;gt;
+&amp;lt;table&amp;gt;
+&amp;lt;thead&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt;
+&amp;lt;th&amp;gt;成绩&amp;lt;/th&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/thead&amp;gt;
+&amp;lt;tbody&amp;gt;&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张一&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;100&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张二&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;200&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;张三&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;300&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;tr&amp;gt;
+&amp;lt;td&amp;gt;综合&amp;lt;/td&amp;gt;
+&amp;lt;td&amp;gt;600&amp;lt;/td&amp;gt;
+&amp;lt;/tr&amp;gt;
+&amp;lt;/tbody&amp;gt;&amp;lt;/table&amp;gt;
+&amp;lt;!-- TBLFM: @&amp;gt;$&amp;gt;=sum(@I..@-1) --&amp;gt;gt;&lt;/code&gt; 表示最后一列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;相对引用&lt;/h3&gt;
+&lt;p&gt;相对引用意思是引用单元格在当前单元格的某个位置。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@-1&lt;/code&gt; 表示引用单元格在当前单元格同一列，但在最后一行&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;$+1&lt;/code&gt; 表示引用单元格在当前单元格同一行，但在最后右边两列&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。&lt;/p&gt;
+&lt;h3&gt;范围引用&lt;/h3&gt;
+&lt;p&gt;&lt;code&gt;@I..@-1&lt;/code&gt; 这样两个点表示引用一个范围。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;注意，范围只允许行到行、列到列、单元格到单元格。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;姓名&lt;/th&gt;
+&lt;th&gt;成绩&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;&lt;tr&gt;
+&lt;td&gt;张一&lt;/td&gt;
+&lt;td&gt;100&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张二&lt;/td&gt;
+&lt;td&gt;200&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;张三&lt;/td&gt;
+&lt;td&gt;300&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;综合&lt;/td&gt;
+&lt;td&gt;600&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+&lt;!-- TBLFM: @&gt;$&gt;=sum(@I..@-1) --&gt;}
+    &lt;/section&gt;
+&lt;/article&gt;gt;=sum(@I..@-1) --&gt;gt;</code> 表示最后一列</li>
+</ul>
+</li>
+</ul>
+<h3>相对引用</h3>
+<p>相对引用意思是引用单元格在当前单元格的某个位置。</p>
+<ul>
+<li><code>@-1</code> 表示引用单元格在当前单元格同一列，但在最后一行</li>
+<li><code>$+1</code> 表示引用单元格在当前单元格同一行，但在最后右边两列</li>
+</ul>
+<p>使用引用单元格时，行或列（和当前单元格相同部分）往往是不用写明的。</p>
+<h3>范围引用</h3>
+<p><code>@I..@-1</code> 这样两个点表示引用一个范围。</p>
+<blockquote>
+<p>注意，范围只允许行到行、列到列、单元格到单元格。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>姓名</th>
+<th>成绩</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>张一</td>
+<td>100</td>
+</tr>
+<tr>
+<td>张二</td>
+<td>200</td>
+</tr>
+<tr>
+<td>张三</td>
+<td>300</td>
+</tr>
+<tr>
+<td>综合</td>
+<td>600</td>
+</tr>
+</tbody></table>
+<!-- TBLFM: @>$>=sum(@I..@-1) -->}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

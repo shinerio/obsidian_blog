@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch使用与原理 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Watch使用与原理</h1>
+        <time datetime="2026-01-03T13:04:29.193Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>Watch机制是etcd的核心功能之一，它允许客户端监听指定键或前缀的变化，实现配置变更的实时通知。默认情况下，watch是从&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;最新版本</font>开始监听的。</p>
+<h1>1. 使用方式</h1>
+<h2>1.1. 基本使用</h2>
+<pre><code class="language-shell">etcdctl watch --prefix /app
+# PUT
+# /app
+# myapp2
+# PUT
+# /app/owner
+# shinerio
+</code></pre>
+<p>添加或修改key</p>
+<pre><code class="language-shell">etcdctl put /app myapp2
+# OK
+etcdctl put /app/owner shinerio
+# OK
+</code></pre>
+<p>etcd提供了多种方式使用Watch功能</p>
+<h3>1.1.1. 命令行方式</h3>
+<pre><code class="language-shell"># 监听单个键 
+etcdctl watch mykey 
+# 监听带有特定前缀的所有键 
+etcdctl watch --prefix /myapp/ 
+# 从特定历史版本开始监听 
+etcdctl watch mykey --rev=3 
+# 以JSON格式输出变更 
+etcdctl -w=json watch mykey
+</code></pre>
+<h3>1.1.2. API调用方式</h3>
+<p> Go客户端示例</p>
+<pre><code class="language-go">// Go客户端示例
+watcher := clientv3.NewWatcher(client)
+watchChan := watcher.Watch(context.Background(), &quot;/app&quot;, clientv3.WithPrefix())
+
+for watchResp := range watchChan {
+    for _, event := range watchResp.Events {
+        fmt.Printf(&quot;Type: %s Key:%s Value:%s\n&quot;, 
+                   event.Type, event.Kv.Key, event.Kv.Value)
+    }
+}
+</code></pre>
+<p>支持以下高级选项</p>
+<ol>
+<li><strong>指定版本</strong>:<ul>
+<li>从特定版本开始监听: <code>WithRev(revision)</code></li>
+<li>仅获取最新事件: <code>WithLastRev()</code></li>
+</ul>
+</li>
+<li><strong>范围监听</strong>:<ul>
+<li>前缀监听: <code>WithPrefix()</code></li>
+<li>范围监听: <code>WithRange(endKey)</code></li>
+</ul>
+</li>
+<li><strong>事件过滤</strong>:<ul>
+<li>仅接收PUT事件: <code>WithFilterPut()</code></li>
+<li>仅接收DELETE事件: <code>WithFilterDelete()</code></li>
+</ul>
+</li>
+<li><strong>进度通知</strong>:<ul>
+<li>当没有事件时发送进度更新: <code>WithProgressNotify()</code></li>
+<li>用于确认连接活跃性</li>
+</ul>
+</li>
+</ol>
+<h1>2. 工作原理</h1>
+<h2>2.1. 整体架构</h2>
+<p>Watch机制的核心组件包括：</p>
+<ol>
+<li><strong>watchableStore</strong>: 可监听的存储层</li>
+<li><strong>watcherGroup</strong>: 监听器群组管理</li>
+<li><strong>watcher</strong>: 单个监听器</li>
+<li><strong>eventBuffer</strong>: 事件缓冲区</li>
+</ol>
+<h2>2.2. 事件流转过程</h2>
+<ol>
+<li><strong>客户端发起Watch请求</strong>:<ul>
+<li>指定key/范围、起始版本等参数</li>
+<li>建立长连接(通常基于gRPC流)</li>
+</ul>
+</li>
+<li><strong>服务端注册watcher</strong>:<ul>
+<li>创建watcher对象</li>
+<li>将watcher添加到watcherGroup中</li>
+<li>根据起始版本决定是否需要从历史事件开始发送</li>
+</ul>
+</li>
+<li><strong>同步历史事件</strong>:<ul>
+<li>如果客户端指定了过去的版本号，服务端会从MVCC存储中查询该版本到当前的所有历史事件，将这些事件发送给客户端。</li>
+</ul>
+</li>
+<li><strong>异步事件通知</strong>:<ul>
+<li>当etcd处理写请求时，会同时：<ul>
+<li>应用到存储层</li>
+<li>通过触发器(trigger)通知watchableStore</li>
+</ul>
+</li>
+<li>watchableStore将事件分发给匹配的watcher</li>
+<li>通过长连接将事件推送给客户端</li>
+</ul>
+</li>
+</ol>
+<h2>2.3. MVCC的重要作用</h2>
+<p>Watch机制严重依赖etcd的MVCC(多版本并发控制)功能：</p>
+<ol>
+<li>每个修改操作都会生成新的版本号(revision)</li>
+<li>历史版本使得Watch可以从&lt;font color=&quot;<span class="tag">#ff0000</span>&quot;&gt;任意点&quot;回溯&quot;监听</font></li>
+<li>由于保留了历史版本，即使客户端断开重连，也不会错过事件</li>
+</ol>
+<h2>2.4. 内存和性能优化</h2>
+<p>为了高效处理大量Watch请求，etcd采用了多种优化：</p>
+<ol>
+<li><strong>批处理机制</strong>:<ul>
+<li>多个事件会被批量发送给客户端</li>
+<li>减少网络往返次数</li>
+</ul>
+</li>
+<li><strong>压缩与淘汰</strong>:<ul>
+<li>基于时间/版本的自动压缩</li>
+<li>设置内存上限，超出时淘汰不活跃的watcher</li>
+</ul>
+</li>
+<li><strong>按需机制</strong>:<ul>
+<li>服务端维护未发送的事件队列</li>
+<li>客户端ready时才发送</li>
+</ul>
+</li>
+<li><strong>进度通知</strong>:<ul>
+<li>定期发送当前进度，避免长时间无事件导致连接失效</li>
+</ul>
+</li>
+</ol>
+<h2>2.5. 可靠性保障</h2>
+<p>etcd Watch提供高可靠性保证：</p>
+<ol>
+<li><strong>断线重连</strong>:<ul>
+<li>客户端断开连接后可从上次接收到的版本继续监听</li>
+<li>不会丢失中间发生的事件</li>
+</ul>
+</li>
+<li><strong>版本保证</strong>:<ul>
+<li>只要历史版本未被压缩，客户端总能收到完整事件序列</li>
+<li>如果请求的版本已被压缩，服务端会返回压缩错误</li>
+</ul>
+</li>
+<li><strong>集群支持</strong>:<ul>
+<li>Watch请求可发送到任何集群成员</li>
+<li>Leader变更不影响Watch功能</li>
+</ul>
+</li>
+</ol>
+<h1>3. 常见挑战和解决方案</h1>
+<ol>
+<li><strong>历史事件压缩</strong>:<ul>
+<li>问题：如果监听的<strong>起始版本已被压缩，将无法获取完整事件</strong></li>
+<li>解决：合理设置压缩策略，或实现备用同步机制</li>
+</ul>
+</li>
+<li><strong>大量watcher的性能</strong>:<ul>
+<li>问题：大量watcher可能导致内存压力和事件分发延迟</li>
+<li>解决：使用前缀合并，减少watcher数量；合理设置服务端资源限制</li>
+</ul>
+</li>
+<li><strong>网络中断处理</strong>:<ul>
+<li>问题：长时间网络中断可能丢失事件</li>
+<li>解决：实现健壮的重连逻辑，记录最后处理的版本号</li>
+</ul>
+</li>
+</ol>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

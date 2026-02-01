@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSL证书 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>SSL证书</h1>
+        <time datetime="2026-01-03T13:04:29.293Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p>在密码学和数字证书体系中，一般没有“私钥证书”的说法。主要是公钥证书。公钥证书（通常就简称为数字证书）是一种电子文档，包含以下信息</p>
+<ul>
+<li>公钥信息</li>
+<li>持有者身份信息（如姓名、组织等）</li>
+<li>证书颁发机构（CA）的数字签名等<br>其主要目的是将<strong>公钥与特定的实体（如个人、服务器等）绑定</strong>，用于在网络通信等场景中验证对方身份，确保信息是发送给正确的接收方，并且保证信息传输的保密性、完整性和不可否认性。例如，在网站的SSL/TLS加密通信中，浏览器会验证网站的公钥证书来确保安全连接。</li>
+</ul>
+<h1>1. 证书域名绑定</h1>
+<p>证书分为范域名证书和单域名证书。</p>
+<h2>1.1. 泛域名证书</h2>
+<p>泛域名证书可以保护一个主域名以及该主域名下的所有<a href="https://zhida.zhihu.com/search?content_id=235980729&content_type=Article&match_order=1&q=%E5%AD%90%E5%9F%9F%E5%90%8D&zhida_source=entity">子域名</a>。当使用泛域名证书时，同一个证书可以保护多个同级子域名，这种证书通常使用通配符<code>*</code>来表示，如<code>*.example.com</code>，因此也被称为通配符SSL证书。</p>
+<ul>
+<li>泛域名证书只能匹配同级别的子域名，不能跨级匹配。例如，<code>*.shinerio.site</code>的域名证书匹配<code>wiki.shinerio.site</code>、<code>learn.shinerio.site</code>等子域名，但是不匹配<code>guide.demo.shinerio.site</code>、<code>developer.demo.shinerio.site</code>等域名。</li>
+<li>泛域名证书一般仅支持申请单个通配符域名的证书，不支持多通配符域名的证书，如<code>*.*.shinerio.site</code><br>泛域名证书的一个主要优势是，它可以适用于未来增加的子域名，无需为每个新的子域名单独购买和安装SSL证书。另外，泛域名证书还可以<strong>简化证书管理和配置</strong>。</li>
+</ul>
+<h2>1.2. 单域名证书</h2>
+<p>如其名称所示，单域名证书仅适用于一个域名或子域名。这意味着，如果有多个域名或子域名需要保护，就需要为每个域名或子域名分别购买和安装单域名证书。单域名证书的优点是在特定于某个域名的通信中，提供了<strong>更高的安全性和保护级别</strong>。与泛域名证书相比，单域名证书的价格更为<strong>经济实惠</strong>。</p>
+<h1>2. 证书类型</h1>
+<p>在 SSL/TLS 证书体系中，DV（Domain Validation）、OV（Organization Validation）和 EV（Extended Validation）是根据<strong>验证级别</strong>和<strong>信任等级</strong>划分的三种类型，主要区别体现在<strong>验证流程严格程度</strong>、<strong>信任标识</strong>、<strong>适用场景</strong>等方面。</p>
+<table>
+<thead>
+<tr>
+<th><strong>维度</strong></th>
+<th><strong>DV 证书（域名验证）</strong></th>
+<th><strong>OV 证书（组织验证）</strong></th>
+<th><strong>EV 证书（扩展验证）</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>验证内容</strong></td>
+<td>仅验证域名所有权（DNS / 文件验证等）</td>
+<td>验证域名所有权 + <strong>组织真实性</strong>（工商注册信息、联系方式等）</td>
+<td>验证域名所有权 + <strong>组织真实性</strong> + <strong>严格身份审核</strong>（法律文件、运营地址核实等）</td>
+</tr>
+<tr>
+<td>安全等级</td>
+<td>一般</td>
+<td>高</td>
+<td>最高</td>
+</tr>
+<tr>
+<td><strong>验证机构审核</strong></td>
+<td>自动或简单人工审核（最快几分钟完成）</td>
+<td>人工审核组织信息（需 1-5 个工作日）</td>
+<td>第三方机构深度审核（需 5-10 个工作日或更久）</td>
+</tr>
+<tr>
+<td><strong>证书价格</strong></td>
+<td>最低（几十到几百元 / 年）</td>
+<td>中等（数百到数千元 / 年）</td>
+<td>最高（数千元到数万元 / 年）</td>
+</tr>
+<tr>
+<td><strong>证书有效期</strong></td>
+<td>通常 1-2 年</td>
+<td>通常 1-3 年</td>
+<td>通常 1-3 年</td>
+</tr>
+</tbody></table>
+<p>DV vs OV<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250604220737.png" alt="image.png"></p>
+<h2>2.1. DV 证书（域名验证）</h2>
+<p>仅包含<strong>域名信息</strong>（通常在<code>CN</code>字段），<strong>无组织信息</strong>（如公司名称、地址等）。    </p>
+<pre><code class="language-plaintext">CN = example.com          # 仅域名，无组织名
+</code></pre>
+<p>DV证书仅验证域名所有权，无需审核组织资质，因此不包含企业信息。</p>
+<h2>2.2. OV 证书（组织验证）</h2>
+<p>包含<strong>完整的组织信息</strong>，至少包括：</p>
+<ul>
+<li><code>CN</code>（Common Name）：域名或子域名（如<code>www.example.com</code>）。</li>
+<li><code>O</code>（Organization）：组织名称（如 “北京某科技有限公司”）。</li>
+<li><code>C</code>（Country）：国家代码（如 “CN”）。</li>
+<li>部分证书可能包含<code>L</code>（Locality，地区）、<code>ST</code>（State，州 / 省）等。</li>
+</ul>
+<pre><code class="language-plaintext">CN = www.example.com 
+O = 北京某科技有限公司 
+C = CN 
+ST = 北京市 
+L = 朝阳区
+</code></pre>
+<p>OV 证书需验证组织真实性，因此必须包含工商注册的企业名称及基本信息。</p>
+<h2>2.3. EV 证书（扩展验证）</h2>
+<p><strong>组织信息最完整</strong>，除包含 OV 证书的所有字段外，可能额外包含：</p>
+<ul>
+<li><code>OU</code>（Organizational Unit，组织单元，如 “信息技术部”）。</li>
+<li><code>STREET</code>（街道地址，用于物理地址验证）。<br><strong>关键区别</strong>：EV 证书的<code>Subject</code>字段中的组织名称需与<strong>工商数据库完全一致</strong>，且可能通过<code>subjectAltName</code>扩展字段包含更多域名。<br>如下是中国银行证书的subject部分</li>
+</ul>
+<pre><code class="language-plaintext">CN = www.boc.cn
+O = Bank of China Limited
+ST = Beijing
+C = CN
+serialNumber = 911000001000013428
+businessCategory = Private Organization
+jurisdictionStateOrProvinceName = Beijing
+jurisdictionCountryName = CN  
+</code></pre>
+<p>查看issuser也可以看出为EV证书</p>
+<pre><code class="language-plaintext">CN = DigiCert Secure Site Pro EV G2 TLS CN RSA4096 SHA256 2022 CA1
+O = DigiCert, Inc.
+C = US
+</code></pre>
+<p>EV 证书需通过严格的身份审核（如法律文件、运营地址核实），因此组织信息最详细且真实可查。</p>
+<h1>3. 证书内容解析</h1>
+<p>x.509证书是一种广泛使用的数字证书标准，用于在网络通信中验证实体（如服务器、客户端、用户）的身份，并确保数据传输的安全性和完整性。它是公钥基础设施（PKI，Public Key Infrastructure）的核心组成部分，常见于 HTTPS、VPN、电子邮件加密等场景<br>如下是一个google公钥证书。<br>!<a href="wwwgooglecompem.html" class="internal-link">www.google.com.pem</a><br>使用如下命令查看证书内容</p>
+<pre><code class="language-shell">openssl x509 -in www.google.com.pem -text -noout
+</code></pre>
+<p>输出如下</p>
+<pre><code>Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            43:eb:8c:7c:8d:cc:8f:44:10:64:56:21:46:d3:f0:26
+        Signature Algorithm: ecdsa-with-SHA256
+        Issuer: C=US, O=Google Trust Services, CN=WE2
+        Validity
+            Not Before: Jan  6 08:38:03 2025 GMT
+            Not After : Mar 31 08:38:02 2025 GMT
+        Subject: CN=www.google.com
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (256 bit)
+                pub: 
+                    04:66:80:6e:cb:6d:2a:dc:81:12:96:39:38:7f:26:
+                    c0:e1:0f:19:f6:67:f6:a8:cf:ae:c1:7b:f6:55:e7:
+                    92:7e:57:73:fd:24:a1:66:d1:22:ec:d8:ba:d6:3d:
+                    23:3e:5b:77:03:6c:02:18:66:a4:05:69:9a:95:1f:
+                    05:c8:8c:01:46
+                ASN1 OID: prime256v1
+                NIST CURVE: P-256
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage: 
+                TLS Web Server Authentication
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Subject Key Identifier: 
+                87:26:06:BF:75:D5:44:29:C0:08:6F:D9:51:1E:32:28:94:46:26:40
+            X509v3 Authority Key Identifier: 
+                keyid:75:BE:C4:77:AE:89:F6:44:37:7D:CF:B1:68:1F:1D:1A:EB:DC:34:59
+
+            Authority Information Access: 
+                OCSP - URI:http://o.pki.goog/we2
+                CA Issuers - URI:http://i.pki.goog/we2.crt
+
+            X509v3 Subject Alternative Name: 
+                DNS:www.google.com
+            X509v3 Certificate Policies: 
+                Policy: 2.23.140.1.2.1
+
+            X509v3 CRL Distribution Points: 
+
+                Full Name:
+                  URI:http://c.pki.goog/we2/dTM3-0hpWfE.crl
+
+            1.3.6.1.4.1.11129.2.4.2: 
+                ......v.Nu.&#39;\...8[l..?R.......i...d.b.9.....:........G0E. TR/I....n.(....&gt;i...\r....)...P..!.......hB....~...N...B4..9./....v.v.....P$|k...V7....+E6.....2u:.AU. Z..j.&#39;....&#39;4@....#(.?.....q...L.?]
+    Signature Algorithm: ecdsa-with-SHA256
+         30:45:02:21:00:ea:41:14:8a:23:05:1f:70:25:d0:36:d5:f4:
+         91:f0:9a:40:f3:77:e6:b5:cb:b2:21:ca:ca:8b:f2:b0:6c:a1:
+         68:02:20:49:a6:3b:e9:b4:bf:1e:41:aa:05:dd:50:7e:4a:93:
+         4e:6d:61:e7:b8:04:d0:55:fc:44:80:a3:67:c4:a2:46:3b
+</code></pre>
+<h2>3.1. 基本信息</h2>
+<ul>
+<li><strong>版本</strong>：X.509 v3（0x2）</li>
+<li><strong>序列号</strong>：<code>43:eb:8c:7c:8d:cc:8f:44:10:64:56:21:46:d3:f0:26</code>（由颁发机构分配的唯一标识符）</li>
+<li><strong>签名算法</strong>：ecdsa-with-SHA256</li>
+</ul>
+<h2>3.2. 颁发者（Issuer）</h2>
+<ul>
+<li><strong>国家</strong>（C，Country）：US（美国）</li>
+<li><strong>组织</strong>（O，organization）：Google Trust Services。CA 所属的组织或公司名称（如 “DigiCert Inc”“Let’s Encrypt”）。</li>
+<li><strong>通用名称</strong>（CN，Common Name）：WE2（Google的Web PKI证书颁发机构）。CA 的完整标识名称，通常是CA的全称或域名（如 “DigiCert Inc”等）。<br>如下是中行证书的issuer部分</li>
+</ul>
+<pre><code class="language-plaintext">CN = DigiCert Secure Site Pro EV G2 TLS CN RSA4096 SHA256 2022 CA1
+O = DigiCert, Inc.
+C = US
+</code></pre>
+<h2>3.3. 有效期（Validity）</h2>
+<ul>
+<li><strong>生效日期</strong>：2025年1月6日 08:38:03 GMT</li>
+<li><strong>过期日期</strong>：2025年3月31日 08:38:02 GMT</li>
+</ul>
+<h2>3.4. 主体（Subject）</h2>
+<ul>
+<li><strong>通用名称</strong>(CN，common name)：<a href="http://www.google.com%EF%BC%88%E8%AF%81%E4%B9%A6%E6%89%80%E5%B1%9E%E7%BD%91%E7%AB%99%EF%BC%89">www.google.com（证书所属网站）</a></li>
+</ul>
+<h2>3.5. 公钥信息</h2>
+<ul>
+<li><strong>算法</strong>：id-ecPublicKey（椭圆曲线公钥）</li>
+<li><strong>密钥长度</strong>：256 位</li>
+<li><strong>公钥值</strong>：04:66:80:6e:cb:6d:2a:dc...（略）</li>
+<li><strong>曲线类型（ASN1 OID）</strong>：prime256v1（也称为NIST P-256）</li>
+</ul>
+<h2>3.6. X.509 v3扩展</h2>
+<ul>
+<li><strong>密钥用途</strong>：Digital Signature（数字签名）</li>
+<li><strong>扩展密钥用途</strong>：TLS Web Server Authentication（TLS网站服务器认证）</li>
+<li><strong>基本约束</strong>：CA:FALSE（表明这不是CA证书，不能用于签发其他证书）</li>
+<li><strong>主体密钥标识符</strong>：87:26:06:BF...（略）</li>
+<li><strong>授权密钥标识符</strong>：75:BE:C4:77...（略）（用于识别签发证书的CA的公钥）</li>
+</ul>
+<h3>3.6.1. 权威信息访问（Authority Information Access）</h3>
+<ul>
+<li><strong>OCSP（Online Certificate Status Protocol）</strong>：<a href="http://o.pki.goog/we2%EF%BC%88%E5%9C%A8%E7%BA%BF%E8%AF%81%E4%B9%A6%E7%8A%B6%E6%80%81%E5%8D%8F%E8%AE%AE%EF%BC%8C%E7%94%A8%E4%BA%8E%E6%A3%80%E6%9F%A5%E8%AF%81%E4%B9%A6%E6%98%AF%E5%90%A6%E8%A2%AB%E5%90%8A%E9%94%80%EF%BC%89">http://o.pki.goog/we2（在线证书状态协议，用于检查证书是否被吊销）</a></li>
+<li><strong>CA签发者（CA Issuers）</strong>：<a href="http://i.pki.goog/we2.crt%EF%BC%88CA%E8%AF%81%E4%B9%A6%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80%EF%BC%89">http://i.pki.goog/we2.crt（CA证书下载地址）</a></li>
+</ul>
+<h3>3.6.2. 主体备用名称</h3>
+<ul>
+<li><strong>DNS</strong>：<a href="http://www.google.com%EF%BC%88%E8%AF%81%E4%B9%A6%E4%BF%9D%E6%8A%A4%E7%9A%84%E5%9F%9F%E5%90%8D%EF%BC%89">www.google.com（证书保护的域名）</a></li>
+</ul>
+<h3>3.6.3. 证书策略</h3>
+<ul>
+<li><strong>策略</strong>：2.23.140.1.2.1（表示域名验证证书）</li>
+</ul>
+<h3>3.6.4. CRL分发点</h3>
+<ul>
+<li><strong>URI</strong>：<a href="http://c.pki.goog/we2/dTM3-0hpWfE.crl%EF%BC%88%E8%AF%81%E4%B9%A6%E5%90%8A%E9%94%80%E5%88%97%E8%A1%A8%E7%9A%84%E4%BD%8D%E7%BD%AE%EF%BC%89">http://c.pki.goog/we2/dTM3-0hpWfE.crl（证书吊销列表的位置）</a></li>
+</ul>
+<h3>3.6.5. 签名算法和签名值</h3>
+<ul>
+<li><strong>摘要算法</strong>：ecdsa-with-SHA256</li>
+<li><strong>值</strong>：30:45:02:21:00:ea:41...（略）（CA对证书内容的签名，CA私钥加密）</li>
+</ul>
+<h1>4. 合法性校验</h1>
+<h2>4.1. 验证证书链</h2>
+<p>证书链从根证书开始，并且证书链中的每一级证书所标识的实体都要为其下一级证书签名，而根证书自身则由证书颁发机构签名。客户端在验证证书链时，必须对链中所有证书的数字签名进行验证，直到达到根证书为止。</p>
+<p>详细步骤如下：</p>
+<ul>
+<li>获取颁发该证书的CA证书（<a href="http://i.pki.goog/we2.crt%EF%BC%89">http://i.pki.goog/we2.crt）</a></li>
+<li>验证证书是由可信CA签发的（Google Trust Services是知名可信CA）</li>
+<li>确认完整的证书链直到根证书</li>
+</ul>
+<p>现代浏览器和操作系统会自动执行这些步骤：</p>
+<ol>
+<li>接收服务器提供的证书链</li>
+<li>检查每个证书是否由上一级证书正确签名</li>
+<li>追溯到预装的可信根证书</li>
+<li>检查证书是否过期或被吊销</li>
+<li>如果验证成功，显示安全连接；失败则显示警告</li>
+</ol>
+<p>对于上述Google证书，完整的证书链应该是：</p>
+<ul>
+<li>终端实体证书：CN=<a href="http://www.google.com">www.google.com</a></li>
+<li>中间证书：C=US, O=Google Trust Services, CN=WE2</li>
+<li>Google Trust Services根证书（已预装在大多数操作系统和浏览器中）<br>以B站证书为例<br><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/blog_images/uncategory20250401223628.png" alt="image.png"></li>
+</ul>
+<h2>4.2. 检查有效期</h2>
+<p>确认当前日期在证书的有效期内（2025年1月6日至2025年3月31日）</p>
+<h2>4.3. 验证域名</h2>
+<p>确认Subject和SAN（Subject Alternative Name）中的域名与您访问的网站匹配（<a href="http://www.google.com%EF%BC%89">www.google.com）</a></p>
+<h2>4.4. 验证证书状态</h2>
+<p>通过OCSP（<a href="http://o.pki.goog/we2%EF%BC%89%E6%88%96CRL%EF%BC%88http://c.pki.goog/we2/dTM3-0hpWfE.crl%EF%BC%89%E6%A3%80%E6%9F%A5%E8%AF%81%E4%B9%A6%E6%98%AF%E5%90%A6%E8%A2%AB%E5%90%8A%E9%94%80">http://o.pki.goog/we2）或CRL（http://c.pki.goog/we2/dTM3-0hpWfE.crl）检查证书是否被吊销</a></p>
+<h2>4.5. 验证签名</h2>
+<p>使用CA的公钥验证证书上的签名，<code>openssl verify -CAfile we2.crt www.google.com.pem</code></p>
+<h3>4.5.1. 签名内容</h3>
+<p>当验证证书签名时，系统会对证书的<strong>所有内容</strong>（除了签名本身）生成摘要，具体包括：</p>
+<ul>
+<li>版本号(Version)</li>
+<li>序列号(Serial Number)</li>
+<li>签名算法标识符(Signature Algorithm)</li>
+<li>颁发者信息(Issuer)</li>
+<li>有效期(Validity)</li>
+<li>证书主体信息(Subject)</li>
+<li>公钥信息(Subject Public Key Info)</li>
+<li>所有X.509 v3扩展内容<br>实际上，这相当于证书的整个DER编码的<strong>TBSCertificate</strong>（To Be Signed Certificate）部分。</li>
+</ul>
+<h3>4.5.2. 验证签名过程</h3>
+<p>详细过程如下：</p>
+<ol>
+<li>提取CA证书的公钥</li>
+<li>使用CA公钥对签名（证书中的最后部分：<code>30:45:02:21:00:ea:41...</code>）进行解密，得到摘要值</li>
+<li>使用摘要算法（SHA256）对TBSCertificate计算摘要值</li>
+<li>比较两个计算的摘要是否相等<blockquote>
+<p>[!note]<br>ECDSA (Elliptic Curve Digital Signature Algorithm) 是一种数字签名算法，它基于椭圆曲线密码学原理。这是一种现代密码学技术，相比传统的RSA算法，可以使用更短的密钥提供同等级别的安全性</p>
+</blockquote>
+</li>
+</ol>
+<h4>4.5.2.1. 检查证书透明度</h4>
+<p>查询证书透明度日志，确认证书已被记录（SCT信息部分）</p>
+<h4>4.5.2.2. 检查密钥用途</h4>
+<p>确认证书用途符合预期（此证书用于TLS Web服务器认证）</p>
+<h1>5. 常见文件格式</h1>
+<h2>5.1. PEM（Privacy - Enhanced Mail）</h2>
+<p>是一种常用的证书或私钥存储格式。它是一种文本格式，以-----BEGIN...-----开头，以-----END...-----结尾。内容主要包括Base64编码的数据。如果是PEM格式的公钥证书，其中就包含证书信息；若是PEM格式的私钥，就包含私钥数据。</p>
+<h2>5.2. P12（也称为PFX）</h2>
+<p>是一种文件格式，用于存储包含公钥、私钥和证书的加密信息包。它是一种二进制格式，主要用于在不同的应用程序和系统之间交换和存储加密密钥和相关证书。这种格式可以方便地将所有必要的安全组件（如个人证书、中间证书、根证书和与之匹配的私钥）打包在一起，并且可以使用密码进行保护，确保只有知道密码的授权用户才能访问其中的内容。</p>
+<h2>5.3. JKS（Java Key Store）</h2>
+<p>是Java的密钥库格式。它可以存储多种加密元素，包括私钥、公钥证书以及证书链。证书链是一组按顺序排列的证书，从服务器证书开始，到中间证书，最后是根证书。这些元素在JKS文件中被安全地保存起来，用于Java应用程序中的安全通信和身份验证。</p>
+<p>在Java应用程序（如Spring应用）中广泛用于配置SSL/TLS通信。例如，在基于Java的Web服务器中，服务器的私钥和证书可以存储在JKS文件中，然后在服务器启动时加载这个JKS文件来建立安全的HTTPS连接。</p>
+<p>JKS文件是二进制格式，并且可以通过密码进行保护。这意味着只有知道密码的用户才能访问和使用存储在其中的密钥和证书。这种加密保护有助于防止密钥和证书被未授权的访问和滥用。</p>
+<h2>5.4. crt格式</h2>
+<p>.crt文件通常用于存储证书。证书包含了公钥信息、证书所有者（如个人、公司或服务器）的身份信息、证书颁发机构（CA）的数字签名等。这些信息用于在网络通信等场景中验证身份。例如，在SSL/TLS加密通信中，服务器会将.crt文件中的公钥证书发送给客户端，客户端通过验证证书签名来确认服务器身份合法性。</p>
+<h2>5.5. key格式</h2>
+<p>.key文件主要用于存储私钥。私钥是加密系统中的关键部分，用于解密由对应的公钥加密的数据，以及进行数字签名。它必须严格保密，因为如果私钥泄露，可能会导致安全问题，如信息被解密或伪造数字签名。</p>
+<p>加密私钥</p>
+<pre><code class="language-shell"># --aes256是加密算法
+openssl rsa -aes256 -in private_decrypted.key -out private_encrypted.key
+</code></pre>
+<p>解密私钥</p>
+<pre><code class="language-shell">openssl rsa -in private_encrypted.key -out private_decrypted.key
+# 解密，输入密码后明文输出
+openssl rsa -text -noout -in private_encrypted.key
+</code></pre>
+<h1>6. ref</h1>
+<p><a href="https://pandaychen.github.io/2019/07/24/auth/">https://pandaychen.github.io/2019/07/24/auth/</a><br><a href="https://www.cnblogs.com/enoc/p/tls-handshake.html">https://www.cnblogs.com/enoc/p/tls-handshake.html</a><br><a href="https://www.nervos.org/zh/knowledge-base/understanding_ECDSA_(explainCKBot)">https://www.nervos.org/zh/knowledge-base/understanding_ECDSA_(explainCKBot)</a></p>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

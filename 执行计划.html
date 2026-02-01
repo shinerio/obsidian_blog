@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>执行计划 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>执行计划</h1>
+        <time datetime="2026-01-03T13:04:29.188Z">2026年1月3日</time>
+        <div class="tags">
+            
+        </div>
+    </header>
+    <section class="content">
+        {<h1>1. explain和explain anayze</h1>
+<p><code>EXPLAIN</code>和<code>EXPLAIN ANALYZE</code>生成的执行计划<strong>通常是一致的，但并不能保证完全一致</strong>。</p>
+<h2>1.1. 核心功能对比</h2>
+<table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>EXPLAIN</th>
+<th>EXPLAIN ANALYZE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>执行方式</strong></td>
+<td>仅生成执行计划，不执行查询</td>
+<td>实际执行查询并生成计划</td>
+</tr>
+<tr>
+<td><strong>执行速度</strong></td>
+<td>毫秒级，非常快</td>
+<td>取决于查询复杂度，可能很慢</td>
+</tr>
+<tr>
+<td><strong>副作用</strong></td>
+<td>无副作用，完全安全</td>
+<td>DML语句会实际修改数据</td>
+</tr>
+<tr>
+<td><strong>资源消耗</strong></td>
+<td>极低，仅消耗规划资源</td>
+<td>消耗实际执行所需的所有资源</td>
+</tr>
+</tbody></table>
+<pre><code class="language-sql">-- 对于修改数据的语句，可以在事务中测试后回滚
+BEGIN;
+EXPLAIN ANALYZE UPDATE table_name SET column = value;
+ROLLBACK;
+</code></pre>
+<h2>1.2. 输出信息对比</h2>
+<table>
+<thead>
+<tr>
+<th>信息类型</th>
+<th>EXPLAIN</th>
+<th>EXPLAIN ANALYZE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>执行计划</strong></td>
+<td>✅ 显示（基于估算）</td>
+<td>✅ 显示（基于实际执行）</td>
+</tr>
+<tr>
+<td><strong>成本估算</strong></td>
+<td>✅ cost=start..total</td>
+<td>✅ cost=start..total</td>
+</tr>
+<tr>
+<td><strong>实际执行时间</strong></td>
+<td>❌ 无</td>
+<td>✅ actual time=start..end</td>
+</tr>
+<tr>
+<td><strong>预估行数</strong></td>
+<td>✅ rows=估算值</td>
+<td>✅ rows=估算值 + actual rows=实际值</td>
+</tr>
+<tr>
+<td><strong>数据宽度</strong></td>
+<td>✅ width=字节数</td>
+<td>✅ width=字节数</td>
+</tr>
+<tr>
+<td><strong>循环次数</strong></td>
+<td>❌ 无</td>
+<td>✅ loops=N</td>
+</tr>
+<tr>
+<td><strong>过滤统计</strong></td>
+<td>❌ 无</td>
+<td>✅ Rows Removed by Filter</td>
+</tr>
+<tr>
+<td><strong>规划时间</strong></td>
+<td>❌ 无</td>
+<td>✅ Planning Time</td>
+</tr>
+<tr>
+<td><strong>总执行时间</strong></td>
+<td>❌ 无</td>
+<td>✅ Execution Time</td>
+</tr>
+</tbody></table>
+<h2>1.3. I/O和缓冲区信息</h2>
+<table>
+<thead>
+<tr>
+<th>I/O 指标</th>
+<th>EXPLAIN</th>
+<th>EXPLAIN ANALYZE</th>
+<th>EXPLAIN (ANALYZE, BUFFERS)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>缓冲区命中</strong></td>
+<td>❌ 无信息</td>
+<td>❌ 无信息</td>
+<td>✅ shared hit=N</td>
+</tr>
+<tr>
+<td><strong>磁盘读取</strong></td>
+<td>❌ 无信息</td>
+<td>❌ 无信息</td>
+<td>✅ shared read=N</td>
+</tr>
+<tr>
+<td><strong>缓冲区脏页</strong></td>
+<td>❌ 无信息</td>
+<td>❌ 无信息</td>
+<td>✅ dirtied=N</td>
+</tr>
+<tr>
+<td><strong>磁盘写入</strong></td>
+<td>❌ 无信息</td>
+<td>❌ 无信息</td>
+<td>✅ written=N</td>
+</tr>
+<tr>
+<td><strong>临时文件I/O</strong></td>
+<td>❌ 无信息</td>
+<td>❌ 无信息</td>
+<td>✅ temp read/written=N</td>
+</tr>
+<tr>
+<td><strong>本地缓冲区</strong></td>
+<td>❌ 无信息</td>
+<td>❌ 无信息</td>
+<td>✅ local hit/read=N</td>
+</tr>
+</tbody></table>
+<h2>1.4. 准确性对比</h2>
+<table>
+<thead>
+<tr>
+<th>准确性方面</th>
+<th>EXPLAIN</th>
+<th>EXPLAIN ANALYZE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>行数估算</strong></td>
+<td>基于统计信息，可能不准确</td>
+<td>显示实际行数，100%准确</td>
+</tr>
+<tr>
+<td><strong>执行时间</strong></td>
+<td>无法提供</td>
+<td>精确到毫秒</td>
+</tr>
+<tr>
+<td><strong>资源使用</strong></td>
+<td>无法评估</td>
+<td>真实反映内存、I/O使用</td>
+</tr>
+<tr>
+<td><strong>并发影响</strong></td>
+<td>无法体现</td>
+<td>反映真实并发环境影响</td>
+</tr>
+<tr>
+<td><strong>缓存状态</strong></td>
+<td>无法体现</td>
+<td>反映当前缓存命中情况</td>
+</tr>
+</tbody></table>
+<h2>1.5. 使用场景对比</h2>
+<table>
+<thead>
+<tr>
+<th>使用场景</th>
+<th>推荐选择</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>日常开发调试</strong></td>
+<td>EXPLAIN</td>
+<td>快速、安全，无副作用</td>
+</tr>
+<tr>
+<td><strong>性能调优</strong></td>
+<td>EXPLAIN ANALYZE</td>
+<td>需要真实性能数据</td>
+</tr>
+<tr>
+<td><strong>生产环境诊断</strong></td>
+<td>EXPLAIN（谨慎使用ANALYZE）</td>
+<td>避免对生产数据的影响</td>
+</tr>
+<tr>
+<td><strong>I/O瓶颈分析</strong></td>
+<td>EXPLAIN (ANALYZE, BUFFERS)</td>
+<td>必须有实际I/O统计</td>
+</tr>
+<tr>
+<td><strong>索引效果验证</strong></td>
+<td>EXPLAIN ANALYZE</td>
+<td>需要真实的性能提升数据</td>
+</tr>
+<tr>
+<td><strong>大批量操作评估</strong></td>
+<td>EXPLAIN → EXPLAIN ANALYZE</td>
+<td>先快速评估，再精确测试</td>
+</tr>
+<tr>
+<td><strong>DML语句优化</strong></td>
+<td>事务中的EXPLAIN ANALYZE</td>
+<td>可回滚，获得真实数据</td>
+</tr>
+</tbody></table>
+<h2>1.6. 高级选项对比</h2>
+<table>
+<thead>
+<tr>
+<th>选项</th>
+<th>EXPLAIN支持</th>
+<th>EXPLAIN ANALYZE支持</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>VERBOSE</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>显示详细信息</td>
+</tr>
+<tr>
+<td><strong>COSTS</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>显示/隐藏成本信息</td>
+</tr>
+<tr>
+<td><strong>BUFFERS</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>显示缓冲区使用情况</td>
+</tr>
+<tr>
+<td><strong>TIMING</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>控制时间测量（默认开启）</td>
+</tr>
+<tr>
+<td><strong>SUMMARY</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>显示摘要信息</td>
+</tr>
+<tr>
+<td><strong>FORMAT</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>输出格式（TEXT/JSON/XML/YAML）</td>
+</tr>
+</tbody></table>
+<h2>1.7. 性能影响对比</h2>
+<table>
+<thead>
+<tr>
+<th>影响类型</th>
+<th>EXPLAIN</th>
+<th>EXPLAIN ANALYZE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>CPU使用</strong></td>
+<td>极低（仅规划）</td>
+<td>查询实际CPU消耗</td>
+</tr>
+<tr>
+<td><strong>内存使用</strong></td>
+<td>极低</td>
+<td>查询实际内存需求</td>
+</tr>
+<tr>
+<td><strong>磁盘I/O</strong></td>
+<td>无</td>
+<td>查询实际I/O操作</td>
+</tr>
+<tr>
+<td><strong>网络传输</strong></td>
+<td>无</td>
+<td>实际数据传输（如果有）</td>
+</tr>
+<tr>
+<td><strong>锁等待</strong></td>
+<td>无</td>
+<td>可能遇到真实锁竞争</td>
+</tr>
+<tr>
+<td><strong>触发器执行</strong></td>
+<td>不执行</td>
+<td>会执行所有触发器</td>
+</tr>
+</tbody></table>
+<h2>1.8. 输出示例对比</h2>
+<h3>1.8.1. EXPLAIN 输出</h3>
+<pre><code class="language-sql">Nested Loop  (cost=0.29..16.34 rows=1 width=68)
+  -&gt;  Index Scan using pk_orders on orders  (cost=0.29..8.30 rows=1 width=36)
+        Index Cond: (id = 123)
+  -&gt;  Index Scan using pk_customers on customers  (cost=0.29..8.04 rows=1 width=32)
+        Index Cond: (id = orders.customer_id)
+</code></pre>
+<h3>1.8.2. EXPLAIN ANALYZE 输出</h3>
+<pre><code class="language-sql">Nested Loop  (cost=0.29..16.34 rows=1 width=68) (actual time=0.234..0.456 rows=1 loops=1)
+  -&gt;  Index Scan using pk_orders on orders  (cost=0.29..8.30 rows=1 width=36) (actual time=0.123..0.234 rows=1 loops=1)
+        Index Cond: (id = 123)
+        Buffers: shared hit=3
+  -&gt;  Index Scan using pk_customers on customers  (cost=0.29..8.04 rows=1 width=32) (actual time=0.089..0.145 rows=1 loops=1)
+        Index Cond: (id = orders.customer_id)
+        Buffers: shared hit=3
+Planning Time: 0.567 ms
+Execution Time: 0.678 ms
+</code></pre>
+<h1>2. cost和actual time解读</h1>
+<p>(预估成本与预估数据量) (实际执行时间与实际数据量):<code>(cost=0.29..8.30 rows=1 width=36) (actual time=0.123..0.234 rows=1 loops=1)</code></p>
+<h2>2.1. cost=0.29..8.30 rows=1 width=36</h2>
+<ul>
+<li><strong>0.29</strong> = <strong>启动成本 (Startup Cost)</strong><ul>
+<li>开始返回第一行数据前需要的成本</li>
+<li>包括：索引查找定位、初始化操作等</li>
+<li>对于索引扫描，通常是定位到第一个匹配记录的成本</li>
+</ul>
+</li>
+<li><strong>8.30</strong> = <strong>总成本 (Total Cost)</strong><ul>
+<li>返回所有结果行的总成本</li>
+<li>包括：启动成本 + 处理所有数据的成本</li>
+<li>这是优化器用来比较不同执行计划的主要指标</li>
+</ul>
+</li>
+<li><strong>rows=1</strong> = <strong>预估行数</strong><ul>
+<li>优化器基于统计信息估算会返回1行</li>
+<li>基于表统计信息、WHERE条件选择性等计算</li>
+</ul>
+</li>
+<li><strong>width=36</strong> = <strong>平均行宽度</strong><ul>
+<li>每行数据的平均字节数为 36 字节</li>
+<li>用于内存使用和I/O成本估算</li>
+</ul>
+</li>
+</ul>
+<h2>2.2. actual time=0.123..0.234 rows=1 loops=1</h2>
+<p>这部分是实际执行时记录的真实数据（仅 <code>EXPLAIN ANALYZE</code> 或 <code>EXPLAIN (ANALYZE, ...)</code> 会输出）：</p>
+<ul>
+<li><strong>0.123 ms</strong> = <strong>首行返回时间</strong><ul>
+<li>实际开始返回第一行数据的时间</li>
+<li>对应启动成本的实际耗时</li>
+</ul>
+</li>
+<li><strong>0.234 ms</strong> = <strong>所有行返回完成时间</strong><ul>
+<li>返回所有结果行的总时间</li>
+<li>对应总成本的实际耗时</li>
+</ul>
+</li>
+<li><strong>actual rows=1</strong> = <strong>实际返回行数</strong><ul>
+<li>真实返回了 1 行数据</li>
+<li>与预估的 rows=1 完全一致（估算准确）</li>
+</ul>
+</li>
+<li><strong>loops=1</strong> = <strong>执行循环次数</strong><ul>
+<li>这个节点被执行了1次</li>
+<li>在嵌套循环中，内层节点的 loops 可能 &gt; 1</li>
+</ul>
+</li>
+</ul>
+<h1>3. Index Scan、BitMap scan</h1>
+<p>在数据库执行计划中，<code>Index Scan</code>（索引扫描）和 <code>Bitmap Index Scan</code>（位图索引扫描）是两种不同的索引使用方式，核心区别在于<strong>数据访问方式</strong>和<strong>适用场景</strong>。</p>
+<h2>3.1. 核心原理</h2>
+<h3>3.1.1. Index Scan（索引扫描）</h3>
+<ul>
+<li><strong>方式</strong>：直接按照索引的物理结构（如B树的顺序）逐条扫描索引条目，<strong>直接定位并访问符合条件的表数据行</strong>。</li>
+<li><strong>过程</strong>：<ol>
+<li>从索引中找到满足条件的条目（包含索引键值和对应表行的物理地址）；</li>
+<li>按照索引顺序，通过物理地址直接访问表中的数据行（可能随机访问磁盘）；</li>
+<li>若有过滤条件（如<code>WHERE</code>子句中的其他条件），在内存中进一步过滤数据。</li>
+</ol>
+</li>
+</ul>
+<h3>3.1.2. Bitmap Index Scan（位图索引扫描）</h3>
+<p><strong>第一阶段</strong>：<code>Bitmap Index Scan（位图索引扫描）</code>先通过索引生成一个<strong>位图（Bitmap）</strong>，记录特定数据块是否包含符合条件的行，每个位代表一个数据块（通常8KB）。</p>
+<pre><code>数据块位图示例：
+Block 1: [1] - 包含符合条件的行
+Block 2: [0] - 不包含符合条件的行  
+Block 3: [1] - 包含符合条件的行
+Block 4: [0] - 不包含符合条件的行
+Block 5: [1] - 包含符合条件的行
+</code></pre>
+<p>Bitmap只告诉我们哪些<strong>数据块</strong>可能有符合条件的行，但数据块内部可能包含<strong>不符合条件</strong>的行，因此必须逐行再次检查所有过滤条件。</p>
+<ul>
+<li><strong>过程</strong>：<ol>
+<li>从索引中找到满足条件的数据块，用位图标记这些块的位置</li>
+<li>若有多个条件（如 <code>WHERE A=? AND B=?</code>），可通过<code>BitmapAnd</code>/<code>BitmapOr</code>组合多个位图（快速计算交集 / 并集），得到最终的 “符合所有条件的数据块” 标记。</li>
+<li>最后根据位图一次性批量访问表中所有符合条件的数据块（顺序访问磁盘，减少 IO 开销）。<br><strong>第二阶段</strong>：<code>Bitmap Heap Scan</code>（位图堆扫描）通常与 <code>Bitmap Index Scan</code> 配合使用<br>拿到标记了目标数据块的位图后，<code>Bitmap Heap Scan</code> 会按位图指示，<strong>批量访问这些数据块</strong>，并从块中提取出真正符合条件的行，此时需要二次过滤，因为一个块中可能只有部分行符合条件。此时会访问标记的数据块，逐行检查，对每一行执行Recheck Cond。</li>
+</ol>
+</li>
+</ul>
+<h2>3.2. 关键区别</h2>
+<table>
+<thead>
+<tr>
+<th><strong>维度</strong></th>
+<th><strong>Index Scan</strong></th>
+<th><strong>Bitmap Index Scan</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>数据访问方式</strong></td>
+<td>逐条访问索引条目，直接定位表行（可能随机 IO）</td>
+<td>先生成位图，再批量访问表行（顺序IO为主）</td>
+</tr>
+<tr>
+<td><strong>多条件处理</strong></td>
+<td>需多次扫描索引或在内存中过滤，效率较低</td>
+<td>通过<code>BitmapAnd</code>/<code>BitmapOr</code>高效组合多个条件</td>
+</tr>
+<tr>
+<td><strong>适用数据量</strong></td>
+<td>适合返回少量行（如结果集占表的 10% 以下）</td>
+<td>适合返回中量行（如结果集占表的 10%-30%）</td>
+</tr>
+<tr>
+<td><strong>索引类型依赖</strong></td>
+<td>主要用于 B 树索引（最常见索引类型）</td>
+<td>可用于B树索引，也常用于专门的位图索引（如 PostgreSQL 的特殊优化）</td>
+</tr>
+<tr>
+<td><strong>磁盘 IO 特点</strong></td>
+<td>随机IO较多（因按索引顺序访问，表行物理位置可能分散）</td>
+<td>顺序IO为主（按位图批量访问，表行物理位置集中）</td>
+</tr>
+<tr>
+<td><strong>执行效率</strong></td>
+<td>少量数据时更快（无位图生成开销）</td>
+<td>中量数据时更快（批量访问减少 IO 开销）</td>
+</tr>
+</tbody></table>
+<h2>3.3. 适用场景</h2>
+<h3>3.3.1. Index Scan更优的场景</h3>
+<ul>
+<li>结果集很小（如通过唯一索引查询单行数据或limit查询少量数据）；</li>
+<li>索引顺序与查询需要的排序顺序一致（可避免额外排序）；</li>
+<li>仅需访问索引包含的字段（即 “索引覆盖查询”，无需回表）。</li>
+</ul>
+<h3>3.3.2. Bitmap Index Scan更优的场景</h3>
+<ul>
+<li>查询包含多个条件（如<code>WHERE A=? AND B=?</code>），且每个条件都有对应的索引；</li>
+<li>结果集中等大小（既不适合全表扫描，也不适合逐条索引扫描）；</li>
+<li>表数据在磁盘上存储较集中（如按顺序插入的表），批量访问效率高。</li>
+</ul>
+<h3>3.3.3. 举例说明</h3>
+<ul>
+<li>若查询 <code>WHERE id = 100</code>（<code>id</code>是主键），数据库会选择 <code>Index Scan</code>：直接通过主键索引定位到单行，效率最高。</li>
+<li>若查询 <code>WHERE status = &#39;active&#39; AND create_time &gt; &#39;2023-01-01&#39;</code>，且<code>status</code>和<code>create_time</code>都有索引，数据库可能选择 <code>Bitmap Index Scan</code>：<ol>
+<li>分别通过两个索引生成 “状态为active的行” 和 “创建时间符合条件的行” 的位图；</li>
+<li>用<code>BitmapAnd</code>计算两个位图的交集（同时满足两个条件的行）；</li>
+<li>按位图批量读取这些行，比两次<code>Index Scan</code>更高效。</li>
+</ol>
+</li>
+</ul>
+<h3>3.3.4. 总结</h3>
+<ul>
+<li><code>Index Scan</code> 是 “点对点” 的精准访问，适合少量数据；</li>
+<li><code>Bitmap Index Scan</code> 是 “批量” 的范围访问，适合多条件、中量数据。</li>
+</ul>
+<p><code>Bitmap Index Scan</code> 的设计初衷是通过<strong>批量访问表数据</strong>减少磁盘 IO 开销：</p>
+<ul>
+<li>当结果集较大时，位图可以将分散的行位置 “聚合”，转化为连续的磁盘块访问（顺序 IO），比 <code>Index Scan</code> 的随机 IO 更高效。</li>
+<li>但当结果集很小时（如仅匹配 10 行），即使生成位图，也难以形成连续的磁盘块访问，批量访问的优势完全无法体现。此时，<code>Index Scan</code> 直接通过索引定位单行的随机 IO 开销，反而比 “生成位图 + 批量访问” 的总开销更小。</li>
+</ul>
+<h3>3.3.5. 实际案例</h3>
+<p>plan A</p>
+<pre><code class="language-sql">SELECT COUNT(1) 
+FROM RESOURCE_TRACES rt1
+WHERE rt1.RESOURCE_ID = ANY (
+    SELECT rt2.RESOURCE_ID 
+    FROM RESOURCE_TRACES rt2
+    WHERE rt2.RESOURCE_TYPE IN (&#39;nat_gateway&#39;, &#39;public-nat-snat-rules&#39;, &#39;public-nat-dnat-rules&#39;)
+      AND rt2.TIMESTAMP &lt; (NOW() - 90)
+      AND rt2.ACTION = &#39;delete&#39;
+    LIMIT 2000
+);
+
+Aggregate  (cost=7080.06..7080.07 rows=1 width=0) (actual time=563.674..563.674 rows=1 loops=1)
+  Output: COUNT(1)
+  Buffers: shared hit=150383 read=13
+  -&gt;  Nested Loop  (cost=4049.00..5918.89 rows=464467 width=0) (actual time=563.671..563.671 rows=0 loops=1)
+        Buffers: shared hit=150383 read=13
+        -&gt;  
+
+  (cost=4049.00..4053.15 rows=415 width=37) (actual time=563.670..563.670 rows=0 loops=1)
+              Output: &quot;ANY_subquery&quot;.RESOURCE_ID
+              Buffers: shared hit=150383 read=13
+              -&gt;  Subquery Scan on &quot;ANY_subquery&quot;  (cost=0.01..4044.00 rows=2000 width=37) (actual time=563.666..563.666 rows=0 loops=1)
+                    Output: &quot;ANY_subquery&quot;.RESOURCE_ID, &quot;ANY_subquery&quot;.RESOURCE_ID
+                    Buffers: shared hit=150383 read=13
+                    -&gt;  Limit  (cost=0.01..4024.00 rows=2000 width=37) (actual time=563.664..563.664 rows=0 loops=1)
+                          Output: PUBLIC.RESOURCE_TRACES.RESOURCE_ID
+                          Buffers: shared hit=150383 read=13
+                          -&gt;  Index Scan using IX_RESOURCE_TRACES_RESOURCE_TYPE_TIMESTAMP on PUBLIC.RESOURCE_TRACES  (cost=0.01..143256.13 rows=71201 width=37) (actual time=563.663..563.663 rows=0 loops=1)
+                                Output: PUBLIC.RESOURCE_TRACES.RESOURCE_ID
+                                Index Cond: (((PUBLIC.RESOURCE_TRACES.RESOURCE_TYPE)::TEXT = ANY (&#39;{nat_gateway,public-nat-snat-rules,public-nat-dnat-rules}&#39;::TEXT[])) AND ((NOW() - 90::DOUBLE PRECISION) &gt; PUBLIC.RESOURCE_TRACES.&quot;TIMESTAMP&quot;))
+                                Filter: ((PUBLIC.RESOURCE_TRACES.ACTION)::TEXT = &#39;delete&#39;::TEXT)
+                                Rows Removed by Filter: 124536
+                                Buffers: shared hit=150383 read=13
+        -&gt;  Index Only Scan using IX_RESOURCE_TRACES_RESOURCE_ID on PUBLIC.RESOURCE_TRACES  (cost=0.00..4.45 rows=5 width=37) (never executed)
+              Output: PUBLIC.RESOURCE_TRACES.RESOURCE_ID
+              Index Cond: (PUBLIC.RESOURCE_TRACES.RESOURCE_ID = (&quot;ANY_subquery&quot;.RESOURCE_ID)::TEXT)
+              Heap Fetches: 0
+Total runtime: 563.881 ms
+</code></pre>
+<p>plan B</p>
+<pre><code class="language-sql">SELECT COUNT(1) 
+FROM RESOURCE_TRACES rt1
+WHERE rt1.RESOURCE_ID = ANY (
+    SELECT rt2.RESOURCE_ID 
+    FROM RESOURCE_TRACES rt2
+    WHERE rt2.RESOURCE_TYPE IN (&#39;nat_gateway&#39;, &#39;public-nat-snat-rules&#39;, &#39;public-nat-dnat-rules&#39;)
+      AND rt2.TIMESTAMP &lt; (NOW() - 90)
+      AND rt2.ACTION = &#39;delete&#39;
+);
+
+Aggregate  (cost=191818.22..191818.23 rows=1 width=0) (actual time=1469.954..1469.954 rows=1 loops=1)
+  Output: COUNT(1)
+  Buffers: shared hit=5980 read=19165
+  -&gt;  Nested Loop  (cost=130613.08..189749.08 rows=827658 width=0) (actual time=1469.950..1469.950 rows=0 loops=1)
+        Buffers: shared hit=5980 read=19165
+        -&gt;  HashAggregate  (cost=130613.08..130760.68 rows=14760 width=37) (actual time=1469.950..1469.950 rows=0 loops=1)
+              Output: PUBLIC.RESOURCE_TRACES.RESOURCE_ID
+              Buffers: shared hit=5980 read=19165
+              -&gt;  Bitmap Heap Scan on PUBLIC.RESOURCE_TRACES  (cost=59991.05..130435.08 rows=71201 width=37) (actual time=1469.919..1469.919 rows=0 loops=1)
+                    Output: PUBLIC.RESOURCE_TRACES.RESOURCE_ID, PUBLIC.RESOURCE_TRACES.RESOURCE_ID
+                    Recheck Cond: (((PUBLIC.RESOURCE_TRACES.RESOURCE_TYPE)::TEXT = ANY (&#39;{nat_gateway,public-nat-snat-rules,public-nat-dnat-rules}&#39;::TEXT[])) AND ((NOW() - 90::DOUBLE PRECISION) &gt; PUBLIC.RESOURCE_TRACES.&quot;TIMESTAMP&quot;) AND ((PUBLIC.RESOURCE_TRACES.ACTION)::TEXT = &#39;delete&#39;::TEXT))
+                    Buffers: shared hit=5980 read=19165
+                    -&gt;  BitmapAnd  (cost=59991.05..59991.05 rows=71201 width=0) (actual time=1454.039..1454.039 rows=0 loops=1)
+                          Buffers: shared hit=4139 read=18722
+                          -&gt;  Bitmap Index Scan on IX_RESOURCE_TRACES_RESOURCE_TYPE_TIMESTAMP  (cost=0.00..7105.65 rows=157120 width=0) (actual time=113.143..113.143 rows=149721 loops=1)
+                                Index Cond: (((PUBLIC.RESOURCE_TRACES.RESOURCE_TYPE)::TEXT = ANY (&#39;{nat_gateway,public-nat-snat-rules,public-nat-dnat-rules}&#39;::TEXT[])) AND ((NOW() - 90::DOUBLE PRECISION) &gt; PUBLIC.RESOURCE_TRACES.&quot;TIMESTAMP&quot;))
+                                Buffers: shared hit=4138 read=857
+                          -&gt;  Bitmap Index Scan on IX_RESOURCE_TRACES_ACTION  (cost=0.00..52849.55 rows=4735589 width=0) (actual time=1253.611..1253.611 rows=4897280 loops=1)
+                                Index Cond: ((PUBLIC.RESOURCE_TRACES.ACTION)::TEXT = &#39;delete&#39;::TEXT)
+                                Buffers: shared hit=1 read=17865
+        -&gt;  Index Only Scan using IX_RESOURCE_TRACES_RESOURCE_ID on PUBLIC.RESOURCE_TRACES  (cost=0.00..3.95 rows=5 width=37) (never executed)
+              Output: PUBLIC.RESOURCE_TRACES.RESOURCE_ID
+              Index Cond: (PUBLIC.RESOURCE_TRACES.RESOURCE_ID = (PUBLIC.RESOURCE_TRACES.RESOURCE_ID)::TEXT)
+              Heap Fetches: 0
+Total runtime: 1471.042 ms
+</code></pre>
+<p>plan a中添加了limit，数据库引擎分析认为最终查询结果数量较少，选了直接使用index scan的方式。</p>
+<p>plan b中<code>Bitmap Index Scan</code> 的核心步骤是先创建“<strong>resource_type和timestamp满足条件的行</strong>”以及“<strong>action满足条件的行</strong>”的位图（Bitmap），这个过程本身存在固定成本。action匹配了接近500w行，resource_type和timestamp匹配接近16万行，而最终BitmapAnd后的结果是零，这个生成位图的时间完全是浪费的。</p>
+<ul>
+<li>即使最终只匹配少量行，也需要扫描索引中符合条件的条目，并为这些行在内存中标记对应的位图位置（例如，用二进制位表示 “第 N 行是否符合条件”）。</li>
+<li>对位图的初始化、位运算（如单个条件的位图生成）需要消耗 CPU 和内存资源，而这些开销对于 “仅返回几行数据” 的场景来说，占比会非常高。</li>
+</ul>
+<p>相比之下，<code>Index Scan</code>（索引扫描）可以直接定位到少量符合条件的行，无需生成位图，省去了这部分固定成本。Plan A中通过timestamp和resource_type所有过滤后只剩16w行数据，再实际回表过滤action（这个过程过滤掉了全部的数据）数据。可以考虑进行索引优化</p>
+<pre><code class="language-sql">-- 当前索引
+IX_RESOURCE_TRACES_RESOURCE_TYPE_TIMESTAMP (RESOURCE_TYPE, TIMESTAMP)
+
+-- 创建包含ACTION的复合索引
+CREATE INDEX IX_RESOURCE_TRACES_OPTIMIZED 
+ON RESOURCE_TRACES (RESOURCE_TYPE, ACTION, TIMESTAMP);
+</code></pre>
+<h4>3.3.5.1. ANY_subquery</h4>
+<ul>
+<li><strong>&quot;ANY_subquery&quot;</strong>：PostgreSQL 内部给子查询分配的别名</li>
+<li>当使用 <code>= ANY (SELECT ...)</code> 或 <code>IN (SELECT ...)</code> 时，优化器会创建这个临时的子查询扫描节点，这不是用户定义的别名，而是系统自动生成的</li>
+<li>plan a中的<code>HashAggregate</code> 的作用是：<ol>
+<li><strong>对子查询结果去重</strong>：确保每个 <code>RESOURCE_ID</code> 只出现一次</li>
+<li><strong>优化连接操作</strong>：避免在 Nested Loop 中重复处理相同的值</li>
+</ol>
+</li>
+</ul>
+<h1>4. HashAggregate</h1>
+<p><code>HashAggregate</code>是 PostgreSQL 中用于执行<strong>聚合操作</strong>的一种算法，它使用<strong>哈希表</strong>来分组和计算聚合函数或实现去重目的等。</p>
+<h2>4.1. 基本工作原理</h2>
+<h3>4.1.1. 哈希表结构</h3>
+<pre><code class="language-sql">-- 假设查询
+SELECT department, COUNT(*), AVG(salary) 
+FROM employees 
+GROUP BY department;
+</code></pre>
+<p>HashAggregate 会创建哈希表：</p>
+<pre><code>Hash Table:
+Key (department) → Aggregated Values
+&quot;IT&quot;            → {count: 15, sum: 750000}
+&quot;Sales&quot;         → {count: 20, sum: 1200000}  
+&quot;HR&quot;            → {count: 8,  sum: 320000}
+</code></pre>
+<h3>4.1.2. 执行步骤</h3>
+<pre><code class="language-sql">1. 扫描输入数据的每一行
+2. 计算 GROUP BY 列的哈希值
+3. 在哈希表中查找对应的组
+4. 更新该组的聚合值
+5. 最后输出所有组的结果
+</code></pre>
+<h2>4.2. HashAggregate vs GroupAggregate</h2>
+<table>
+<thead>
+<tr>
+<th>方面</th>
+<th>HashAggregate</th>
+<th>GroupAggregate</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>算法</strong></td>
+<td>基于哈希表</td>
+<td>基于预排序数据</td>
+</tr>
+<tr>
+<td><strong>输入要求</strong></td>
+<td>无需排序</td>
+<td>需要按GROUP BY列排序</td>
+</tr>
+<tr>
+<td><strong>内存使用</strong></td>
+<td>需要足够内存存储哈希表</td>
+<td>内存需求较小</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>小到中等数据集，随机顺序</td>
+<td>大数据集，已排序数据</td>
+</tr>
+<tr>
+<td><strong>性能特点</strong></td>
+<td>O(n) 时间复杂度</td>
+<td>O(nlogn) 如果需要额外排序</td>
+</tr>
+</tbody></table>
+<h2>4.3. 实际执行计划示例</h2>
+<h3>4.3.1. 示例1：基本 GROUP BY</h3>
+<pre><code class="language-sql">EXPLAIN (ANALYZE, BUFFERS) 
+SELECT department, COUNT(*), AVG(salary)
+FROM employees 
+GROUP BY department;
+</code></pre>
+<pre><code>HashAggregate  (cost=180.00..185.00 rows=5 width=20) 
+               (actual time=12.345..12.567 rows=5 loops=1)
+  Output: department, count(*), avg(salary)
+  Group Key: department
+  Batches: 1  Memory Usage: 24kB
+  Buffers: shared hit=100
+  -&gt;  Seq Scan on employees  (cost=0.00..150.00 rows=1000 width=20) 
+                             (actual time=0.123..8.456 rows=1000 loops=1)
+        Output: department, salary
+        Buffers: shared hit=100
+</code></pre>
+<p><strong>关键信息解读</strong>：</p>
+<ul>
+<li><strong>Group Key</strong>: <code>department</code> - 分组的列</li>
+<li><strong>Batches: 1</strong> - 所有数据在一批处理（内存足够）</li>
+<li><strong>Memory Usage: 24kB</strong> - 哈希表占用内存</li>
+<li><strong>rows=5</strong> - 最终输出5个不同的部门</li>
+</ul>
+<h3>4.3.2. 示例2：去重操作（DISTINCT）</h3>
+<pre><code class="language-sql">EXPLAIN ANALYZE 
+SELECT DISTINCT resource_id FROM resource_traces;
+</code></pre>
+<pre><code class="language-sql">HashAggregate  (cost=4049.00..4053.15 rows=415 width=37) 
+               (actual time=563.670..563.670 rows=0 loops=1)
+  Output: resource_id
+  Group Key: resource_id
+  Buffers: shared hit=150383 read=13
+</code></pre>
+<p>这里 <code>HashAggregate</code> 用于：</p>
+<ul>
+<li><strong>去重操作</strong>：<code>DISTINCT</code> 本质上是按所有选择列分组</li>
+<li><strong>Group Key</strong>: <code>resource_id</code> 用于去重的列</li>
+<li><strong>rows=0</strong>: 输入数据为空，所以输出也为空</li>
+</ul>
+<h3>4.3.3. 示例3：内存不足时的批处理</h3>
+<pre><code class="language-sql">HashAggregate  (cost=180.00..185.00 rows=50000 width=20) 
+               (actual time=234.567..245.789 rows=50000 loops=1)
+  Output: customer_id, sum(amount)
+  Group Key: customer_id  
+  Batches: 3  Memory Usage: 4096kB  Disk Usage: 15432kB
+  -&gt;  Seq Scan on orders
+</code></pre>
+<p><strong>Batches &gt; 1</strong> 说明：</p>
+<ul>
+<li>内存不足以一次性处理所有分组</li>
+<li>数据被分成3批处理</li>
+<li>使用了 15MB 的临时磁盘空间</li>
+</ul>
+<h2>4.4. 不同聚合场景下的 HashAggregate</h2>
+<h3>4.4.1. COUNT DISTINCT</h3>
+<pre><code class="language-sql">SELECT COUNT(DISTINCT customer_id) FROM orders;
+</code></pre>
+<pre><code class="language-sql">Aggregate  (actual time=45.123..45.123 rows=1 loops=1)
+  Output: count(DISTINCT customer_id)
+  -&gt;  HashAggregate  (actual time=34.567..41.234 rows=5000 loops=1)
+        Output: customer_id
+        Group Key: customer_id  -- 先去重
+        -&gt;  Seq Scan on orders
+</code></pre>
+<h3>4.4.2. 多列分组</h3>
+<pre><code class="language-sql">SELECT region, department, COUNT(*) 
+FROM employees 
+GROUP BY region, department;
+</code></pre>
+<pre><code class="language-sql">HashAggregate  (actual time=23.456..25.789 rows=15 loops=1)
+  Output: region, department, count(*)
+  Group Key: region, department  -- 复合分组键
+</code></pre>
+<h3>4.4.3. HAVING 子句</h3>
+<pre><code class="language-sql">SELECT department, COUNT(*) 
+FROM employees 
+GROUP BY department 
+HAVING COUNT(*) &gt; 10;
+</code></pre>
+<pre><code class="language-sql">HashAggregate  (actual time=12.345..12.456 rows=3 loops=1)
+  Output: department, count(*)
+  Group Key: department
+  Filter: (count(*) &gt; 10)  -- HAVING 条件
+  Rows Removed by Filter: 2  -- 2个组被HAVING过滤掉
+</code></pre>
+<h2>4.5. 性能调优考虑</h2>
+<h3>4.5.1. work_mem 设置</h3>
+<pre><code class="language-sql">-- 检查当前设置
+SHOW work_mem;  -- 默认通常是 4MB
+
+-- 如果看到 Batches &gt; 1，考虑增加 work_mem
+SET work_mem = &#39;64MB&#39;;
+
+-- 或者针对特定会话
+SET LOCAL work_mem = &#39;128MB&#39;;
+</code></pre>
+<h3>4.5.2. 何时选择 HashAggregate vs GroupAggregate</h3>
+<pre><code class="language-sql">-- PostgreSQL 会基于以下因素选择：
+-- 1. 数据量大小
+-- 2. 是否已按 GROUP BY 列排序
+-- 3. work_mem 设置
+-- 4. 预估的分组数量
+
+-- 强制使用 GroupAggregate（通过排序）
+SELECT department, COUNT(*) 
+FROM employees 
+ORDER BY department  -- 强制排序，可能选择 GroupAggregate
+GROUP BY department;
+</code></pre>
+<h3>4.5.3. 监控指标</h3>
+<ul>
+<li><strong>Batches</strong>: 应该尽量为 1</li>
+<li><strong>Memory Usage</strong>: 不应该超过 work_mem</li>
+<li><strong>Disk Usage</strong>: 应该避免出现</li>
+<li><strong>actual rows vs estimated rows</strong>: 估算准确性</li>
+</ul>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

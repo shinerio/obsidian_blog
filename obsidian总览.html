@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian总览 - Shinerio's Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body class="article-page" id="theme-body">
+    <div class="page-wrapper">
+        <header class="page-header">
+            <div class="container">
+                <nav class="page-nav">
+                    <div class="nav-links">
+                        <a href="index.html" class="nav-link ">Home</a>
+                        <a href="articles.html" class="nav-link ">Articles</a>
+                        <a href="search.html" class="nav-link ">Search</a>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <button id="theme-toggle" aria-label="Toggle dark mode" class="theme-toggle-btn">
+                            <span class="sun-icon">☀️</span>
+                            <span class="moon-icon">🌙</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </header>
+        <main class="page-main">
+            <div class="container">
+                <article>
+    <header>
+        <h1>Obsidian总览</h1>
+        <time datetime="2026-01-03T13:04:29.305Z">2026年1月3日</time>
+        <div class="tags">
+            
+            <span class="tag">obsidian</span>
+            
+            <span class="tag">tool</span>
+            
+        </div>
+    </header>
+    <section class="content">
+        {<p><span class="tag">#obsidian</span> </p>
+<h1>1. 视图</h1>
+<p>obsidian一共提供了三种视图：</p>
+<ul>
+<li>preview mode：预览模式，可以编辑，显示实时预览结果，此模式下metadata不会渲染</li>
+<li>reading mode：阅读模式，markdown渲染后结果，不可编辑</li>
+<li>source mode：以纯文本形式显示markdown</li>
+</ul>
+<p>以下是我的切换快捷键设置</p>
+<ul>
+<li><code>⌘⌥S</code> 切换预览和源码模式</li>
+<li><code>⌘E</code> 切换预览和阅读模式</li>
+<li>阅读和源码模式无法直接相互切换</li>
+</ul>
+<hr>
+<h1>2. 核心功能</h1>
+<h2>2.1. 双链</h2>
+<h3>2.1.1. 语法</h3>
+<ul>
+<li>链接到文章， <code>&lt;a href=&quot;obsidian总览.html&quot; class=&quot;internal-link&quot;&gt;obsidian总览&lt;/a&gt;</code> </li>
+<li>链接到标题，<code>&lt;a href=&quot;obsidian总览语法.html&quot; class=&quot;internal-link&quot;&gt;obsidian总览&lt;span class=&quot;tag&quot;&gt;#语法&lt;/span&gt;&lt;/a&gt;</code> ^c9e6ba</li>
+<li>链接到文本块，<code>&lt;a href=&quot;obsidian总览c9e6ba.html&quot; class=&quot;internal-link&quot;&gt;obsidian总览#^c9e6ba&lt;/a&gt;</code></li>
+<li>链接别名，<code>&lt;a href=&quot;obsidian总览c9e6ba-链接别名.html&quot; class=&quot;internal-link&quot;&gt;obsidian总览#^c9e6ba | 链接别名&lt;/a&gt;</code></li>
+</ul>
+<h3>2.1.2. 查看</h3>
+<p>按住<code>ctrl或command</code>，光标悬浮预览。</p>
+<p><a href="obsidian总览.html" class="internal-link">Obsidian总览</a><br><a href="obsidian总览语法.html" class="internal-link">Obsidian总览<span class="tag">#语法</span></a><br><a href="obsidian总览c9e6ba.html" class="internal-link">Obsidian总览##^c9e6ba</a><br><a href="obsidian总览c9e6ba-链接别名.html" class="internal-link">Obsidian总览#^c9e6ba | 链接别名</a></p>
+<h3>2.1.3. 引用</h3>
+<p>使用<code>![[]]</code>可以直接将段落引用到当前页面，作为当前页面的一部分显示.<br>!<a href="obsidian总览语法.html" class="internal-link">Obsidian总览<span class="tag">#语法</span></a></p>
+<h3>2.1.4. 标注</h3>
+<p>[Callouts - Obsidian Help](<a href="https://help.obsidian.md/Editing+and+formatting/Callouts">https://help.obsidian.md/Editing+and+formatting/Callouts</a><span class="tag">#Supported</span>+types)</p>
+<blockquote>
+<p>[!tip]</p>
+</blockquote>
+<blockquote>
+<p>[!bug]</p>
+</blockquote>
+<blockquote>
+<p>[!warning]</p>
+</blockquote>
+<blockquote>
+<p>[!info]</p>
+</blockquote>
+<blockquote>
+<p>[!failure]</p>
+</blockquote>
+<blockquote>
+<p>[!success]</p>
+</blockquote>
+<blockquote>
+<p>[!question]</p>
+</blockquote>
+<blockquote>
+<p>[!danger]</p>
+</blockquote>
+<blockquote>
+<p>[!example]</p>
+</blockquote>
+<blockquote>
+<p>[!unknown]</p>
+</blockquote>
+<blockquote>
+<p>[!note]</p>
+</blockquote>
+<blockquote>
+<p>[!todo]</p>
+</blockquote>
+<h2>2.2. 搜索</h2>
+<h3>2.2.1. <code>⌘F</code>进行搜索当前文档</h3>
+<h3>2.2.2. <code>⌘⇧F</code>搜索整个资料库</h3>
+<p>默认是搜索全部内容，也可以使用<code>prefix:</code>的形式指定范围搜索。</p>
+<pre><code>1. 搜索文本内容：`content:key`
+2. 搜索文件名：`file:key`
+3. 搜索tag: `tag:&lt;span class=&quot;tag&quot;&gt;#key&lt;/span&gt;`
+4. 搜索同一章节：`section:key`
+5. 搜索同一段落：`block:key`
+6. 搜索同一行：`line:(key1 key2)`
+</code></pre>
+<p>obsidian还支持多个关键词组合查询，举例如下：</p>
+<ul>
+<li>文件同时包含obsidian和tool标签，<code>tag:&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt; and tag:&lt;span class=&quot;tag&quot;&gt;#tool&lt;/span&gt;</code></li>
+<li>文件名包含数据库关键词，且文本中某一行同时出现了隔离和mysql关键字，<code>file:数据库 line:(隔离 mysql)</code></li>
+<li>文件名包含数据库或者文件名包含obsidian，<code>file:数据库 OR file:obsidian</code></li>
+<li>文件名包含数据库或者拥有obsidian标签，<code>file:数据库 OR tag:&lt;span class=&quot;tag&quot;&gt;#database&lt;/span&gt;</code></li>
+<li>文件包包含数据库且不包含隔离关键字，<code>file:数据库 - file:隔离</code></li>
+</ul>
+<h3>2.2.3. 搜索task</h3>
+<ul>
+<li>搜索所有待办事项：<code>task:&#39;&#39;</code></li>
+<li>所有带有指定关键词的待办事项：<code>task:key</code></li>
+<li>搜索未完成的待办事项：<code>task-todo:&#39;&#39;</code></li>
+<li>搜索已完成的待办事项：<code>task-done:&#39;&#39;</code></li>
+</ul>
+<h3>2.2.4. 保存搜索结果</h3>
+<p>使用如下语法进行查询</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/obsidian%E4%BF%9D%E5%AD%98%E6%9F%A5%E8%AF%A2%E7%BB%93%E6%9E%9C.png" alt="image.png"></p>
+<p>查询结果会内嵌到当前页面中。</p>
+<pre><code class="language-query">file:obsidian OR tag:&lt;span class=&quot;tag&quot;&gt;#obsidian&lt;/span&gt;
+</code></pre>
+<h2>2.3. 标签</h2>
+<p><span class="tag">#obsidian</span></p>
+<p>obsidian添加标签有两种方式：</p>
+<ol>
+<li>在文章任意地方可以通过 <code>&lt;span class=&quot;tag&quot;&gt;#标签名称&lt;/span&gt;</code> 插入标签，然后可以在「标签面板」中看到所有仓库中的标签。注意标签需要在单独一行，且<code>#</code>和标签名称间不能存在空格，否则会当成标题处理。</li>
+<li>在文章的meta区通过yaml语法插入标签，如下：</li>
+</ol>
+<pre><code class="language-yaml">---
+tags:
+- obsidian
+---
+</code></pre>
+<hr>
+<h1>3. 核心插件</h1>
+<h2>3.1. 幻灯片</h2>
+<h2>3.2. 日记</h2>
+<h2>3.3. canvas</h2>
+<h3>3.3.1. card</h3>
+<p>canvas支持以下几种card</p>
+<ul>
+<li>text card</li>
+<li>markdown笔记</li>
+<li>视频&amp;文件</li>
+<li>pdf文件</li>
+<li>网页，可以预览整个网页</li>
+</ul>
+<h3>3.3.2. 拖拽文件夹</h3>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/canvas%E6%8B%96%E6%8B%BD%E6%96%87%E4%BB%B6%E5%A4%B9.gif" alt="Kapture 2023-01-21 at 14.00.50.gif"></p>
+<h3>3.3.3. group</h3>
+<p>同时选中多个card，右击可以新建group</p>
+<h3>3.3.4. 嵌套</h3>
+<p>canvas支持嵌套使用，即在一个canvas上叠加canvas</p>
+<h2>3.4. Template</h2>
+<p>obsidian支持模板功能，可以快速插入一段模板代码。还支持动态参数，如<code></code> 可以获取当天时间</p>
+<p>第三方插件Templater可以支持更为强大的模板功能。</p>
+<h1>4. 三方插件</h1>
+<table>
+<thead>
+<tr>
+<th>名称</th>
+<th>简介</th>
+<th>详情介绍</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/MarkMindCkm/obsidian-markmind">paste url into selection</a></td>
+<td>可以实现选中文字后，按下<code>command + v</code>即可将url链接到文</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://github.com/deathau/cm-editor-syntax-highlight-obsidian">Editor Syntax Highlight</a></td>
+<td>代码高亮</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://github.com/lynchjames/obsidian-mind-map">mind map</a></td>
+<td>将markdown通过思维导图的方式呈现</td>
+<td><a href="mind-map.html" class="internal-link">Mind map</a></td>
+</tr>
+<tr>
+<td><a href="https://github.com/tgrosinger/md-advanced-tables">Advanced Table</a></td>
+<td>增强的表格工具</td>
+<td><a href="advanced-table.html" class="internal-link">Advanced Table</a></td>
+</tr>
+<tr>
+<td><a href="https://github.com/zsviczian/obsidian-excalidraw-plugin">Excalidraw</a></td>
+<td>手绘风格作图工具</td>
+<td><a href="excalidraw.html" class="internal-link">Excalidraw</a></td>
+</tr>
+<tr>
+<td>File Explorer Note Count</td>
+<td>显示文件夹中文件数量</td>
+<td></td>
+</tr>
+<tr>
+<td>Image auto upload</td>
+<td>图床工具</td>
+<td><a href="image-auto-upload-plugin.html" class="internal-link">Image auto upload Plugin</a></td>
+</tr>
+<tr>
+<td>Minimal Theme Setting</td>
+<td>obsidian主题设置</td>
+<td><a href="minimal-theme-setting.html" class="internal-link">Minimal Theme setting</a></td>
+</tr>
+<tr>
+<td>Quick Explorer</td>
+<td>obsidian窗口下方显示文件导航</td>
+<td></td>
+</tr>
+<tr>
+<td>pandoc</td>
+<td>将obsidian笔记导出为其他各种格式的文件</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://github.com/quorafind/obsidian-memos">memos</a></td>
+<td>备忘录，记录小灵感</td>
+<td></td>
+</tr>
+<tr>
+<td>dataview</td>
+<td></td>
+<td><a href="dataview.html" class="internal-link">dataview</a></td>
+</tr>
+<tr>
+<td>kanban</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>tasks</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>calender</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>reveal active file button</td>
+<td>可以自动展开当前文件路径</td>
+<td></td>
+</tr>
+<tr>
+<td>better file link</td>
+<td>可以将文件插入到当前page，也可以引用其他存储目录的文件</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://silentvoid13.github.io/Templater/">Templater</a></td>
+<td>支持强大的模板语法</td>
+<td></td>
+</tr>
+<tr>
+<td>Number Headings</td>
+<td>可以自动给标题编号</td>
+<td></td>
+</tr>
+<tr>
+<td>Kanban</td>
+<td>可以实现类似teambition或者trello类似的看板功能</td>
+<td></td>
+</tr>
+<tr>
+<td>Eidting toolbar</td>
+<td>提供一个编辑栏，给文字加颜色，添加附件等等工具</td>
+<td></td>
+</tr>
+<tr>
+<td>spreadsheet</td>
+<td>提供类似于excel的高级表格工具</td>
+<td></td>
+</tr>
+<tr>
+<td>obsidian git</td>
+<td>使用git同步笔记，国内使用gitee体验更好</td>
+<td></td>
+</tr>
+</tbody></table>
+<h1>5. 调试</h1>
+<p>当使用obsidian插件遇到问题的时候，可以使用<code>⌘+⌥+i</code>打开调试窗口。</p>
+<p><img src="https://shinerio.oss-cn-beijing.aliyuncs.com/obsidian/obsidian%E8%B0%83%E8%AF%95%E7%AA%97%E5%8F%A3.png" alt="image.png"></p>
+<h1>6. 发布gitpage</h1>
+<h2>6.1. excalidraw转化</h2>
+<ol>
+<li>设置excalidraw同步生成svg图片</li>
+<li>图片上传阿里云，并自动将<code>![[]]</code>语法转化为<code>![]()</code>图片引用</li>
+</ol>
+<pre><code class="language-shell"># 以北京为例
+git clone git@github.com:shinerio/ob_tools.git
+cd ob_tools
+export oss_endpoint=&#39;http://oss-cn-beijing.aliyuncs.com&#39;
+export oss_path=&#39;obsidian/&#39;
+export oss_ak=your_ak
+export oss_sk=your_sk
+export oss_bucket=your_bucket
+python main.py --vaultpath=&quot;obsidian vault路径 \
+--input=&quot;需要转换的文件相对于vaultpath的路径&quot; \
+--outputpath=&quot;输入文件根路径, 输出目录将会保持和vault一样的目录结构&quot; \
+--attachment=&quot;本地图片存储路径&quot;
+</code></pre>
+}
+    </section>
+</article>
+            </div>
+        </main>
+        <footer class="page-footer">
+            <div class="container">
+                <p>&copy; 2026 Shinerio's Blog. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Theme switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('theme-toggle');
+            const body = document.getElementById('theme-body');
+
+            // Check for saved theme preference or respect OS preference
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+
+            // Set initial theme
+            if (savedTheme === 'dark' || (!savedTheme && prefersDarkScheme.matches)) {
+                body.setAttribute('data-theme', 'dark');
+            } else {
+                body.removeAttribute('data-theme'); // light theme
+            }
+
+            // Toggle theme function
+            function toggleTheme() {
+                if (body.getAttribute('data-theme') === 'dark') {
+                    body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            }
+
+            // Add event listener to theme toggle button
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Listen for OS theme changes
+            prefersDarkScheme.addEventListener('change', function(e) {
+                if (!localStorage.getItem('theme')) {
+                    if (e.matches) {
+                        body.setAttribute('data-theme', 'dark');
+                    } else {
+                        body.removeAttribute('data-theme');
+                    }
+                }
+            });
+
+            // Search functionality
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            const searchTypeRadios = document.querySelectorAll('input[name="search-type"]');
+
+            if (searchInput && searchButton) {
+                let searchData = null;
+
+                // Load search data
+                async function loadSearchData() {
+                    try {
+                        const response = await fetch('./assets/js/search-data.json');
+                        if (response.ok) {
+                            searchData = await response.json();
+                        } else {
+                            console.error('Failed to load search data:', response.status);
+                        }
+                    } catch (error) {
+                        console.error('Error loading search data:', error);
+                    }
+                }
+
+                // Initialize search data
+                loadSearchData();
+
+                // Debounce function to limit search calls
+                function debounce(func, wait) {
+                    let timeout;
+                    return function executedFunction(...args) {
+                        const later = () => {
+                            clearTimeout(timeout);
+                            func(...args);
+                        };
+                        clearTimeout(timeout);
+                        timeout = setTimeout(later, wait);
+                    };
+                }
+
+                // Get selected search type
+                function getSelectedSearchType() {
+                    const selectedRadio = document.querySelector('input[name="search-type"]:checked');
+                    return selectedRadio ? selectedRadio.value : 'all';
+                }
+
+                // Perform search
+                function performSearch(query) {
+                    if (!searchData || !query.trim()) {
+                        searchResults.innerHTML = '';
+                        searchSuggestions.innerHTML = '';
+                        return;
+                    }
+
+                    const queryTerms = query.toLowerCase().split(/\s+/).filter(term => term.length > 0);
+                    const searchType = getSelectedSearchType();
+
+                    if (queryTerms.length === 0) {
+                        searchResults.innerHTML = '';
+                        return;
+                    }
+
+                    const results = [];
+
+                    // Search through articles
+                    searchData.articles.forEach(article => {
+                        let score = 0;
+                        let snippet = '';
+
+                        // Get content based on search type
+                        const lowerTitle = article.title.toLowerCase();
+                        const lowerContent = article.content.toLowerCase();
+                        const lowerTags = article.tags.join(' ').toLowerCase();
+
+                        queryTerms.forEach(term => {
+                            switch(searchType) {
+                                case 'title':
+                                    // Only title matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    break;
+                                case 'content':
+                                    // Only content matches count (fixed to exclude title matches)
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    break;
+                                case 'all':
+                                default:
+                                    // Both title and content matches count
+                                    if (lowerTitle.includes(term)) {
+                                        score += 10;
+                                    }
+                                    if (lowerContent.includes(term)) {
+                                        score += 1;
+                                    }
+                                    // Tag matches get medium-high score
+                                    if (lowerTags.includes(term)) {
+                                        score += 5;
+                                    }
+                                    break;
+                            }
+                        });
+
+                        if (score > 0) {
+                            // Generate snippet based on search type
+                            let content = '';
+
+                            if (searchType === 'title') {
+                                // For title-only search, show title content
+                                content = article.title.substring(0, 200);
+                            } else if (searchType === 'content') {
+                                // For content-only search, show content excerpt
+                                content = article.content.substring(0, 200);
+                            } else {
+                                // For all search, show content with title as context
+                                content = article.content.substring(0, 200);
+                            }
+
+                            // Find first occurrence of query term in content for snippet
+                            queryTerms.forEach(term => {
+                                let searchIn = content.toLowerCase();
+                                if (searchType === 'title') {
+                                    searchIn = lowerTitle;
+                                } else if (searchType === 'content') {
+                                    searchIn = lowerContent;
+                                }
+
+                                const index = searchIn.indexOf(term);
+                                if (index !== -1) {
+                                    // Expand snippet around the match
+                                    let start, end;
+                                    if (searchType === 'title') {
+                                        start = Math.max(0, index - 15);
+                                        end = Math.min(content.length, index + term.length + 35);
+                                    } else {
+                                        start = Math.max(0, index - 30);
+                                        end = Math.min(content.length, index + term.length + 70);
+                                    }
+
+                                    content = (start > 0 ? '...' : '') +
+                                              content.substring(start, end) +
+                                              (end < (searchType === 'title' ? article.title.length : article.content.length) ? '...' : '');
+
+                                    // Highlight the term in the snippet
+                                    const searchContent = searchType === 'title' ? article.title : article.content;
+                                    const adjustedIndex = searchType === 'title' ?
+                                        Math.min(index, article.title.length - 1) :
+                                        Math.min(index, article.content.length - 1);
+
+                                    content = content.replace(
+                                        new RegExp(`(${escapeRegExp(term)})`, 'gi'),
+                                        '<mark>$1</mark>'
+                                    );
+                                }
+                            });
+
+                            results.push({
+                                article: article,
+                                score: score,
+                                snippet: content
+                            });
+                        }
+                    });
+
+                    // Sort results by score
+                    results.sort((a, b) => b.score - a.score);
+
+                    // Display results
+                    displaySearchResults(results);
+                }
+
+                // Display search results
+                function displaySearchResults(results) {
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<p class="no-results">未找到匹配的文章</p>';
+                        return;
+                    }
+
+                    const resultsHTML = results.map(result => `
+                        <div class="search-result-item">
+                            <h3 class="search-result-title">
+                                <a href="./${result.article.slug}.html">${highlightQueryTerms(result.article.title, document.querySelector('#search-input').value)}</a>
+                            </h3>
+                            <div class="search-result-meta">
+                                ${result.article.tags.map(tag => `<span class="tag">#${tag}</span>`).join('')}
+                            </div>
+                            <p class="search-result-excerpt">${result.snippet}</p>
+                        </div>
+                    `).join('');
+
+                    searchResults.innerHTML = resultsHTML;
+                }
+
+                // Highlight query terms in text
+                function highlightQueryTerms(text, query) {
+                    if (!query.trim()) return text;
+
+                    const queryTerms = query.split(/\s+/).filter(term => term.length > 0);
+                    let highlightedText = text;
+
+                    queryTerms.forEach(term => {
+                        const regex = new RegExp(`(${escapeRegExp(term)})`, 'gi');
+                        highlightedText = highlightedText.replace(regex, '<mark>$1</mark>');
+                    });
+
+                    return highlightedText;
+                }
+
+                // Escape special regex characters
+                function escapeRegExp(string) {
+                    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                // Event listener for search button
+                searchButton.addEventListener('click', function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                });
+
+                // Event listener for Enter key
+                searchInput.addEventListener('keypress', function(event) {
+                    if (event.key === 'Enter') {
+                        const query = searchInput.value;
+                        performSearch(query);
+                    }
+                });
+
+                // Add debounced input handler for live search (optional)
+                const debouncedSearch = debounce(function() {
+                    const query = searchInput.value;
+                    performSearch(query);
+                }, 300);
+
+                searchInput.addEventListener('input', debouncedSearch);
+
+                // Add event listeners for search type radios
+                searchTypeRadios.forEach(radio => {
+                    radio.addEventListener('change', function() {
+                        const query = searchInput.value;
+                        if (query.trim()) {
+                            performSearch(query);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
